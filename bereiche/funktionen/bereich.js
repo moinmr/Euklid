@@ -97,6 +97,7 @@ function steigAnsicht() {
   var oben = hud && hud.firstChild ? hud.getBoundingClientRect().bottom : 60;
   var unten = schreib.hidden ? S.h - (S.unten || 70) : schreib.getBoundingClientRect().top;
   var ym = (-l.a[1] - l.b[1]) / 2 / U, xm = (l.a[0] + l.b[0]) / 2 / U;
+  if (FLEVELS[F.level].herleitung && (F.phase === 3 || F.phase === 4)) { var h = fHerl(), g = herlGmax(); xm = g / 2; ym = h.b + h.m * g / 2; }
   S.oy = (oben + unten) / 2 + ym * U;
   S.ox = S.w / 2 - xm * U;
   App.applyView();
@@ -169,16 +170,27 @@ function buildFunk(ctx, ws) {
   if (lvz && lvz.herleitung && F.lines[F.runde]) {
     // beide Achsenschnittpunkte mit Koordinaten; ab Schritt 2 der Erklärung das Steigungsdreieck dazwischen.
     // Die Ecke liegt bei (xs|b), so liegen die Katheten nie auf den Achsen. Beschriftungen in den freien Ecken.
-    var hm = fHerl(), sx = hm.xs > 0 ? 1 : -1, sb = hm.b > 0 ? 1 : -1, P = [0, -hm.b * U], Q = [hm.xs * U, 0], ecke = [Q[0], P[1]];
-    if (F.phase >= 2) {
+    var hm = fHerl(), steigt = hm.m > 0, sx = hm.xs > 0 ? 1 : -1, sb = hm.b > 0 ? 1 : -1, P = [0, -hm.b * U], Q = [hm.xs * U, 0], ecke = [Q[0], P[1]];
+    if (F.phase === 3 || F.phase === 4) {
+      // allgemeiner Punkt (x|y) auf der Geraden, Dreieck von (0|b) bis dorthin: x nach rechts, y − b nach oben oder unten
+      var G = [F.gx * U, -(hm.b + hm.m * F.gx) * U], C = [G[0], P[1]];
+      ctx.save(); ctx.strokeStyle = INK; ctx.globalAlpha = 0.75; ctx.lineWidth = 2 * ws * k; ctx.setLineDash([6 * k, 5 * k]);
+      ctx.beginPath(); ctx.moveTo(P[0], P[1]); ctx.lineTo(C[0], C[1]); ctx.lineTo(G[0], G[1]); ctx.stroke(); ctx.restore();
+      text(ctx, 'x', G[0] / 2, P[1] + (steigt ? 14 : -14) * k, INK, 15);
+      text(ctx, 'y − b', G[0] + 26 * k, (P[1] + G[1]) / 2, INK, 15);
+      ctx.fillStyle = INK; dotAt(ctx, G, false, 7);
+      text(ctx, '(x|y)', G[0] + (steigt ? -32 : 32) * k, G[1] - 15 * k, INK, 14);
+    }
+    if (F.phase === 2 || F.phase === 6) {
       ctx.save(); ctx.strokeStyle = INK; ctx.globalAlpha = 0.75; ctx.lineWidth = 2 * ws * k; ctx.setLineDash([6 * k, 5 * k]);
       ctx.beginPath(); ctx.moveTo(P[0], P[1]); ctx.lineTo(ecke[0], ecke[1]); ctx.lineTo(Q[0], Q[1]); ctx.stroke(); ctx.restore();
       text(ctx, String(Math.abs(hm.xs)), Q[0] / 2, P[1] - sb * 14 * k, INK, 14);
-      if (F.phase < 4) text(ctx, String(Math.abs(hm.b)), Q[0] + sx * 14 * k, P[1] / 2, INK, 14);
+      if (F.phase === 2) text(ctx, String(Math.abs(hm.b)), Q[0] + sx * 14 * k, P[1] / 2, INK, 14);
     }
-    ctx.fillStyle = INK; dotAt(ctx, P, false, 5); dotAt(ctx, Q, false, 5);
-    text(ctx, '(0|' + fmt(hm.b) + ')', -sx * 40 * k, P[1] + sb * 16 * k, INK, 13);
-    text(ctx, '(' + fmt(hm.xs) + '|0)', Q[0] - sx * 30 * k, sb > 0 ? 30 * k : -16 * k, INK, 13);
+    ctx.fillStyle = INK; dotAt(ctx, P, false, 5); if (F.phase !== 3 && F.phase !== 4) dotAt(ctx, Q, false, 5);
+    if (F.phase === 3 || F.phase === 4) text(ctx, '(0|' + fmt(hm.b) + ')', -40 * k, P[1] + (steigt ? -16 : 16) * k, INK, 13);   // links, das Dreieck ist rechts
+    else text(ctx, '(0|' + fmt(hm.b) + ')', -sx * 40 * k, P[1] + sb * 16 * k, INK, 13);
+    if (F.phase !== 3 && F.phase !== 4) text(ctx, '(' + fmt(hm.xs) + '|0)', Q[0] - sx * 30 * k, sb > 0 ? 30 * k : -16 * k, INK, 13);
   }
   F.pts.forEach(function (p) {
     var col = fPunktFalsch(p) ? C.RED : BLUE;   // falscher Punkt rot
@@ -253,7 +265,14 @@ function fTarget(pos) {
   }
   return S.tool === 'point' ? fLattice(pos) : fSnap(pos);
 }
+// Level mit herleitung, Schritt 3: den Punkt (x|y) auf der Geraden ziehen
+function herlZiehen(pos) {
+  if (!FLEVELS[F.level].herleitung || F.phase !== 3) return;
+  var g = herlGx(Math.round(pos[0] / U));
+  if (g !== F.gx) { F.gx = g; fSchreib(true); render(); }
+}
 function fDown(pos) {
+  herlZiehen(pos);
   if (FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung || FLEVELS[F.level].herleitung) return true;
   S.drawing = true; S.lmode = S.ls ? 'end' : 'start';
   S.end = [pos[0], pos[1]]; S.target = fTarget(pos);
@@ -261,6 +280,7 @@ function fDown(pos) {
   return true;
 }
 function fMove(pos) {
+  herlZiehen(pos);
   if (FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung || FLEVELS[F.level].herleitung) return true;
   if (S.drawing) { S.end = [pos[0], pos[1]]; S.target = fTarget(pos); }
   S.loupe = S.sp; render();
@@ -440,7 +460,7 @@ function fLoadLevel(n, restore) {
   if (lv.herleitung) {
     // auch neu, wenn noch Geraden aus der alten Fassung gespeichert sind (zweiter Punkt nicht auf der x-Achse)
     if (!F.lines.some(function (l) { return l.fest; }) || F.lines.some(function (l) { return l.b[1] !== 0; })) { F.lines = fFestHerleitung(); F.runde = 0; }
-    F.phase = F.runde ? 4 : 0; F.ein = ['', ''];
+    F.phase = F.runde ? 6 : 0; F.ein = ['', '']; F.gx = herlGx(3);
   }
   // Nur die Knöpfe unten, die das Level braucht
   var wz = lv.werkzeuge || ['point', 'line', 'undo', 'clear', 'view'];
@@ -576,6 +596,8 @@ function herlText(k) {
   var h = fHerl(), B = fmt(h.b), X = fmt(h.xs), R = Math.abs(h.xs), H = Math.abs(h.b), hoch = (h.xs > 0 ? -h.b : h.b) > 0;
   var M = fmt(h.m), rise = fmt(hoch ? H : -H), G = '<bdi dir="ltr">y = ' + kurzGl(h.m, h.b) + '</bdi>';
   function p(s) { return '<bdi dir="ltr">' + s + '</bdi>'; }
+  // Herleitung in drei Zeilen: Steigung im Dreieck, mal x, plus b (rechts daneben, was man rechnet)
+  var Z = '<span class="zeilen"><bdi dir="ltr">(y − b) : x = m<i>| · x</i></bdi><bdi dir="ltr">y − b = m·x<i>| + b</i></bdi><bdi dir="ltr">y = mx + b<i></i></bdi></span>';
   var t = [
     { de: 'Diese Gerade schneidet die y-Achse bei ' + p('(0|' + B + ')') + ' und die x-Achse bei ' + p('(' + X + '|0)') + '. Aus diesen zwei Punkten bekommen wir ihre Gleichung.',
       en: 'This line crosses the y-axis at ' + p('(0|' + B + ')') + ' and the x-axis at ' + p('(' + X + '|0)') + '. From these two points we get its equation.',
@@ -601,14 +623,30 @@ function herlText(k) {
       es: 'Paso 2: de un punto al otro se va ' + R + ' a la derecha y ' + H + (hoch ? ' hacia arriba' : ' hacia abajo') + '. Pendiente m = ' + p(rise + ' : ' + R + ' = ' + M) + '.',
       ja: 'ステップ2：点から点へ、右へ ' + R + '、' + (hoch ? '上へ ' : '下へ ') + H + '。傾き m = ' + p(rise + ' : ' + R + ' = ' + M) + '。',
       ar: 'الخطوة 2: من نقطة إلى أخرى نتحرك ' + R + ' إلى اليمين و' + H + (hoch ? ' إلى الأعلى' : ' إلى الأسفل') + '. الميل m = ' + p(rise + ' : ' + R + ' = ' + M) + '.' },
-    { de: 'Schritt 3: Bei x = 0 ist y = b. Pro Kästchen nach rechts kommt m dazu. Darum gilt ' + p('y = mx + b') + ', hier ' + G + '.',
-      en: 'Step 3: At x = 0, y = b. For each square to the right, m is added. So ' + p('y = mx + b') + ', here ' + G + '.',
-      fi: 'Vaihe 3: Kun x = 0, y = b. Jokaista ruutua oikealle kohti lisätään m. Siksi ' + p('y = mx + b') + ', tässä ' + G + '.',
-      tr: 'Adım 3: x = 0’da y = b. Sağa her karede m eklenir. Bu yüzden ' + p('y = mx + b') + ', burada ' + G + '.',
-      fr: 'Étape 3 : pour x = 0, y = b. À chaque carreau vers la droite, on ajoute m. Donc ' + p('y = mx + b') + ', ici ' + G + '.',
-      es: 'Paso 3: con x = 0, y = b. Por cada cuadrito a la derecha se suma m. Por eso ' + p('y = mx + b') + ', aquí ' + G + '.',
-      ja: 'ステップ3：x = 0 のとき y = b。右へ1ます進むごとに m がたされます。だから ' + p('y = mx + b') + '、ここでは ' + G + '。',
-      ar: 'الخطوة 3: عند x = 0 يكون y = b. مع كل مربع إلى اليمين نضيف m. لذلك ' + p('y = mx + b') + '، وهنا ' + G + '.' }
+    { de: 'Schritt 3: Nimm irgendeinen Punkt (x|y) auf der Geraden und zieh ihn hin und her. Das Dreieck von (0|b) bis (x|y) geht x nach rechts und y − b nach oben oder unten. Die Steigung bleibt immer gleich:',
+      en: 'Step 3: Take any point (x|y) on the line and drag it back and forth. The triangle from (0|b) to (x|y) goes x to the right and y − b up or down. The slope always stays the same:',
+      fi: 'Vaihe 3: Ota mikä tahansa piste (x|y) suoralta ja vedä sitä edestakaisin. Kolmio pisteestä (0|b) pisteeseen (x|y) menee x oikealle ja y − b ylös tai alas. Kulmakerroin pysyy aina samana:',
+      tr: 'Adım 3: Doğru üzerinde herhangi bir (x|y) noktası al ve onu ileri geri sürükle. (0|b)’den (x|y)’ye üçgen sağa x, yukarı ya da aşağı y − b gider. Eğim hep aynı kalır:',
+      fr: 'Étape 3 : prends n’importe quel point (x|y) sur la droite et fais-le glisser. Le triangle de (0|b) à (x|y) va de x vers la droite et de y − b vers le haut ou le bas. La pente reste toujours la même :',
+      es: 'Paso 3: toma cualquier punto (x|y) de la recta y arrástralo. El triángulo de (0|b) a (x|y) va x a la derecha e y − b hacia arriba o abajo. La pendiente siempre es la misma:',
+      ja: 'ステップ3：直線の上の好きな点 (x|y) をとって、左右に動かそう。(0|b) から (x|y) までの三角形は、右へ x、上か下へ y − b。傾きはいつも同じです：',
+      ar: 'الخطوة 3: خذ أي نقطة (x|y) على المستقيم وحرّكها ذهابًا وإيابًا. المثلث من (0|b) إلى (x|y) يذهب x إلى اليمين و y − b إلى الأعلى أو الأسفل. الميل يبقى دائمًا نفسه:' },
+    { de: 'Schritt 4: Das gilt für jeden Punkt der Geraden:' + Z,
+      en: 'Step 4: This holds for every point of the line:' + Z,
+      fi: 'Vaihe 4: Tämä pätee suoran jokaiseen pisteeseen:' + Z,
+      tr: 'Adım 4: Bu, doğrunun her noktası için geçerlidir:' + Z,
+      fr: 'Étape 4 : c’est vrai pour chaque point de la droite :' + Z,
+      es: 'Paso 4: esto vale para cada punto de la recta:' + Z,
+      ja: 'ステップ4：これは直線のどの点でも成り立ちます：' + Z,
+      ar: 'الخطوة 4: هذا صحيح لكل نقطة على المستقيم:' + Z },
+    { de: 'Bei dieser Geraden ist m = ' + M + ' und b = ' + B + '. Also heißt ihre Gleichung ' + G + '.',
+      en: 'For this line m = ' + M + ' and b = ' + B + '. So its equation is ' + G + '.',
+      fi: 'Tällä suoralla m = ' + M + ' ja b = ' + B + '. Sen yhtälö on siis ' + G + '.',
+      tr: 'Bu doğruda m = ' + M + ' ve b = ' + B + '. Yani denklemi ' + G + '.',
+      fr: 'Pour cette droite, m = ' + M + ' et b = ' + B + '. Son équation est donc ' + G + '.',
+      es: 'En esta recta m = ' + M + ' y b = ' + B + '. Así que su ecuación es ' + G + '.',
+      ja: 'この直線では m = ' + M + '、b = ' + B + '。だから式は ' + G + ' です。',
+      ar: 'في هذا المستقيم m = ' + M + ' و b = ' + B + '. إذن معادلته ' + G + '.' }
   ];
   return t[k];
 }
@@ -636,11 +674,24 @@ var HERL = {
        ja: 'おしい。最後には b：直線が y 軸と交わるところの y の値が入ります。',
        ar: 'ليس تمامًا. في النهاية يأتي b: قيمة y حيث يقطع المستقيم محور y.' }
 };
+function zahl(n) { return n < 0 ? '(' + fmt(n) + ')' : String(n); }
+// x des Punkts (x|y) in Schritt 3: 1 bis 4, und das Dreieck höchstens 6 Kästchen hoch
+function herlGmax() { var h = fHerl(), g = 4; while (g > 1 && Math.abs(h.m * g) > 6) g--; return g; }
+function herlGx(x) {
+  var h = fHerl();
+  return Math.max(1, Math.min(herlGmax(), x));
+}
+// Zeile unter Schritt 3 mit den Zahlen des gezogenen Punkts
+function herlLive() {
+  var h = fHerl(), y = h.b + h.m * F.gx;
+  return '<bdi dir="ltr">x = ' + F.gx + ', y = ' + fmt(y) + ':&nbsp; (' + fmt(y) + ' − ' + zahl(h.b) + ') : ' + F.gx + ' = ' + fmt(h.m) + '</bdi>';
+}
 function herlKarte() {
   var stand = '<span class="stand">' + (F.runde + 1) + ' / ' + F.lines.length + '</span>', keys = '';
-  if (F.phase < 4) {
+  if (F.phase < 6) {
     schreib.innerHTML = '<div class="steig">' + stand + '</div><p class="erkl">' + App.wahl(herlText(F.phase)) + '</p>' +
-      '<button class="opt pruefen" data-act="schritt">' + App.wahl(F.phase === 3 ? HERL.du : HERL.weiter) + ' →</button>';
+      (F.phase === 3 ? '<div class="zeilen"><p>' + herlLive() + '</p></div>' : '') +
+      '<button class="opt pruefen" data-act="schritt">' + App.wahl(F.phase === 5 ? HERL.du : HERL.weiter) + ' →</button>';
     return;
   }
   for (var d = -4; d <= 4; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + fmt(d) + '</button>';
@@ -651,8 +702,8 @@ function herlKarte() {
 }
 // Weiter in der Erklärung; nach Schritt 3 kommt die zweite Gerade zum Selbermachen
 function herlSchritt() {
-  if (F.phase < 3) F.phase++;
-  else { F.runde++; F.phase = 4; F.ein = ['', '']; F.slot = 0; F.fb = ''; }
+  if (F.phase < 5) F.phase++;
+  else { F.runde++; F.phase = 6; F.ein = ['', '']; F.slot = 0; F.fb = ''; }
   F.neueAnsicht = true;
 }
 function herlPruefen() {

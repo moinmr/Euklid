@@ -308,3 +308,5 @@ body {
 /* Erklärtext in einem Maschinen-Level: ruhig, nicht fett */
 #mach .erkl, #fschreib .erkl { text-align: center; font-size: 16.5px; line-height: 1.45; margin: 0; }
 .rtl #mach .erkl, .rtl #fschreib .erkl { direction: rtl; }
+#fschreib .erkl .zeilen { margin-top: 6px; font-size: 18px; }
+#fschreib .erkl .zeilen i { display: inline-block; width: 3.2em; margin-left: .6em; text-align: left; font-style: normal; opacity: .6; }
