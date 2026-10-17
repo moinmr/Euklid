@@ -2,7 +2,7 @@
 App.level('funktionen', {
   id: 'achsenabschnitt',
   text: {
-    de: { title: 'y-Achsenabschnitt',
+    de: { title: 'Achsenabschnitt',
           task: 'Zeichne y = x + 2. Die +2 sagt, wo die Gerade die y-Achse schneidet.',
           done: 'Richtig! Die +2 verschiebt die Gerade nach oben. Sie schneidet die y-Achse bei 2.' },
     en: { title: 'y-intercept',

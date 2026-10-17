@@ -1,4 +1,4 @@
-// Level: Das Taxi. Grundgebühr plus Preis pro km (zufällig), Tabelle für 1, 2, 3, 5 km. Falsche Antworten sind typische Denkfehler.
+// Level: Taxipreis. Grundgebühr plus Preis pro km (zufällig), Tabelle für 1, 2, 3, 5 km. Falsche Antworten sind typische Denkfehler.
 (function () {
 // Aufgabentext mit den Preisen des aktuellen Taxis
 function mitPreis(f) {
@@ -7,28 +7,28 @@ function mitPreis(f) {
 App.level('funktionen', {
   id: 'taxi',
   text: {
-    de: { title: 'Das Taxi',
+    de: { title: 'Taxipreis',
           task: mitPreis(function (g, p) { return 'Ein Taxi kostet ' + g + ' Grundgebühr plus ' + p + ' pro Kilometer. Was kostet jede Fahrt?'; }),
           done: 'Richtig! Zu jeder Strecke gehört genau ein Preis. Das ist eine Funktion.' },
-    en: { title: 'The taxi',
+    en: { title: 'Taxi fare',
           task: mitPreis(function (g, p) { return 'A taxi costs a ' + g + ' base fare plus ' + p + ' per kilometre. What does each ride cost?'; }),
           done: 'Right! Each distance has exactly one price. That is a function.' },
-    fi: { title: 'Taksi',
+    fi: { title: 'Taksin hinta',
           task: mitPreis(function (g, p) { return 'Taksi maksaa ' + g + ' perusmaksun ja ' + p + ' kilometriltä. Paljonko kukin matka maksaa?'; }),
           done: 'Oikein! Jokaiseen matkaan kuuluu tasan yksi hinta. Se on funktio.' },
-    tr: { title: 'Taksi',
+    tr: { title: 'Taksi ücreti',
           task: mitPreis(function (g, p) { return 'Bir taksi ' + g + ' açılış ücreti artı kilometre başına ' + p + ' tutuyor. Her yolculuk ne kadar?'; }),
           done: 'Doğru! Her mesafeye tam olarak bir fiyat düşer. Bu bir fonksiyondur.' },
-    fr: { title: 'Le taxi',
+    fr: { title: 'Le prix du taxi',
           task: mitPreis(function (g, p) { return 'Un taxi coûte ' + g + ' de prise en charge plus ' + p + ' par kilomètre. Combien coûte chaque trajet ?'; }),
           done: 'Bravo ! À chaque distance correspond exactement un prix. C’est une fonction.' },
-    es: { title: 'El taxi',
+    es: { title: 'La tarifa del taxi',
           task: mitPreis(function (g, p) { return 'Un taxi cuesta ' + g + ' de bajada de bandera más ' + p + ' por kilómetro. ¿Cuánto cuesta cada viaje?'; }),
           done: '¡Correcto! A cada distancia le corresponde exactamente un precio. Eso es una función.' },
-    ja: { title: 'タクシー',
+    ja: { title: 'タクシー料金',
           task: mitPreis(function (g, p) { return 'タクシーは基本料金' + g + '、1キロごとに' + p + 'です。それぞれの料金はいくら？'; }),
           done: '正解！どの距離にもちょうど1つの料金が決まります。これが関数です。' },
-    ar: { title: 'سيارة الأجرة',
+    ar: { title: 'أجرة التاكسي',
           task: mitPreis(function (g, p) { return 'تكلف سيارة الأجرة ' + g + ' أجرة أساسية زائد ' + p + ' لكل كيلومتر. كم تكلف كل رحلة؟'; }),
           done: 'صحيح! لكل مسافة سعر واحد بالضبط. هذه دالة.' }
   },
