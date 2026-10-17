@@ -320,9 +320,11 @@ function loadLevel(n, restore) {
   if (S.onLevel) S.onLevel(S.level, false);
   checkLevel();
 }
-function nextLevel() {
+// d = 1 nächstes, d = -1 vorheriges Level (am Ende geht es wieder von vorn los)
+function nextLevel(d) {
+  var n = LEVELS.length;
   storeCurrent();
-  loadLevel(S.level === null ? 0 : (S.level + 1) % LEVELS.length);
+  loadLevel(S.level === null ? 0 : (S.level + (d || 1) + n) % n);
   saveProgress();
 }
 

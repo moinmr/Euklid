@@ -86,7 +86,8 @@ App.start = function () {
   bind('b-undo', beiBereich('undo'));
   bind('b-clear', beiBereich('clear'));
   bind('b-view', App.resetView);
-  bind('b-level', beiBereich('next'));
+  bind('b-level', function () { var a = App.aktiv(); if (a) a.next(1); });
+  bind('b-prev', function () { var a = App.aktiv(); if (a) a.next(-1); });
   bind('b-lang', App.wechsleSprache);
   bind('h-lang', App.wechsleSprache);
 

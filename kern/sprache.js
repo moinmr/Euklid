@@ -66,6 +66,7 @@ var TEXTE = {
   loeschen: { de: 'Alles löschen', en: 'Clear all' },
   ansicht: { de: 'Ansicht zurücksetzen', en: 'Reset view' },
   naechstes: { de: 'Nächstes Level', en: 'Next level' },
+  vorheriges: { de: 'Vorheriges Level', en: 'Previous level' },
   sprache: { de: 'Sprache wechseln', en: 'Change language' }
 };
 App.t = function (key) {

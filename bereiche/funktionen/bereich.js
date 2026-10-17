@@ -249,7 +249,8 @@ function fClear() {
   delete F.solutions[F.level]; delete F.work[F.level]; F.solved.delete(F.level);
   fLoadLevel(F.level, false); fSave();
 }
-function fNext() { fStore(); fLoadLevel((F.level + 1) % FLEVELS.length); fSave(); }
+// d = 1 nächstes, d = -1 vorheriges Level
+function fNext(d) { var n = FLEVELS.length; fStore(); fLoadLevel((F.level + (d || 1) + n) % n); fSave(); }
 function fSave() { App.speichern(FKEY, FLEVELS, F, F.level); }
 function fLoad() {
   var n = App.laden(FKEY, OLD_FKEY, FLEVELS, F);
