@@ -47,10 +47,10 @@ App.level('funktionen', {
     for (var i = 0; i < 2; i++) {
       var ls = M.last[i], run2 = M.run === i;
       html += '<div class="mcol"><h3>' + maschine(names[i]) + '</h3><div class="mbox' + (run2 ? ' run' : '') + '">?</div>' +
-        '<div class="last">' + (ls ? ls.x + ' → <b>' + ls.y + '</b>' : '–') + '</div>' +
+        '<div class="last">' + (ls ? '<span class="rein">' + ls.x + '</span> → <b class="raus">' + ls.y + '</b>' : '–') + '</div>' +
         '<button class="feedbtn" data-act="feedm" data-i="' + i + '"' + dis + '>' +
         App.wahl({ de: 'Füttern', en: 'Feed', fi: 'Syötä', tr: 'Besle', fr: 'Donner', es: 'Dar', ja: '入れる', ar: 'أدخل' }) + '</button>' +
-        '<div class="log">' + M.logs[i].map(function (p) { return p.x + '→' + p.y; }).join(' · ') + '</div></div>';
+        '<div class="log">' + M.logs[i].map(function (p) { return '<span class="rein">' + p.x + '</span>→<span class="raus">' + p.y + '</span>'; }).join(' · ') + '</div></div>';
     }
     M.run = false;
     html += '</div>' + K.keypad('sel', M.sel);

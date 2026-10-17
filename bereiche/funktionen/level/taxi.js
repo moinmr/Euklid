@@ -44,7 +44,9 @@ App.level('funktionen', {
       App.wahl({ de: 'Preis', en: 'Price', fi: 'Hinta', tr: 'Fiyat', fr: 'Prix', es: 'Precio', ja: '料金', ar: 'السعر' }) + '</div>';
     for (var i = 0; i < M.rows.length; i++) {
       var cls = i < M.i ? 'good' : (i === M.i && !M.done ? 'cur' : '');
-      html += '<div class="' + cls + '">' + M.rows[i] + ' km</div><div class="' + cls + '">' + (i < M.i ? M.got[i] + ' €' : '?') + '</div>';
+      // Aktuelle Zeile: Strecke in der Farbe für „rein“, Preis in der Farbe für „raus“
+      var cur = cls === 'cur';
+      html += '<div class="' + cls + (cur ? ' rein' : '') + '">' + M.rows[i] + ' km</div><div class="' + cls + (cur ? ' raus' : '') + '">' + (i < M.i ? M.got[i] + ' €' : '?') + '</div>';
     }
     html += '</div>';
     if (!M.done) {
