@@ -745,7 +745,8 @@ function machClick(e) {
 
 App.funk = {
   ARROW: ARROW, rnd: rnd, shuffle: shuffle, options: options, keypad: keypad, optButtons: optButtons,
-  f: f, finish: finish, falsch: falsch, M: function () { return M; }
+  f: f, finish: finish, falsch: falsch, koordHTML: function (M) { return koordHTML(M); },
+  regelMit: function (r, t) { return regelMit(r, t); }, funktionHTML: function (r, n) { return funktionHTML(r, n); }, M: function () { return M; }
 };
 
 /* ---------- Einstiegs-Level: eine Maschine mit sichtbarer oder geheimer Regel ----------
