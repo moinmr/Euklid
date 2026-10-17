@@ -187,7 +187,7 @@ body {
   height: 44px; background: none; color: var(--ink); font-family: var(--font-ui); font-size: 16px;
   border: 1.2px solid rgba(56,41,26,.45); border-radius: 10px; cursor: pointer; touch-action: manipulation;
 }
-#langpick .chip-l { display: flex; align-items: center; justify-content: center; gap: 8px; }
+#langpick .chip-l { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; }
 #langpick .chip-l .kz { font-size: 12px; letter-spacing: .04em; opacity: .55; }
 #langpick .chip-l.on { border-color: var(--blue); color: var(--blue); border-width: 2px; }
 #langpick p { margin: 14px 0; font-size: 14px; text-align: center; opacity: .75; }
