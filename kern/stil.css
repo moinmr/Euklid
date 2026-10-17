@@ -286,5 +286,11 @@ body {
   background: #fbf4e2; box-shadow: 0 6px 20px rgba(56,41,26,.18), 0 1px 3px rgba(56,41,26,.12);
 }
 #fschreib .fb { margin: 0; text-align: center; font-size: 14.5px; line-height: 1.4; }
+#fschreib .schnitt { display: flex; justify-content: space-around; gap: 8px; }
+#fschreib .schnitt p { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 13px; opacity: .95; }
+#fschreib .schnitt bdi { font-size: 24px; }
+#fschreib .slot { width: 56px; height: 44px; margin: 0 2px; font-size: 22px; }
+#fschreib .zeile { display: flex; gap: 8px; }
+#fschreib .zeile .minus { flex: none; width: 64px; font-size: 26px; }
 /* Rechts-nach-links: der Knopf › bleibt rechts wie oben in der Leiste, nur der Text läuft von rechts */
 .rtl #fertig > span { direction: rtl; }

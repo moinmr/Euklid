@@ -30,7 +30,7 @@ function fHas(x, y) { return F.pts.some(function (p) { return p.x === x && p.y =
 function fcopy(sn) {
   return {
     pts: sn.pts.map(function (p) { return p.fest ? { x: p.x, y: p.y, gid: 0, fest: true } : { x: p.x, y: p.y, gid: p.gid }; }),
-    lines: sn.lines.map(function (l) { return { a: l.a.slice(), b: l.b.slice(), gid: l.gid }; }),
+    lines: sn.lines.map(function (l) { return l.fest ? { a: l.a.slice(), b: l.b.slice(), gid: 0, fest: true } : { a: l.a.slice(), b: l.b.slice(), gid: l.gid }; }),
     fn: !!sn.fn
   };
 }
@@ -50,6 +50,16 @@ function fFestPunkte() {
       return [{ x: x1, y: y1, gid: 0, fest: true }, { x: x2, y: y2, gid: 0, fest: true }];
     }
   }
+}
+// Level mit schnitt: vorgegebene Gerade durch (xs|0) und (0|ys), beide ganzzahlig und nicht 0
+function fFestLinie() {
+  var xs = 0, ys = 1 + rnd(3);
+  while (!xs) xs = rnd(9) - 4;
+  return { a: [xs * U, 0], b: [0, -ys * U], gid: 0, fest: true };
+}
+function fSchnitt() {
+  var l = F.lines.filter(function (l) { return l.fest; })[0];
+  return l ? { x: Math.round(l.a[0] / U), y: -Math.round(l.b[1] / U) } : null;
 }
 function fLattice(pos) { return V([Math.round(pos[0] / U) * U, Math.round(pos[1] / U) * U]); }
 function fSnap(pos) {
@@ -98,38 +108,26 @@ function buildFunk(ctx, ws) {
   if (x0 < 0 && x1 > 0) text(ctx, 'y', 13 * k, y0 + 122 * k, INK, 13);
 
   ctx.lineCap = 'round';
+  var lvz = FLEVELS[F.level], nurFeste = !!(lvz && (lvz.verbinden || lvz.schnitt));   // nur die vorgegebenen Punkte zeigen
   F.lines.forEach(function (l) {
-    var col = fLinieFalsch(l) ? C.RED : BLUE;   // falsche Linie rot
+    var col = l.fest ? INK : fLinieFalsch(l) ? C.RED : BLUE;   // vorgegebene Gerade dunkel, falsche Linie rot
     ctx.strokeStyle = col; extLine(ctx, l.a, l.b, 2.5 * ws * k);
-    ctx.fillStyle = col; dotAt(ctx, l.a, false); dotAt(ctx, l.b, false);
+    if (!nurFeste) { ctx.fillStyle = col; dotAt(ctx, l.a, false); dotAt(ctx, l.b, false); }
   });
   F.pts.forEach(function (p) {
     var col = fPunktFalsch(p) ? C.RED : BLUE;   // falscher Punkt rot
     ctx.fillStyle = col; dotAt(ctx, [p.x * U, -p.y * U], false, 5);
     text(ctx, '(' + fmt(p.x) + '|' + fmt(p.y) + ')', p.x * U + 24 * k, -p.y * U - 13 * k, col, 12);
   });
-  var lv = FLEVELS[F.level], q = lv && lv.verbinden && F.fn ? fRegel() : null;
-  if (q) {
-    // links oberhalb des oberen Punkts, auf hellem Schild, damit Achse und Zahlen nicht stören
-    var hp = F.pts.reduce(function (t, p) { return p.y > t.y ? p : t; }), tx = hp.x * U - 1.4 * U, ty = -hp.y * U - 0.8 * U, et = eqStr(q);
-    ctx.font = '400 ' + (15 * k) + 'px ' + C.FONT;
-    var tw = ctx.measureText(et).width + 14 * k, th = 24 * k;
-    ctx.fillStyle = 'rgba(251,244,226,0.95)';
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(tx - tw / 2, ty - th / 2, tw, th, 8 * k); else ctx.rect(tx - tw / 2, ty - th / 2, tw, th);
-    ctx.fill();
-    text(ctx, et, tx, ty, C.GREEN, 15);
-  }
   // Vorschau
   ctx.fillStyle = BLUE; ctx.strokeStyle = BLUE;
-  if (S.ls) dotAt(ctx, vp(S.ls), true);
+  if (S.ls && !nurFeste) dotAt(ctx, vp(S.ls), true);
   if (S.drawing && S.end) {
     var e = S.target ? vp(S.target) : S.end;
     if (S.tool === 'line' && S.lmode === 'end' && S.ls && Math.hypot(e[0] - S.ls.x, e[1] - S.ls.y) > 1) {
       ctx.globalAlpha = 0.55; extLine(ctx, vp(S.ls), e, 2 * ws * k); ctx.globalAlpha = 1;
     }
-    ctx.fillStyle = BLUE; dotAt(ctx, e, true);
-    if (S.target) mark(ctx, S.target);
+    if (!nurFeste) { ctx.fillStyle = BLUE; dotAt(ctx, e, true); if (S.target) mark(ctx, S.target); }
   }
 }
 
@@ -182,14 +180,22 @@ function drawTable(ctx) {
   ctx.restore();
 }
 
-function fTarget(pos) { return S.tool === 'point' ? fLattice(pos) : fSnap(pos); }
+function fTarget(pos) {
+  if (FLEVELS[F.level].verbinden) {
+    var g = fSnap(pos);
+    return g && F.pts.some(function (p) { return p.fest && p.x * U === g.x && -p.y * U === g.y; }) ? g : null;
+  }
+  return S.tool === 'point' ? fLattice(pos) : fSnap(pos);
+}
 function fDown(pos) {
+  if (FLEVELS[F.level].schnitt) return true;
   S.drawing = true; S.lmode = S.ls ? 'end' : 'start';
   S.end = [pos[0], pos[1]]; S.target = fTarget(pos);
   S.loupe = S.sp; render();
   return true;
 }
 function fMove(pos) {
+  if (FLEVELS[F.level].schnitt) return true;
   if (S.drawing) { S.end = [pos[0], pos[1]]; S.target = fTarget(pos); }
   S.loupe = S.sp; render();
   return true;
@@ -223,7 +229,7 @@ function fUp(pos) {
       S.ls = V(b);
     } else if (S.ls && Math.hypot(b[0] - S.ls.x, b[1] - S.ls.y) > 12 * S.k) {
       F.gid += 1;
-      if (FLEVELS[F.level].verbinden) { F.lines = []; F.fn = false; F.ein = ['', '']; F.slot = 0; F.fb = ''; }
+      if (FLEVELS[F.level].verbinden) F.lines = [];
       F.lines.push({ a: vp(S.ls), b: b, gid: F.gid });
       S.ls = null;
     }
@@ -303,8 +309,11 @@ function fCheck() {
   var ok;
   if (lv.verbinden) {
     var q = fRegel(), linie = !!q && F.lines.some(function (l) { return fLineOk(l, q); });
-    ok = linie && F.fn;
-    fSchreib(linie && !F.fn, F.lines.length && !linie ? LINIE_FALSCH : null);
+    ok = linie;
+    fSchreib(false, F.lines.length && !linie ? LINIE_FALSCH : null);
+  } else if (lv.schnitt) {
+    ok = F.fn;
+    fSchreib(!F.fn);
   } else {
     ok = fNeed(lv).every(function (r) { return fHas(r[0], r[1]); });
     if (lv.pts) {
@@ -352,8 +361,11 @@ function fLoadLevel(n, restore) {
   var lv = FLEVELS[n];
   if (lv.verbinden) {
     if (!F.pts.some(function (p) { return p.fest; })) F.pts = fFestPunkte();
-    // y = 0 knapp über der Eingabekarte, damit Punkte und Gerade frei bleiben
-    S.oy = S.h - (S.unten || 70) - 250;
+  }
+  if (lv.schnitt) {
+    if (!F.lines.some(function (l) { return l.fest; })) F.lines = [fFestLinie()];
+    // y = 0 knapp über der Eingabekarte, damit die Schnittpunkte frei bleiben
+    S.oy = S.h - (S.unten || 70) - 300;
   }
   // Nur die Knöpfe unten, die das Level braucht
   var wz = lv.werkzeuge || ['point', 'line', 'undo', 'clear', 'view'];
@@ -389,10 +401,24 @@ function fLoad() {
   if (n !== null) F.level = n;
 }
 
-// Eingabekarte unten: Funktion der Geraden selbst aufschreiben (Level mit verbinden)
+// Karte unten: Hinweise im Gitter, und im Level mit schnitt die Eingabe der zwei Schnittpunkte
 var PRUEFEN = { de: 'Prüfen', en: 'Check', fi: 'Tarkista', tr: 'Kontrol et', fr: 'Vérifier', es: 'Comprobar', ja: 'たしかめる', ar: 'تحقق' };
 var BEIDE = { de: 'Fülle beide Kästchen aus.', en: 'Fill in both boxes.', fi: 'Täytä molemmat laatikot.', tr: 'İki kutuyu da doldur.',
               fr: 'Remplis les deux cases.', es: 'Rellena las dos casillas.', ja: '2つの□をうめよう。', ar: 'املأ المربعين.' };
+var ACHSE = {
+  de: ['x-Achse', 'y-Achse'], en: ['x-axis', 'y-axis'], fi: ['x-akseli', 'y-akseli'], tr: ['x ekseni', 'y ekseni'],
+  fr: ['axe des x', 'axe des y'], es: ['eje x', 'eje y'], ja: ['x 軸', 'y 軸'], ar: ['محور x', 'محور y']
+};
+var SCHAU = [
+  { de: 'Nicht ganz. Schau genau, wo die Gerade die x-Achse kreuzt.', en: 'Not quite. Look closely where the line crosses the x-axis.',
+    fi: 'Ei aivan. Katso tarkasti, missä suora leikkaa x-akselin.', tr: 'Tam değil. Doğrunun x eksenini nerede kestiğine dikkatle bak.',
+    fr: 'Pas tout à fait. Regarde bien où la droite coupe l’axe des x.', es: 'Casi. Mira bien dónde corta la recta el eje x.',
+    ja: 'おしい。直線が x 軸と交わるところをよく見よう。', ar: 'ليس تمامًا. انظر جيدًا أين يقطع المستقيم محور x.' },
+  { de: 'Nicht ganz. Schau genau, wo die Gerade die y-Achse kreuzt.', en: 'Not quite. Look closely where the line crosses the y-axis.',
+    fi: 'Ei aivan. Katso tarkasti, missä suora leikkaa y-akselin.', tr: 'Tam değil. Doğrunun y eksenini nerede kestiğine dikkatle bak.',
+    fr: 'Pas tout à fait. Regarde bien où la droite coupe l’axe des y.', es: 'Casi. Mira bien dónde corta la recta el eje y.',
+    ja: 'おしい。直線が y 軸と交わるところをよく見よう。', ar: 'ليس تمامًا. انظر جيدًا أين يقطع المستقيم محور y.' }
+];
 var schreib = null;
 function fSchreib(zeigen, hinweis) {
   if (!schreib) return;
@@ -400,34 +426,28 @@ function fSchreib(zeigen, hinweis) {
   schreib.classList.toggle('hinweis', !zeigen && !!hinweis);
   if (!zeigen) { schreib.innerHTML = hinweis ? '<p class="fb">' + App.wahl(hinweis) + '</p>' : ''; return; }
   function slot(k) { return '<button class="slot' + (F.slot === k ? ' sel' : '') + '" data-act="slot" data-i="' + k + '">' + F.ein[k] + '</button>'; }
-  var keys = '';
+  var keys = '', t = App.wahl(ACHSE);
   for (var d = 0; d < 10; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + d + '</button>';
-  schreib.innerHTML = '<p class="schreib"><bdi dir="ltr">' + vn('y', 'raus') + ' = ' + slot(0) + '·' + vn('x', 'rein') + ' + ' + slot(1) + '</bdi></p>' +
-    '<div class="keys reihe">' + keys + '</div><button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button>' +
+  schreib.innerHTML =
+    '<div class="schnitt"><p><span>' + t[0] + '</span><bdi dir="ltr">(' + slot(0) + '|0)</bdi></p>' +
+    '<p><span>' + t[1] + '</span><bdi dir="ltr">(0|' + slot(1) + ')</bdi></p></div>' +
+    '<div class="keys reihe">' + keys + '</div>' +
+    '<div class="zeile"><button class="key minus" data-act="minus" aria-label="minus">−</button>' +
+    '<button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button></div>' +
     (F.fb ? '<p class="fb">' + App.wahl(F.fb) + '</p>' : '');
 }
 function schreibClick(e) {
   var b = e.target.closest ? e.target.closest('button') : null;
   if (!b) return;
-  var act = b.getAttribute('data-act');
+  var act = b.getAttribute('data-act'), v = F.ein[F.slot], neg = v.charAt(0) === '−';
   if (act === 'slot') F.slot = Number(b.getAttribute('data-i'));
-  else if (act === 'ziffer') { F.ein[F.slot] = b.getAttribute('data-n'); F.slot = 1; F.fb = ''; }
+  else if (act === 'ziffer') { F.ein[F.slot] = (neg ? '−' : '') + b.getAttribute('data-n'); F.slot = 1; F.fb = ''; }
+  else if (act === 'minus') { F.ein[F.slot] = neg ? v.slice(1) : '−' + v; F.fb = ''; }
   else if (act === 'pruefen') {
-    var q = fRegel(), m = Number(F.ein[0]), c = Number(F.ein[1]);
-    if (F.ein[0] === '' || F.ein[1] === '') F.fb = BEIDE;
-    else if (m === q.m && c === q.b) { F.fn = true; F.fb = ''; }
-    else {
-      var p = F.pts.filter(function (r) { return r.fest && m * r.x + c !== r.y; })[0] || F.pts[0];
-      var X = vn('x', 'rein') + ' = ' + fmt(p.x), w = fmt(m * p.x + c), Y = vn('y', 'raus') + ' = ' + fmt(p.y);
-      F.fb = { de: 'Nicht ganz. Mit deiner Funktion gibt ' + X + ' den Wert ' + w + ', der Punkt hat aber ' + Y + '.',
-               en: 'Not quite. With your function, ' + X + ' gives ' + w + ', but the point has ' + Y + '.',
-               fi: 'Ei aivan. Funktiollasi ' + X + ' antaa ' + w + ', mutta pisteessä ' + Y + '.',
-               tr: 'Tam değil. Senin fonksiyonunla ' + X + ' için ' + w + ' çıkıyor, ama noktada ' + Y + '.',
-               fr: 'Pas tout à fait. Avec ta fonction, ' + X + ' donne ' + w + ', mais le point a ' + Y + '.',
-               es: 'Casi. Con tu función, ' + X + ' da ' + w + ', pero el punto tiene ' + Y + '.',
-               ja: 'おしい。きみの関数だと ' + X + ' のとき ' + w + ' ですが、点は ' + Y + ' です。',
-               ar: 'ليس تمامًا. بدالتك يعطي ' + X + ' القيمة ' + w + '، لكن النقطة فيها ' + Y + '.' };
-    }
+    var z = fSchnitt(), w = F.ein.map(function (s) { return Number(s.replace('−', '-')); });
+    if (!/\d/.test(F.ein[0]) || !/\d/.test(F.ein[1])) F.fb = BEIDE;
+    else if (w[0] === z.x && w[1] === z.y) { F.fn = true; F.fb = ''; }
+    else F.fb = SCHAU[w[0] === z.x ? 1 : 0];
   } else return;
   fCheck();
   render();
