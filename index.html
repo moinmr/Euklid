@@ -198,14 +198,19 @@ var CM = 38;              // px pro cm
 var COMPASS_SNAP = true;
 var FONT = '"Jost", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 var TAU = Math.PI * 2;
-var STORE_KEY = 'euklid-fortschritt-v1';
+var STORE_KEY = 'euklid-fortschritt';
+var OLD_STORE_KEY = 'euklid-fortschritt-v1';   // alter Stand nach Position, wird einmal übernommen
+
+// Jedes Level hat eine feste Kennung (id). Der Fortschritt wird nach id gespeichert,
+// darum darf die Reihenfolge sich ändern. Eine id nie ändern, sonst ist der Stand dieses Levels weg.
+// Die Nummer im Titel ("Level 1: ...") ergibt sich aus der Position.
 
 var LEVELS = [
-  { kind: 'tri', title: 'Level 1: Gleichseitiges Dreieck',
+  { id: 'dreieck', kind: 'tri', title: 'Gleichseitiges Dreieck',
     task: 'Konstruiere über der Strecke AB ein gleichseitiges Dreieck. Benutze Zirkel und Linie.' },
-  { kind: 'hex', title: 'Level 2: Sechseck',
+  { id: 'sechseck', kind: 'hex', title: 'Sechseck',
     task: 'Konstruiere über der Strecke AB ein regelmäßiges Sechseck. Benutze Zirkel und Linie.' },
-  { kind: 'perp', title: 'Level 3: Mittelsenkrechte', y: 0.45,
+  { id: 'mittelsenkrechte', kind: 'perp', title: 'Mittelsenkrechte', y: 0.45,
     task: 'Konstruiere die Mittelsenkrechte der Strecke AB. Benutze Zirkel und Linie.' }
 ];
 
@@ -758,22 +763,72 @@ function storeCurrent() {
 }
 function saveProgress() {
   try {
-    var data = { solved: Array.from(S.solved).sort(), level: S.level || 0, solutions: S.solutions, work: {} };
-    Object.keys(S.work).forEach(function (k) { if (S.work[k]) data.work[k] = S.work[k]; });
-    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+    localStorage.setItem(STORE_KEY, JSON.stringify(packProgress(LEVELS, S, S.level || 0)));
   } catch (e) { /* Speichern darf nie stören */ }
 }
 function loadProgress() {
   try {
-    var raw = localStorage.getItem(STORE_KEY);
-    if (!raw) return;
-    var data = JSON.parse(raw);
-    S.solved = new Set((data.solved || []).map(Number).filter(function (k) { return k >= 0 && k < LEVELS.length; }));
-    S.solutions = data.solutions || {};
-    S.work = data.work || {};
-    var lv = Number(data.level || 0);
-    S.start_level = lv >= 0 && lv < LEVELS.length ? lv : 0;
+    var data = readProgress(STORE_KEY, OLD_STORE_KEY, LEVELS);
+    if (data) S.start_level = unpackProgress(LEVELS, data, S);
   } catch (e) { /* ignorieren */ }
+}
+
+/* ===================== Speichern nach Level-Kennung ===================== */
+// Im Speicher: { solved: [id], level: id, solutions: { id: Bild }, work: { id: Bild } }.
+// Im Programm (S, F) bleiben die Positionen als Schlüssel, umgerechnet wird nur beim Speichern und Laden.
+// Stände von Leveln, die es gerade nicht gibt, kommen in P.keep und werden mitgespeichert.
+function levelIndex(L, id) {
+  for (var i = 0; i < L.length; i++) if (L[i].id === id) return i;
+  return -1;
+}
+function packProgress(L, P, level) {
+  var keep = P.keep || { solved: [], solutions: {}, work: {} };
+  var d = { solved: keep.solved.slice(), level: L[level] ? L[level].id : null, solutions: {}, work: {} };
+  Array.from(P.solved).sort(function (a, b) { return a - b; }).forEach(function (i) {
+    if (L[i] && d.solved.indexOf(L[i].id) < 0) d.solved.push(L[i].id);
+  });
+  ['solutions', 'work'].forEach(function (f) {
+    Object.keys(keep[f]).forEach(function (id) { d[f][id] = keep[f][id]; });
+    Object.keys(P[f]).forEach(function (k) { if (P[f][k] && L[k]) d[f][L[k].id] = P[f][k]; });
+  });
+  return d;
+}
+function unpackProgress(L, d, P) {
+  P.solved = new Set(); P.solutions = {}; P.work = {};
+  P.keep = { solved: [], solutions: {}, work: {} };
+  (d.solved || []).forEach(function (id) {
+    var i = levelIndex(L, id);
+    if (i >= 0) P.solved.add(i); else P.keep.solved.push(id);
+  });
+  ['solutions', 'work'].forEach(function (f) {
+    var src = d[f] || {};
+    Object.keys(src).forEach(function (id) {
+      if (!src[id]) return;
+      var i = levelIndex(L, id);
+      if (i >= 0) P[f][i] = src[id]; else P.keep[f][id] = src[id];
+    });
+  });
+  return Math.max(0, levelIndex(L, d.level));
+}
+// Alter Stand (nach Position in der damaligen Reihenfolge, die der heutigen entspricht) in Kennungen umrechnen.
+function fromOldProgress(L, o) {
+  function id(k) { k = Number(k); return k >= 0 && k < L.length && k === Math.floor(k) ? L[k].id : null; }
+  var d = { solved: [], level: id(o.level || 0), solutions: {}, work: {} };
+  (o.solved || []).forEach(function (k) { var i = id(k); if (i && d.solved.indexOf(i) < 0) d.solved.push(i); });
+  ['solutions', 'work'].forEach(function (f) {
+    var src = o[f] || {};
+    Object.keys(src).forEach(function (k) { var i = id(k); if (i && src[k]) d[f][i] = src[k]; });
+  });
+  return d;
+}
+function readProgress(key, oldKey, L) {
+  var raw = localStorage.getItem(key);
+  if (raw) return JSON.parse(raw);
+  var old = localStorage.getItem(oldKey);
+  if (!old) return null;
+  var d = fromOldProgress(L, JSON.parse(old));
+  try { localStorage.setItem(key, JSON.stringify(d)); } catch (e) {}
+  return d;   // der alte Schlüssel bleibt als Sicherung liegen
 }
 
 /* ===================== Prüfen ===================== */
@@ -893,42 +948,43 @@ var U = 40;   // Pixel pro Einheit im Koordinatensystem
 var M = null;   // Zustand des aktuellen Maschinen-Levels
 function isMach(lv) { return !!lv.type; }
 var FLEVELS = [
-  { title: 'Level 1: Die Maschine', type: 'machine',
+  { id: 'maschine', title: 'Die Maschine', type: 'machine',
     task: 'Tippe auf eine Zahl. Sie fällt in die Maschine, und eine neue Zahl kommt heraus. Finde die Regel.',
     done: 'Richtig! Die Maschine rechnet immer nach derselben Regel.' },
-  { title: 'Level 2: Zwei Maschinen', type: 'broken',
+  { id: 'zwei-maschinen', title: 'Zwei Maschinen', type: 'broken',
     task: 'Eine Maschine ist kaputt. Füttere beide mit Zahlen, auch mehrmals mit derselben. Welche ist verlässlich?',
     done: 'Richtig! Eine Funktion gibt zu jeder Eingabe immer dasselbe aus.' },
-  { title: 'Level 3: Das Taxi', type: 'taxi',
+  { id: 'taxi', title: 'Das Taxi', type: 'taxi',
     task: function () { return 'Ein Taxi kostet ' + (M ? M.g : 3) + '\u00a0\u20ac Grundgebühr plus ' + (M ? M.p : 2) + '\u00a0\u20ac pro Kilometer. Was kostet jede Fahrt?'; },
     done: 'Richtig! Zu jeder Strecke gehört genau ein Preis. Das ist eine Funktion.' },
-  { title: 'Level 4: Punkte setzen',
+  { id: 'punkte', title: 'Punkte setzen',
     task: 'Setze A(3|2) und B(−2|4). Die erste Zahl geht nach rechts, die zweite nach oben. Minus heißt links oder unten.',
     done: 'Richtig! Der erste Wert ist die Position nach rechts, der zweite nach oben.',
     pts: [{ n: 'A', x: 3, y: 2 }, { n: 'B', x: -2, y: 4 }] },
-  { title: 'Level 5: Wertetabelle',
+  { id: 'wertetabelle', title: 'Wertetabelle',
     task: 'Zeichne y = x + 1. Rechne y für x = 0, 1, 2, 3, setze die Punkte und zieh die Gerade durch sie.',
     done: 'Richtig! Jeder Schritt nach rechts bringt die Gerade um 1 nach oben.',
     eq: { m: 1, b: 1 }, xs: [0, 1, 2, 3] },
-  { title: 'Level 6: Steigung',
+  { id: 'steigung', title: 'Steigung',
     task: 'Zeichne y = 2x. Pro Schritt nach rechts geht es um 2 nach oben. Setze die Punkte und zieh die Gerade.',
     done: 'Richtig! Die Steigung ist 2: Pro Schritt nach rechts geht es 2 nach oben.',
     eq: { m: 2, b: 0 }, xs: [0, 1, 2] },
-  { title: 'Level 7: y-Achsenabschnitt',
+  { id: 'achsenabschnitt', title: 'y-Achsenabschnitt',
     task: 'Zeichne y = x + 2. Die +2 sagt, wo die Gerade die y-Achse schneidet.',
     done: 'Richtig! Die +2 verschiebt die Gerade nach oben. Sie schneidet die y-Achse bei 2.',
     eq: { m: 1, b: 2 }, xs: [0, 1, 2] },
-  { title: 'Level 8: Steigung und Achsenabschnitt',
+  { id: 'steigung-achsenabschnitt', title: 'Steigung und Achsenabschnitt',
     task: 'Zeichne y = 2x − 1. Setze die Punkte für x = 0, 1, 2 und zieh die Gerade.',
     done: 'Richtig! Steigung 2, und die Gerade schneidet die y-Achse bei −1.',
     eq: { m: 2, b: -1 }, xs: [0, 1, 2] },
-  { title: 'Level 9: Negative Steigung',
+  { id: 'negative-steigung', title: 'Negative Steigung',
     task: 'Zeichne y = −x + 3. Setze die Punkte für x = 0, 1, 2, 3 und zieh die Gerade.',
     done: 'Richtig! Bei negativer Steigung geht die Gerade nach rechts nach unten.',
     eq: { m: -1, b: 3 }, xs: [0, 1, 2, 3] }
 ];
 var F = { level: 0, pts: [], lines: [], gid: 0, solved: new Set(), solutions: {}, work: {} };
-var FKEY = 'euklid-funk-v3';
+var FKEY = 'euklid-funk';
+var OLD_FKEY = 'euklid-funk-v3';   // alter Stand nach Position, wird einmal übernommen
 
 function fmt(n) { return n < 0 ? '−' + (-n) : String(n); }
 function eqStr(q) {
@@ -1166,18 +1222,13 @@ function fClear() {
 function fNext() { fStore(); fLoadLevel((F.level + 1) % FLEVELS.length); fSave(); }
 function fSave() {
   try {
-    localStorage.setItem(FKEY, JSON.stringify({ solved: Array.from(F.solved), level: F.level, solutions: F.solutions, work: F.work }));
+    localStorage.setItem(FKEY, JSON.stringify(packProgress(FLEVELS, F, F.level)));
   } catch (e) { /* ignorieren */ }
 }
 function fLoad() {
   try {
-    var raw = localStorage.getItem(FKEY);
-    if (!raw) return;
-    var d = JSON.parse(raw);
-    F.solved = new Set((d.solved || []).map(Number).filter(function (k) { return k >= 0 && k < FLEVELS.length; }));
-    F.solutions = d.solutions || {}; F.work = d.work || {};
-    var lv = Number(d.level || 0);
-    F.level = lv >= 0 && lv < FLEVELS.length ? lv : 0;
+    var d = readProgress(FKEY, OLD_FKEY, FLEVELS);
+    if (d) F.level = unpackProgress(FLEVELS, d, F);
   } catch (e) { /* ignorieren */ }
 }
 
@@ -1208,7 +1259,7 @@ function init() {
         : 'Level ' + (level + 1) + ' geschafft! Tippe auf die Treppe für das nächste Level.';
     } else {
       var b = document.createElement('b');
-      b.textContent = L[level].title + (sv.has(level) ? ' (schon gelöst)' : '');
+      b.textContent = 'Level ' + (level + 1) + ': ' + L[level].title + (sv.has(level) ? ' (schon gelöst)' : '');
       hud.appendChild(b);
       var tk = L[level].task;
       hud.appendChild(document.createTextNode(typeof tk === 'function' ? tk() : tk));
@@ -1505,7 +1556,8 @@ if (typeof document === 'undefined') {
   module.exports = { S: S, LEVELS: LEVELS, onDown: onDown, onMove: onMove, onUp: onUp, setTool: setTool,
     loadLevel: loadLevel, undo: undo, snapshot: snapshot, restoreSnap: restoreSnap, checkLevel: checkLevel,
     storeCurrent: storeCurrent, V: V, FLEVELS: FLEVELS, vertices: vertices, resetView: resetView,
-    F: F, fLoadLevel: fLoadLevel };
+    F: F, fLoadLevel: fLoadLevel, saveProgress: saveProgress, loadProgress: loadProgress,
+    fSave: fSave, fLoad: fLoad, packProgress: packProgress, unpackProgress: unpackProgress };
 } else {
   init();
 }
