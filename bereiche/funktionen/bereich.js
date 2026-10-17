@@ -323,7 +323,7 @@ App.funk = {
 
 /* ---------- Einstiegs-Level: eine Maschine mit sichtbarer oder geheimer Regel ----------
    App.funk.einstieg(c) baut start/html/click aus Bausteinen. c: id, text, regel() -> {m, b},
-   namen (null = noch keine, 'wechsel' = zufällig und in Runde 2 y rein/x raus, 'zufall', oder [rein, raus]),
+   namen (null = noch keine, 'zufall' = zufälliges Paar, auch y rein und x raus, oder [rein, raus]),
    geheim (Regel versteckt), einsetzen (in der Box steht nach dem Füttern die Zahl statt des Namens), fn (Funktion als Zeile), liste, tabelle, achsen, koord,
    frage ('wert' | 'punkt' | 'funktion'). Farben: Orange = rein, Lila = raus. */
 var PAARE = [['a', 'b'], ['x', 'y'], ['n', 'm'], ['t', 's']];
@@ -534,7 +534,7 @@ App.funk.einstieg = function (c) {
       M.max = Math.max(5, Math.ceil(f(M.r, 9) / 5) * 5);
       var pool = c.namen === 'zufall' ? PAARE.concat([['y', 'x']]) : PAARE;
       M.names = !c.namen ? [null, null] : Array.isArray(c.namen) ? c.namen.slice() : pool[rnd(pool.length)].slice();
-      M.round = 1; M.fed = []; M.last = null; M.q = null;
+      M.fed = []; M.last = null; M.q = null;
     },
     html: function (M) {
       var l = M.last, run = M.run, i = M.names[0], o = M.names[1], html = '', zeigen = !c.geheim || M.done;
@@ -556,28 +556,14 @@ App.funk.einstieg = function (c) {
       if (c.achsen) html += achsenHTML(M);
       if (c.koord) html += koordHTML(M);
       if (M.done) return html;
-      if (M.hinweis) {
-        // Runde 1 geschafft: grüne Karte unten, ohne ›, denn das Level geht hier weiter. Die Namen sind schon neu.
-        html += '<div class="zwischen" aria-live="polite"><span>' + App.wahl({
-          de: 'Richtig! Jetzt bekommen die Zahlen neue Namen. Die Maschine bleibt gleich.',
-          en: 'Right! Now the numbers get new names. The machine stays the same.',
-          fi: 'Oikein! Nyt luvut saavat uudet nimet. Kone pysyy samana.',
-          tr: 'Doğru! Şimdi sayılar yeni adlar alıyor. Makine aynı kalıyor.',
-          fr: 'Bravo ! Maintenant les nombres changent de nom. La machine reste la même.',
-          es: '¡Correcto! Ahora los números tienen nombres nuevos. La máquina es la misma.',
-          ja: '正解！今度は数に新しい名前がつきます。マシンは同じです。',
-          ar: 'صحيح! الآن تأخذ الأعداد أسماء جديدة. الآلة نفسها لم تتغير.'
-        }) + '</span></div>';
-      }
       return html + (M.q === null ? '<p class="hint">' + feedHint(3 - M.fed.length) + '</p>' : frageHTML(M, c));
     },
     click: function (M, act, d) {
-      M.hinweis = false;
       if (act === 'feed') {
         var p = { x: d.n, y: f(M.r, d.n) };
         if (!hatX(M, p.x)) M.fed.push(p);
         M.last = p; M.run = true;
-        if (M.round === 1) M.fb = '';
+        M.fb = '';
         if ((M.q === null && M.fed.length >= 3) || (M.q === d.n && c.frage !== 'funktion')) frageStellen(M, c);
         return;
       }
@@ -587,12 +573,6 @@ App.funk.einstieg = function (c) {
       if (richtig === null) return;
       if (!richtig) { M.wrong++; M.fb = falschFB(M, c); return; }
       if (c.frage !== 'funktion') { M.fed.push({ x: M.q, y: M.ans }); M.last = M.fed[M.fed.length - 1]; }
-      if (c.namen === 'wechsel' && M.round === 1) {
-        // Runde 2: gleiche Maschine, neue Namen. Immer y für die Eingabe und x für die Ausgabe.
-        M.round = 2; M.names = ['y', 'x']; M.fb = ''; M.last = null; M.hinweis = true;
-        frageStellen(M, c);
-        return;
-      }
       // Immer von links nach rechts lesen, auch in Arabisch: rein → raus
       M.fb = c.frage === 'funktion' ? funktionHTML(M.r, M.names)
         : '<bdi dir="ltr">' + (M.names[0] ? gleich(M.names[0], 'rein', M.q) + ' → ' + gleich(M.names[1], 'raus', M.ans)

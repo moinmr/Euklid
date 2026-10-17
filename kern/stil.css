@@ -81,24 +81,13 @@ body {
   color: var(--green); font-size: 14.5px; line-height: 1.4; cursor: pointer;
 }
 #fertig > span { flex: 1; }
-#fertig .weiter, .zwischen .weiter {
+#fertig .weiter {
   flex: none; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
   background: none; border: 1.6px solid var(--green); border-radius: 50%; color: var(--green); cursor: pointer; padding: 0;
 }
-#fertig .weiter svg, .zwischen .weiter svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-#fertig .weiter:active, .zwischen .weiter:active { opacity: .5; }
+#fertig .weiter svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#fertig .weiter:active { opacity: .5; }
 .geschafft #mach { padding-bottom: calc(170px + env(safe-area-inset-bottom, 0px)); }
-/* Zwischenstand in einer Maschine (z. B. nach Runde 1): gleiche Karte unten, › geht weiter */
-.zwischen {
-  position: fixed; z-index: 3; left: 0; right: 0; bottom: calc(var(--unten, 70px) + 8px);
-  width: min(520px, calc(100% - 32px)) !important; margin: 0 auto; box-sizing: border-box;
-  display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 10px 16px; border-radius: 14px;
-  background: #fbf4e2; box-shadow: 0 6px 20px rgba(56,41,26,.18), 0 1px 3px rgba(56,41,26,.12);
-  color: var(--green); font-size: 14.5px; line-height: 1.4;
-}
-.zwischen > span { flex: 1; }
-#mach:has(.zwischen) { padding-bottom: calc(170px + env(safe-area-inset-bottom, 0px)); }
-.rtl .zwischen > span { direction: rtl; }
 .feld:empty::before { content: '\200b'; }
 [hidden] { display: none !important; }
 #home {

@@ -1,6 +1,5 @@
-// Level: Zahlen mit Namen. Eingabe und Ausgabe bekommen Variablen-Namen (zufällig, z. B. a und b),
-// die Funktion steht als Zeile da, jede Fütterung kommt in eine Tabelle.
-// Runde 1: Frage mit den ersten Namen. Runde 2: gleiche Maschine, neue Namen (y rein, x raus).
+// Level: Zahlen mit Namen. Eingabe und Ausgabe bekommen Variablen-Namen (zufällig, z. B. a und b, auch y rein und x raus),
+// die Funktion steht als Zeile da, jede Fütterung kommt in die volle Tabelle. Eine Frage, dann geschafft.
 App.level('funktionen', App.funk.einstieg({
   id: 'variablen',
   text: {
@@ -30,5 +29,5 @@ App.level('funktionen', App.funk.einstieg({
           done: 'صحيح! الاسم لا يهم. المهم هو أي عدد يدخل وأي عدد يخرج.' }
   },
   regel: function () { return { m: 1 + App.funk.rnd(2), b: 1 + App.funk.rnd(4) }; },
-  namen: 'wechsel', einsetzen: true, fn: true, tabelle: 'voll', frage: 'wert'
+  namen: 'zufall', einsetzen: true, fn: true, tabelle: 'voll', frage: 'wert'
 }));
