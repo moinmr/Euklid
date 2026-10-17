@@ -397,7 +397,7 @@ function achsenHTML(M) {
 // Koordinatensystem: Eingabe nach rechts, Ausgabe nach oben. Jede Fütterung wird ein Punkt,
 // beim neuesten zeigen gestrichelte Linien den Weg: erst nach rechts, dann nach oben.
 function koordHTML(M) {
-  var W = 340, H = 180, L = 30, R = 24, T = 24, B = 24, xmax = 10, ymax = M.max, i;
+  var W = 340, H = 181, L = 30, R = 24, T = 28, B = 24, xmax = 10, ymax = M.max, i;
   function px(v) { return L + v * (W - L - R) / xmax; }
   function py(v) { return H - B - v * (H - B - T) / ymax; }
   var s = '<svg class="koord" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
@@ -408,7 +408,7 @@ function koordHTML(M) {
   for (i = 0; i < xmax; i++) s += '<text class="zl" x="' + px(i) + '" y="' + (py(0) + 16) + '">' + i + '</text>';
   for (i = 5; i <= ymax; i += 5) s += '<text class="zl ry" x="' + (px(0) - 6) + '" y="' + (py(i) + 4) + '">' + i + '</text>';
   s += '<text class="an rein" x="' + (px(xmax) + 6) + '" y="' + (py(0) + 6) + '">' + M.names[0] + '</text>';
-  s += '<text class="an raus" x="' + (px(0) + 7) + '" y="' + (py(ymax) - 2) + '">' + M.names[1] + '</text>';
+  s += '<text class="an raus mitte" x="' + px(0) + '" y="' + (py(ymax) - 9) + '">' + M.names[1] + '</text>';
   M.fed.forEach(function (p) {
     if (M.last && p.x === M.last.x) {
       s += '<line class="weg rein" x1="' + px(p.x) + '" y1="' + py(0) + '" x2="' + px(p.x) + '" y2="' + py(p.y) + '"/>';
