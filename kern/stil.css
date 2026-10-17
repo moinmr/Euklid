@@ -141,15 +141,15 @@ body {
 @keyframes shake { 0%, 100% { transform: none; } 25% { transform: rotate(-3deg) scale(1.05); } 75% { transform: rotate(3deg) scale(1.05); } }
 @media (prefers-reduced-motion: reduce) { .mbox.run, .chip.out.on { animation: none; } }
 /* Sprach-Umschalter: in der Symbolleiste und oben rechts auf der Startseite */
-.ib.lang { font-family: var(--font-ui); font-size: 14px; font-weight: 400; letter-spacing: .04em; }
+.ib.lang { font-family: var(--font-ui); font-size: 14px; font-weight: 400; letter-spacing: .04em; gap: 6px; }
+#bar .ib.lang { width: 64px; }
+.lang span.on, #h-lang span.on { color: var(--blue); }
 #h-lang {
   position: absolute; z-index: 1;
   top: max(14px, env(safe-area-inset-top, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
   height: 40px; padding: 0 12px; background: none; color: var(--ink);
-  font-family: var(--font-ui); font-size: 15px; letter-spacing: .04em;
+  font-family: var(--font-ui); font-size: 15px; letter-spacing: .04em; word-spacing: 4px;
   border: 1.2px solid var(--ink); border-radius: 10px; cursor: pointer; touch-action: manipulation;
 }
-#h-lang span { opacity: .4; }
-#h-lang span.on { opacity: 1; }
 #h-lang:active { opacity: .5; }
 #h-lang:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
