@@ -306,5 +306,5 @@ body {
 #fschreib .zeilen { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 17px; }
 #fschreib .zeilen p { margin: 0; }
 /* Erklärtext in einem Maschinen-Level: ruhig, nicht fett */
-#mach .erkl { text-align: center; font-size: 16.5px; line-height: 1.45; margin: 0; }
-.rtl #mach .erkl { direction: rtl; }
+#mach .erkl, #fschreib .erkl { text-align: center; font-size: 16.5px; line-height: 1.45; margin: 0; }
+.rtl #mach .erkl, .rtl #fschreib .erkl { direction: rtl; }
