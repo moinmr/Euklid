@@ -29,5 +29,5 @@ App.level('funktionen', App.funk.einstieg({
           done: 'صحيح! يُظهر المحوران إلى أين ينتقل كل عدد.' }
   },
   regel: function () { return { m: 1 + App.funk.rnd(2), b: 1 + App.funk.rnd(4) }; },
-  namen: 'zufall', fn: true, achsen: true, frage: 'wert'
+  namen: 'zufall', einsetzen: true, fn: true, achsen: true, frage: 'wert'
 }));

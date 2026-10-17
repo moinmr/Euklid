@@ -29,5 +29,5 @@ App.level('funktionen', App.funk.einstieg({
           done: 'صحيح! كل زوج من x وy نقطة. كل النقاط معًا تُظهر الدالة.' }
   },
   regel: function () { return { m: 1 + App.funk.rnd(2), b: 1 + App.funk.rnd(4) }; },
-  namen: ['x', 'y'], fn: true, koord: true, frage: 'punkt'
+  namen: ['x', 'y'], einsetzen: true, fn: true, koord: true, frage: 'punkt'
 }));

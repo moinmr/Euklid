@@ -276,7 +276,7 @@ function options(correct, cands) {
 function keypad(act, sel) {
   var s = '';
   for (var d = 0; d < 10; d++) {
-    s += '<button class="key' + (sel === d ? ' sel' : '') + '" data-act="' + act + '" data-n="' + d + '"' + (M.done ? ' disabled' : '') + '>' + d + '</button>';
+    s += '<button class="key' + (sel === d ? ' sel' : '') + '" data-act="' + act + '" data-n="' + d + '"' + (M.done || M.zwischen ? ' disabled' : '') + '>' + d + '</button>';
   }
   return '<div class="keys">' + s + '</div>';
 }
@@ -308,7 +308,7 @@ function machShow(n) {
   if (isM) { machStart(n); mach.scrollTop = 0; }
 }
 function machClick(e) {
-  var b = e.target.closest ? e.target.closest('button') : null;
+  var b = e.target.closest ? e.target.closest('[data-act]') : null;
   if (!b || !M || M.done || !isMach(FLEVELS[F.level])) return;
   FLEVELS[F.level].click(M, b.getAttribute('data-act'), {
     n: Number(b.getAttribute('data-n')), v: Number(b.getAttribute('data-v')), i: Number(b.getAttribute('data-i'))
@@ -342,7 +342,21 @@ function funktionHTML(r, names) { return '<bdi>' + vn(names[1], 'raus') + ' = ' 
 function hatX(M, x) { return M.fed.some(function (p) { return p.x === x; }); }
 
 // Tabelle quer: oben die Eingaben, unten die Ausgaben, nach Eingabe sortiert
-function tabelleHTML(M) {
+// voll: alle Eingaben 0 bis 9 stehen schon da (blass), die Ausgaben füllen sich beim Füttern; die gefragte bekommt ein ?
+function tabelleHTML(M, voll) {
+  if (voll) {
+    var o1 = '<tr><th>' + vn(M.names[0], 'rein') + '</th>', u1 = '<tr><th>' + vn(M.names[1], 'raus') + '</th>';
+    for (var x = 0; x < 10; x++) {
+      var p = M.fed.filter(function (q) { return q.x === x; })[0], cls = [];
+      if (!p) cls.push('leer');
+      if (M.last && M.last.x === x) cls.push('neu');
+      if (M.q === x) cls.push('frage');
+      var k = cls.length ? ' class="' + cls.join(' ') + '"' : '';
+      o1 += '<td' + k + '>' + x + '</td>';
+      u1 += '<td' + k + '>' + (p ? p.y : M.q === x ? '?' : '') + '</td>';
+    }
+    return '<table class="vtab voll">' + o1 + '</tr>' + u1 + '</tr></table>';
+  }
   var reihe = M.fed.slice().sort(function (a, b) { return a.x - b.x; });
   var oben = '<tr><th>' + vn(M.names[0], 'rein') + '</th>', unten = '<tr><th>' + vn(M.names[1], 'raus') + '</th>';
   reihe.forEach(function (p) {
@@ -538,13 +552,33 @@ App.funk.einstieg = function (c) {
       if (c.liste) html += '<div class="hist">' + M.fed.map(function (p) {
         return '<span><span class="rein">' + p.x + '</span> → <span class="raus">' + p.y + '</span></span>';
       }).join('') + '</div>';
-      if (c.tabelle) html += tabelleHTML(M);
+      if (c.tabelle) html += tabelleHTML(M, c.tabelle === 'voll');
       if (c.achsen) html += achsenHTML(M);
       if (c.koord) html += koordHTML(M);
       if (M.done) return html;
+      if (M.zwischen) {
+        // Runde 1 geschafft: Karte unten wie beim Lösen, › startet Runde 2 mit neuen Namen
+        return html + '<div class="zwischen" data-act="runde2" role="button"><span>' + App.wahl({
+          de: 'Richtig! Jetzt bekommen die Zahlen neue Namen. Die Maschine bleibt gleich.',
+          en: 'Right! Now the numbers get new names. The machine stays the same.',
+          fi: 'Oikein! Nyt luvut saavat uudet nimet. Kone pysyy samana.',
+          tr: 'Doğru! Şimdi sayılar yeni adlar alıyor. Makine aynı kalıyor.',
+          fr: 'Bravo ! Maintenant les nombres changent de nom. La machine reste la même.',
+          es: '¡Correcto! Ahora los números tienen nombres nuevos. La máquina es la misma.',
+          ja: '正解！今度は数に新しい名前がつきます。マシンは同じです。',
+          ar: 'صحيح! الآن تأخذ الأعداد أسماء جديدة. الآلة نفسها لم تتغير.'
+        }) + '</span><button class="weiter" data-act="runde2" aria-label="›"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5L16 12L9.5 18.5"/></svg></button></div>';
+      }
       return html + (M.q === null ? '<p class="hint">' + feedHint(3 - M.fed.length) + '</p>' : frageHTML(M, c));
     },
     click: function (M, act, d) {
+      if (act === 'runde2') {
+        // Gleiche Maschine, neue Namen. Immer y für die Eingabe und x für die Ausgabe.
+        M.zwischen = false; M.round = 2; M.names = ['y', 'x']; M.fb = ''; M.last = null;
+        frageStellen(M, c);
+        return;
+      }
+      if (M.zwischen) return;
       if (act === 'feed') {
         var p = { x: d.n, y: f(M.r, d.n) };
         if (!hatX(M, p.x)) M.fed.push(p);
@@ -559,16 +593,7 @@ App.funk.einstieg = function (c) {
       if (richtig === null) return;
       if (!richtig) { M.wrong++; M.fb = falschFB(M, c); return; }
       if (c.frage !== 'funktion') { M.fed.push({ x: M.q, y: M.ans }); M.last = M.fed[M.fed.length - 1]; }
-      if (c.namen === 'wechsel' && M.round === 1) {
-        // Runde 2: gleiche Maschine, neue Namen. Immer y für die Eingabe und x für die Ausgabe.
-        M.round = 2; M.names = ['y', 'x'];
-        M.fb = { de: 'Richtig! Neue Namen, gleiche Maschine.', en: 'Right! New names, same machine.',
-                 fi: 'Oikein! Uudet nimet, sama kone.', tr: 'Doğru! Yeni adlar, aynı makine.',
-                 fr: 'Bravo ! Nouveaux noms, même machine.', es: '¡Correcto! Nombres nuevos, la misma máquina.',
-                 ja: '正解！名前は新しく、マシンは同じです。', ar: 'صحيح! أسماء جديدة، والآلة نفسها.' };
-        frageStellen(M, c);
-        return;
-      }
+      if (c.namen === 'wechsel' && M.round === 1) { M.zwischen = true; M.q = null; M.fb = ''; return; }
       // Immer von links nach rechts lesen, auch in Arabisch: rein → raus
       M.fb = c.frage === 'funktion' ? funktionHTML(M.r, M.names)
         : '<bdi dir="ltr">' + (M.names[0] ? gleich(M.names[0], 'rein', M.q) + ' → ' + gleich(M.names[1], 'raus', M.ans)

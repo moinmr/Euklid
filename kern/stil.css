@@ -76,13 +76,24 @@ body {
 /* Geschafft: Karte unten über der Werkzeugleiste, Text und › nebeneinander */
 #hud.ok { top: auto; display: flex; align-items: center; gap: 12px; text-align: start; padding: 10px 10px 10px 16px; }
 #hud.ok > span { flex: 1; }
-#hud .weiter {
+#hud .weiter, .zwischen .weiter {
   flex: none; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
   background: none; border: 1.6px solid var(--green); border-radius: 50%; color: var(--green); cursor: pointer; padding: 0;
 }
-#hud .weiter svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-#hud .weiter:active { opacity: .5; }
+#hud .weiter svg, .zwischen .weiter svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#hud .weiter:active, .zwischen .weiter:active { opacity: .5; }
 .geschafft #mach { padding-bottom: calc(170px + env(safe-area-inset-bottom, 0px)); }
+/* Zwischenstand in einer Maschine (z. B. nach Runde 1): gleiche Karte unten, › geht weiter */
+.zwischen {
+  position: fixed; z-index: 3; left: 0; right: 0; bottom: calc(var(--unten, 70px) + 8px);
+  width: min(520px, calc(100% - 32px)) !important; margin: 0 auto; box-sizing: border-box;
+  display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; border-radius: 14px;
+  background: #fbf4e2; box-shadow: 0 6px 20px rgba(56,41,26,.18), 0 1px 3px rgba(56,41,26,.12);
+  color: var(--green); font-size: 14.5px; line-height: 1.4; cursor: pointer;
+}
+.zwischen > span { flex: 1; }
+#mach:has(.zwischen) { padding-bottom: calc(170px + env(safe-area-inset-bottom, 0px)); }
+.rtl .zwischen > span { direction: rtl; }
 .feld:empty::before { content: '\200b'; }
 [hidden] { display: none !important; }
 #home {
@@ -170,6 +181,11 @@ body {
 .vk > .vn { position: absolute; left: 0; right: 0; top: -30px; text-align: center; font-size: 24px; line-height: 1; }
 #mach > .vflow { margin-top: 22px; }
 #mach > .vtab { width: auto; }
+#mach > .vtab.voll { width: 100%; table-layout: fixed; font-size: 16px; }
+.vtab.voll th, .vtab.voll td { min-width: 0; padding: 5px 0; }
+.vtab.voll th { width: 34px; padding-right: 4px; }
+.vtab.voll td.leer { opacity: .35; }
+.vtab.voll tr:last-child td.frage { opacity: 1; font-weight: 700; }
 .mbox.regel { width: auto; min-width: 92px; padding: 0 10px; font-size: 21px; white-space: nowrap; }
 .fn { margin: 0; text-align: center; font-size: 20px; direction: ltr; }
 .vtab { border-collapse: collapse; margin: 0 auto; width: auto; max-width: 100%; direction: ltr; font-size: 18px; }

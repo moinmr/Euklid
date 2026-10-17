@@ -30,5 +30,5 @@ App.level('funktionen', App.funk.einstieg({
           done: 'صحيح! الاسم لا يهم. المهم هو أي عدد يدخل وأي عدد يخرج.' }
   },
   regel: function () { return { m: 1 + App.funk.rnd(2), b: 1 + App.funk.rnd(4) }; },
-  namen: 'wechsel', einsetzen: true, fn: true, tabelle: true, frage: 'wert'
+  namen: 'wechsel', einsetzen: true, fn: true, tabelle: 'voll', frage: 'wert'
 }));

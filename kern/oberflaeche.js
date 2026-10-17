@@ -122,7 +122,11 @@ App.start = function () {
 
   // Höhe der unteren Leiste, damit z. B. die Wertetabelle darüber steht
   var bottom = document.getElementById('bottom');
-  new ResizeObserver(function () { S.unten = bottom.offsetHeight; App.render(); }).observe(bottom);
+  new ResizeObserver(function () {
+    S.unten = bottom.offsetHeight;
+    document.documentElement.style.setProperty('--unten', S.unten + 'px');
+    App.render();
+  }).observe(bottom);
   bind('h-lang', App.wechsleSprache);
 
   // ----- Startseite -----
