@@ -181,7 +181,9 @@ body {
 .achsen .vb { stroke: var(--ink); stroke-width: 1.2; opacity: .35; }
 .achsen .vb.neu { opacity: .9; stroke-width: 1.6; }
 .achsen .pr, .koord .pr { fill: var(--rein); } .achsen .pa, .koord .pa { fill: var(--raus); }
-.platz { font-size: 1.15em; }
+/* Kästchen für die Zahl in der Regel (Level ohne Namen); die gefütterte Zahl steht darin */
+.feld { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 1.2em; height: 1.2em; padding: 0 .12em; line-height: 1;
+  vertical-align: -.08em; border: 2px solid currentColor; border-radius: 3px; text-align: center; }
 .koord { display: block; flex: none; direction: ltr; height: auto; }
 .koord .gl { stroke: var(--ink); stroke-width: 1; opacity: .12; }
 .koord .ax { stroke: var(--ink); stroke-width: 1.3; }
