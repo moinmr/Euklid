@@ -12,8 +12,6 @@ App.ordnung.funktionen = [
   'punkte-verbinden',
   'achsen-schnitt',
   'steigung-ablesen',
-  'steigung',
-  'achsenabschnitt',
   'steigung-achsenabschnitt',
   'negative-steigung'
 ];
