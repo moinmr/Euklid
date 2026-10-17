@@ -183,7 +183,7 @@ App.start = function () {
     [0, 1].forEach(function (i) {
       html += '<h3>' + T(i ? 'sprache2' : 'sprache1') + '</h3><div class="chips">' + App.sprachen.map(function (s) {
         return '<button class="chip-l' + (paar[i] === s.code ? ' on' : '') + '" data-i="' + i + '" data-c="' + s.code + '" lang="' + s.code + '"' +
-          (s.rtl ? ' dir="rtl"' : '') + '>' + s.name + '</button>';
+          '><span' + (s.rtl ? ' dir="rtl"' : '') + '>' + s.name + '</span><span class="kz">' + s.kurz + '</span></button>';
       }).join('') + '</div>';
     });
     html += '<p>' + T('paarHinweis') + '</p><button class="done">' + T('fertig') + '</button>';
