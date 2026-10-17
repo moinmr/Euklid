@@ -130,6 +130,8 @@ body {
 @keyframes shake { 0%, 100% { transform: none; } 25% { transform: rotate(-3deg) scale(1.05); } 75% { transform: rotate(3deg) scale(1.05); } }
 @media (prefers-reduced-motion: reduce) { .mbox.run, .chip.out.on { animation: none; } }
 /* Sprach-Umschalter: in der Symbolleiste und oben rechts auf der Startseite */
+/* Level-Nummer zwischen den Pfeilen ‹ 2 › */
+.lvnum { flex: none; min-width: 16px; align-self: center; text-align: center; font-size: 17px; color: var(--ink); pointer-events: none; }
 .ib.lang { font-family: var(--font-ui); font-size: 14px; font-weight: 400; letter-spacing: .04em; }
 #h-lang {
   position: absolute; z-index: 1;

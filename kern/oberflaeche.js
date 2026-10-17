@@ -38,7 +38,11 @@ App.start = function () {
       hud.appendChild(document.createTextNode(App.txt(lv, 'task')));
     }
   }
-  S.onLevel = function (level, done) { last = [level, done]; showHud(level, done); };
+  S.onLevel = function (level, done) {
+    last = [level, done];
+    document.getElementById('lv-num').textContent = level === null ? '' : level + 1;
+    showHud(level, done);
+  };
 
   function resize() {
     var r = canvas.getBoundingClientRect();
