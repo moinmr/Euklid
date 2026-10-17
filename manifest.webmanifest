@@ -1,0 +1,17 @@
+{
+  "name": "Euklid",
+  "short_name": "Euklid",
+  "description": "Geometrie konstruieren mit Linie und Zirkel",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "portrait",
+  "background_color": "#f5ebd1",
+  "theme_color": "#f5ebd1",
+  "lang": "de",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
