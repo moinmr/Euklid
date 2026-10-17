@@ -56,10 +56,16 @@ body {
 .ib.on { color: var(--blue); }
 .ib:active { opacity: .45; }
 .ib:focus-visible { outline: 2px solid var(--blue); outline-offset: -4px; border-radius: 8px; }
-/* Aufgabentext oben unter der Leiste, mit der Sprechblase ein- und ausblendbar */
+/* Aufgabentext als schwebende Karte unter der oberen Leiste. Sie liegt über dem Inhalt,
+   darum verschiebt sich beim Ein- und Ausblenden nichts. Tippen auf die Karte blendet sie aus. */
 #hud {
-  max-width: 560px; margin: 0 auto; padding: 2px 0 0;
+  position: absolute; z-index: 3; left: 0; right: 0;
+  top: calc(env(safe-area-inset-top, 0px) + 58px);
+  width: min(520px, calc(100% - 32px)); margin: 0 auto; box-sizing: border-box;
+  padding: 10px 14px; border-radius: 14px;
+  background: #fbf4e2; box-shadow: 0 6px 20px rgba(56,41,26,.18), 0 1px 3px rgba(56,41,26,.12);
   text-align: center; font-size: 14.5px; font-weight: 400; line-height: 1.4; letter-spacing: .01em; text-wrap: balance;
+  cursor: pointer;
 }
 #hud:empty { display: none; }
 #hud b { display: block; font-weight: 700; }
@@ -93,10 +99,13 @@ body {
 #mach {
   position: absolute; inset: 0; z-index: 1; background: var(--parchment);
   overflow-y: auto; -webkit-overflow-scrolling: touch;
-  padding: calc(var(--oben, 84px) + 6px) max(16px, env(safe-area-inset-right, 0px)) calc(90px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  padding: calc(70px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(80px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
   display: flex; flex-direction: column; align-items: center; gap: 20px;
 }
 #mach > * { width: 100%; max-width: 440px; }
+/* Inhalt senkrecht mittig, damit die Aufgaben-Karte oben möglichst wenig verdeckt */
+#mach > :first-child { margin-top: auto; }
+#mach > :last-child { margin-bottom: auto; }
 .flow { display: flex; align-items: center; justify-content: center; gap: 8px; }
 .chip { min-width: 74px; text-align: center; font-size: 26px; font-weight: 400; color: var(--ink); opacity: .45; }
 .chip.on { opacity: 1; }

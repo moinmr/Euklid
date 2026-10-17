@@ -101,13 +101,11 @@ App.start = function () {
   bind('b-lang', App.wechsleSprache);
   bind('b-task', function () { taskOpen = !taskOpen; if (last) showHud(last[0], last[1]); });
 
-  // Wie weit die obere Leiste mit Aufgabentext reicht: für die Wertetabelle und die Maschinen-Fläche
-  var top = document.getElementById('top');
-  new ResizeObserver(function () {
-    S.oben = Math.round(top.getBoundingClientRect().bottom) - 14;
-    document.getElementById('app').style.setProperty('--oben', S.oben + 'px');
-    App.render();
-  }).observe(top);
+  hud.addEventListener('click', function () { if (taskOpen && last && !last[1]) { taskOpen = false; showHud(last[0], last[1]); } });
+
+  // Höhe der unteren Leiste, damit z. B. die Wertetabelle darüber steht
+  var bottom = document.getElementById('bottom');
+  new ResizeObserver(function () { S.unten = bottom.offsetHeight; App.render(); }).observe(bottom);
   bind('h-lang', App.wechsleSprache);
 
   // ----- Startseite -----

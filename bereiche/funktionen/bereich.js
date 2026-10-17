@@ -102,7 +102,7 @@ function buildFunk(ctx, ws) {
   }
 }
 
-// Tabelle bzw. Punkteliste oben rechts (Bildschirmkoordinaten)
+// Tabelle bzw. Punkteliste unten rechts über den Werkzeugen (Bildschirmkoordinaten)
 function drawTable(ctx) {
   var lv = FLEVELS[F.level];
   if (!lv || isMach(lv)) return;
@@ -121,7 +121,7 @@ function drawTable(ctx) {
     });
   }
   var rh = 22, bw = lv.eq ? 96 : 124, bh = 34 + (head ? rh : 0) + rows.length * rh + 6;
-  var bx = S.w - bw - 12, by = (S.oben || 72) + 4, y = by + 27;   // unter der oberen Leiste und dem Aufgabentext
+  var bx = S.w - bw - 12, by = S.h - (S.unten || 70) - bh - 4, y = by + 27;
   ctx.save();
   ctx.fillStyle = 'rgba(245,235,209,0.94)';
   ctx.strokeStyle = 'rgba(56,41,26,0.45)'; ctx.lineWidth = 1;
