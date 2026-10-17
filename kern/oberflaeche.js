@@ -31,30 +31,36 @@ App.start = function () {
     if (hud.firstChild) platz = Math.max(platz, Math.ceil(hud.getBoundingClientRect().bottom) + 14);
     if (platz) document.getElementById('mach').style.setProperty('--karte', platz + 'px');
   }
+  // Geschafft-Karte unten, mit › direkt daneben: weiter mit dem Daumen. Der Aufgabentext oben bleibt stehen.
+  var fertig = document.createElement('div');
+  fertig.id = 'fertig'; fertig.hidden = true; fertig.setAttribute('aria-live', 'polite');
+  hud.parentNode.insertBefore(fertig, hud.nextSibling);
+  fertig.addEventListener('click', function () { var a = App.aktiv(); if (a) a.next(1); });
+  function showFertig(level, done) {
+    var a = App.aktiv();
+    fertig.hidden = !(done && a && level !== null);
+    document.body.classList.toggle('geschafft', !fertig.hidden);
+    fertig.textContent = '';
+    if (fertig.hidden) return;
+    fertig.style.bottom = ((S.unten || 70) + 8) + 'px';
+    var L = a.levels(), sv = a.solved(), t = document.createElement('span'), w = document.createElement('button');
+    t.textContent = sv.size === L.length ? T('alle') : App.txt(L[level], 'done') || T('geschafft', level + 1);
+    w.className = 'weiter'; w.setAttribute('aria-label', T('naechstes'));
+    w.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5L16 12L9.5 18.5"/></svg>';
+    fertig.appendChild(t); fertig.appendChild(w);
+  }
   function showHud(level, done) {
     var a = App.aktiv();
-    hud.classList.toggle('ok', !!done);
-    document.body.classList.toggle('geschafft', !!done && level !== null);
-    hud.style.bottom = done ? ((S.unten || 70) + 8) + 'px' : '';
+    showFertig(level, done);
     hud.textContent = '';
     document.getElementById('b-task').classList.toggle('on', taskOpen);
-    if (level === null || !a) return;
-    if (!done && !taskOpen) return;
+    if (level === null || !a || !taskOpen) return;
     var L = a.levels(), sv = a.solved(), lv = L[level];
-    if (done) {
-      // Geschafft-Karte unten, mit › direkt daneben: weiter mit dem Daumen
-      var fertig = App.txt(lv, 'done'), t = document.createElement('span'), w = document.createElement('button');
-      t.textContent = sv.size === L.length ? T('alle') : fertig || T('geschafft', level + 1);
-      w.className = 'weiter'; w.setAttribute('aria-label', T('naechstes'));
-      w.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5L16 12L9.5 18.5"/></svg>';
-      hud.appendChild(t); hud.appendChild(w);
-    } else {
-      var b = document.createElement('b');
-      b.textContent = T('level') + ' ' + (level + 1) + ': ' + App.txt(lv, 'title') + (sv.has(level) ? T('schon') : '');
-      hud.appendChild(b);
-      hud.appendChild(document.createTextNode(App.txt(lv, 'task')));
-    }
-    if (!done) merkePlatz(level);
+    var b = document.createElement('b');
+    b.textContent = T('level') + ' ' + (level + 1) + ': ' + App.txt(lv, 'title') + (sv.has(level) && !done ? T('schon') : '');
+    hud.appendChild(b);
+    hud.appendChild(document.createTextNode(App.txt(lv, 'task')));
+    merkePlatz(level);
   }
   S.onLevel = function (level, done) {
     var key = S.mode + ':' + level;
@@ -114,11 +120,7 @@ App.start = function () {
   bind('b-lang', App.wechsleSprache);
   bind('b-task', function () { taskOpen = !taskOpen; if (last) showHud(last[0], last[1]); });
 
-  hud.addEventListener('click', function () {
-    if (!last) return;
-    if (last[1]) { var a = App.aktiv(); if (a) a.next(1); }   // Geschafft-Karte: ganz antippbar, geht weiter
-    else if (taskOpen) { taskOpen = false; showHud(last[0], last[1]); }
-  });
+  hud.addEventListener('click', function () { if (taskOpen && last) { taskOpen = false; showHud(last[0], last[1]); } });
 
   // Höhe der unteren Leiste, damit z. B. die Wertetabelle darüber steht
   var bottom = document.getElementById('bottom');

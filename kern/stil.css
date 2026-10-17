@@ -72,16 +72,21 @@ body {
 }
 #hud:empty { display: none; }
 #hud b { display: block; font-weight: 700; }
-#hud.ok { color: var(--green); font-weight: 400; }
-/* Geschafft: Karte unten über der Werkzeugleiste, Text und › nebeneinander */
-#hud.ok { top: auto; display: flex; align-items: center; gap: 12px; text-align: start; padding: 10px 10px 10px 16px; }
-#hud.ok > span { flex: 1; }
-#hud .weiter, .zwischen .weiter {
+/* Geschafft: eigene Karte unten über der Werkzeugleiste, Text und › nebeneinander; der Aufgabentext oben bleibt */
+#fertig {
+  position: absolute; z-index: 3; left: 0; right: 0;
+  width: min(520px, calc(100% - 32px)); margin: 0 auto; box-sizing: border-box;
+  display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; border-radius: 14px;
+  background: #fbf4e2; box-shadow: 0 6px 20px rgba(56,41,26,.18), 0 1px 3px rgba(56,41,26,.12);
+  color: var(--green); font-size: 14.5px; line-height: 1.4; cursor: pointer;
+}
+#fertig > span { flex: 1; }
+#fertig .weiter, .zwischen .weiter {
   flex: none; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
   background: none; border: 1.6px solid var(--green); border-radius: 50%; color: var(--green); cursor: pointer; padding: 0;
 }
-#hud .weiter svg, .zwischen .weiter svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-#hud .weiter:active, .zwischen .weiter:active { opacity: .5; }
+#fertig .weiter svg, .zwischen .weiter svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#fertig .weiter:active, .zwischen .weiter:active { opacity: .5; }
 .geschafft #mach { padding-bottom: calc(170px + env(safe-area-inset-bottom, 0px)); }
 /* Zwischenstand in einer Maschine (z. B. nach Runde 1): gleiche Karte unten, › geht weiter */
 .zwischen {
@@ -273,5 +278,4 @@ body {
 /* Lange Antworten (z. B. "A ist verlässlich") dürfen umbrechen, ohne aus dem Knopf zu ragen */
 .opt { height: auto; min-height: 52px; line-height: 1.2; padding: 6px 8px; }
 /* Rechts-nach-links: der Knopf › bleibt rechts wie oben in der Leiste, nur der Text läuft von rechts */
-.rtl #hud.ok { direction: ltr; }
-.rtl #hud.ok > span { direction: rtl; }
+.rtl #fertig > span { direction: rtl; }
