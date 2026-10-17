@@ -5,7 +5,19 @@ App.level('euklid', {
     de: { title: 'Sechseck',
           task: 'Konstruiere über der Strecke AB ein regelmäßiges Sechseck. Benutze Zirkel und Linie.' },
     en: { title: 'Hexagon',
-          task: 'Construct a regular hexagon on the segment AB. Use the compass and the line.' }
+          task: 'Construct a regular hexagon on the segment AB. Use the compass and the line.' },
+    fi: { title: 'Kuusikulmio',
+          task: 'Piirrä janalle AB säännöllinen kuusikulmio. Käytä harppia ja viivaa.' },
+    tr: { title: 'Altıgen',
+          task: 'AB doğru parçası üzerine düzgün bir altıgen çiz. Pergel ve çizgiyi kullan.' },
+    fr: { title: 'Hexagone',
+          task: 'Construis un hexagone régulier sur le segment AB. Utilise le compas et la ligne.' },
+    es: { title: 'Hexágono',
+          task: 'Construye un hexágono regular sobre el segmento AB. Usa el compás y la línea.' },
+    ja: { title: '六角形',
+          task: '線分ABの上に正六角形を作図しましょう。コンパスと線を使います。' },
+    ar: { title: 'سداسي',
+          task: 'أنشئ سداسيًا منتظمًا على القطعة AB. استخدم الفرجار والخط.' }
   },
   pruefen: function (A, B, s, tol) {
     var E = App.euklid, vp = App.vp, unit = App.unit;

@@ -169,15 +169,36 @@ App.start = function () {
   // ----- Sprache -----
   function sprachKnopf() {
     var cur = App.sprache();
-    // Beide Sprachen, die aktuelle in Blau
-    var html = App.sprachen.map(function (s) {
-      return '<span' + (s.code === cur ? ' class="on"' : '') + '>' + s.kurz + '</span>';
+    // Die zwei gewählten Sprachen, die aktuelle in Blau
+    var html = App.paar().map(function (c) {
+      return '<span' + (c === cur ? ' class="on"' : '') + '>' + App.info(c).kurz + '</span>';
     }).join(' ');
     document.getElementById('b-lang').innerHTML = html;
     document.getElementById('h-lang').innerHTML = html;
   }
+  // Auswahl: Sprache 1 und Sprache 2 aus allen Sprachen
+  var pick = document.getElementById('langpick'), sheet = pick.querySelector('.sheet');
+  function auswahl() {
+    var paar = App.paar(), html = '<h2>' + T('sprachen') + '</h2>';
+    [0, 1].forEach(function (i) {
+      html += '<h3>' + T(i ? 'sprache2' : 'sprache1') + '</h3><div class="chips">' + App.sprachen.map(function (s) {
+        return '<button class="chip-l' + (paar[i] === s.code ? ' on' : '') + '" data-i="' + i + '" data-c="' + s.code + '" lang="' + s.code + '"' +
+          (s.rtl ? ' dir="rtl"' : '') + '>' + s.name + '</button>';
+      }).join('') + '</div>';
+    });
+    html += '<p>' + T('paarHinweis') + '</p><button class="done">' + T('fertig') + '</button>';
+    sheet.innerHTML = html;
+  }
+  bind('h-set', function () { auswahl(); pick.hidden = false; });
+  pick.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (e.target === pick || (b && b.classList.contains('done'))) { pick.hidden = true; return; }
+    if (b && b.getAttribute('data-c')) { App.setzePaar(Number(b.getAttribute('data-i')), b.getAttribute('data-c')); auswahl(); }
+  });
+
   function texte() {
     document.documentElement.lang = App.sprache();
+    document.documentElement.classList.toggle('rtl', App.rtl());
     Array.prototype.forEach.call(document.querySelectorAll('[data-aria]'), function (el) {
       el.setAttribute('aria-label', T(el.getAttribute('data-aria')));
     });

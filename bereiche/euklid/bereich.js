@@ -422,7 +422,7 @@ function checkLevel() {
 
 App.bereich({
   id: 'euklid',
-  name: { de: 'Euklid', en: 'Euclid' },
+  name: { de: 'Euklid', en: 'Euclid', fi: 'Eukleides', tr: 'Öklid', fr: 'Euclide', es: 'Euclides', ja: 'ユークリッド', ar: 'إقليدس' },
   icon: '<svg viewBox="0 0 40 44"><path d="M6 36H34L20 11.8Z"/><path d="M8.44 8.11A28 28 0 0 1 28.94 19.94M31.56 8.11A28 28 0 0 0 11.06 19.94"/></svg>',
   werkzeuge: ['line', 'compass', 'move', 'cut'],
   init: function () { LEVELS = App.levelListe('euklid'); loadProgress(); },

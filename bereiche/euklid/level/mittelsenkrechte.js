@@ -6,7 +6,19 @@ App.level('euklid', {
     de: { title: 'Mittelsenkrechte',
           task: 'Konstruiere die Mittelsenkrechte der Strecke AB. Benutze Zirkel und Linie.' },
     en: { title: 'Perpendicular bisector',
-          task: 'Construct the perpendicular bisector of the segment AB. Use the compass and the line.' }
+          task: 'Construct the perpendicular bisector of the segment AB. Use the compass and the line.' },
+    fi: { title: 'Keskinormaali',
+          task: 'Piirrä janan AB keskinormaali. Käytä harppia ja viivaa.' },
+    tr: { title: 'Orta dikme',
+          task: 'AB doğru parçasının orta dikmesini çiz. Pergel ve çizgiyi kullan.' },
+    fr: { title: 'Médiatrice',
+          task: 'Construis la médiatrice du segment AB. Utilise le compas et la ligne.' },
+    es: { title: 'Mediatriz',
+          task: 'Construye la mediatriz del segmento AB. Usa el compás y la línea.' },
+    ja: { title: '垂直二等分線',
+          task: '線分ABの垂直二等分線を作図しましょう。コンパスと線を使います。' },
+    ar: { title: 'المنصف العمودي',
+          task: 'أنشئ المنصف العمودي للقطعة AB. استخدم الفرجار والخط.' }
   },
   pruefen: function (A, B, s, tol) {
     var S = App.S, arcHas = App.euklid.arcHas;

@@ -162,3 +162,33 @@ body {
 }
 #h-lang:active { opacity: .5; }
 #h-lang:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+/* Zahnrad oben links auf der Startseite und die Sprachauswahl */
+#h-set {
+  position: absolute; z-index: 1;
+  top: max(14px, env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px));
+  width: 40px; height: 40px; padding: 0; background: none; border: 0; color: var(--ink); cursor: pointer; touch-action: manipulation;
+}
+#h-set svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; }
+#h-set:active { opacity: .5; }
+#langpick {
+  position: absolute; inset: 0; z-index: 8; background: rgba(56,41,26,.25);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+#langpick .sheet {
+  width: 100%; max-width: 420px; max-height: 100%; overflow-y: auto; box-sizing: border-box;
+  background: #fbf4e2; border-radius: 16px; padding: 18px 16px;
+  box-shadow: 0 10px 30px rgba(56,41,26,.25);
+}
+#langpick h2 { margin: 0 0 6px; font-size: 22px; font-weight: 400; text-align: center; }
+#langpick h3 { margin: 14px 0 8px; font-size: 15px; font-weight: 700; }
+#langpick .chips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+#langpick .chip-l, #langpick .done {
+  height: 44px; background: none; color: var(--ink); font-family: var(--font-ui); font-size: 16px;
+  border: 1.2px solid rgba(56,41,26,.45); border-radius: 10px; cursor: pointer; touch-action: manipulation;
+}
+#langpick .chip-l.on { border-color: var(--blue); color: var(--blue); border-width: 2px; }
+#langpick p { margin: 14px 0; font-size: 14px; text-align: center; opacity: .75; }
+#langpick .done { width: 100%; border-color: var(--ink); }
+#langpick button:active { opacity: .5; }
+/* Von rechts nach links (Arabisch): nur die Texte, die Leisten und das Bild bleiben, wie sie sind */
+.rtl #hud, .rtl #mach .hint, .rtl #mach .q, .rtl #mach .fb, .rtl #mach .mcol h3, .rtl .area .t, .rtl #home h1, .rtl #home .sub, .rtl #langpick .sheet { direction: rtl; }

@@ -48,11 +48,14 @@
     </div>
   </div>
   <div id="home">
+    <button id="h-set" data-aria="sprachen"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.8V5.3M12 18.7V21.2M2.8 12H5.3M18.7 12H21.2M5.5 5.5L7.3 7.3M16.7 16.7L18.5 18.5M5.5 18.5L7.3 16.7M16.7 7.3L18.5 5.5"/><circle cx="12" cy="12" r="6.3"/></svg></button>
     <button id="h-lang" data-aria="sprache"></button>
     <h1 data-t="mathe"></h1>
     <p class="sub" data-t="waehle"></p>
     <div id="areas"></div>
   </div>
+  <!-- Auswahl der zwei Sprachen, geöffnet mit dem Zahnrad auf der Startseite -->
+  <div id="langpick" hidden role="dialog" data-aria="sprachen"><div class="sheet"></div></div>
 </div>
 
 <script src="kern/dateien.js"></script>

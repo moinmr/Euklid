@@ -16,7 +16,7 @@ Lern-App für Kinder, gebaut als Web-App aus mehreren kleinen Dateien (ohne Buil
 - Hosting: GitHub Pages, Repository `moinmr/euklid` (öffentlich), Adresse `https://moinmr.github.io/euklid/`.
 - Dateien im Repository: siehe "Aufbau" unten, dazu `manifest.webmanifest` (Anzeige `standalone`, Hochformat), `sw.js` (Service Worker), `icon-192.png`, `icon-512.png`.
 - Installation: In Chrome die Adresse öffnen, dann "App installieren". Änderungen am Manifest greifen nur nach Deinstallieren und Neuinstallieren.
-- Fortschritt liegt im Browser (localStorage), nur auf diesem Gerät. Schlüssel: `euklid-fortschritt` (Euklid), `euklid-funk` (Funktionen), `mathe-sprache` (gewählte Sprache). Die alten Stände aus `euklid-fortschritt-v1` und `euklid-funk-v3` werden beim ersten Start einmal übernommen.
+- Fortschritt liegt im Browser (localStorage), nur auf diesem Gerät. Schlüssel: `euklid-fortschritt` (Euklid), `euklid-funk` (Funktionen), `mathe-sprache` (aktuelle Sprache), `mathe-sprachpaar` (die zwei gewählten Sprachen). Die alten Stände aus `euklid-fortschritt-v1` und `euklid-funk-v3` werden beim ersten Start einmal übernommen.
 
 ## Aufbau
 
@@ -38,7 +38,7 @@ bereiche/<bereich>/level/<id>.js   ein Level pro Datei, mit Texten in beiden Spr
 - Neues Level: Datei `level/<id>.js` anlegen (`App.level('<bereich>', { id, text: { de: {...}, en: {...} }, ... })`) und die Kennung in `reihenfolge.js` eintragen. Sonst nichts.
 - Umsortieren: nur `reihenfolge.js` ändern.
 - Neuer Bereich: Ordner `bereiche/<id>/` mit `bereich.js` (`App.bereich({ id, name, icon, werkzeuge, init, levels, solved, open, draw, down, move, up, check, undo, clear, next, persist })`), `reihenfolge.js` und `level/`, dann die Kennung in `bereiche/liste.js` eintragen. Eigener Speicher-Schlüssel, z. B. `mathe-<id>`.
-- Sprachen: in `kern/sprache.js` (`App.sprachen`). Texte stehen als `{ de: ..., en: ... }`; fehlt eine Sprache, springt Deutsch ein. Umschalter oben rechts auf der Startseite und rechts in der Symbolleiste, die Wahl wird gemerkt.
+- Sprachen: alle in `kern/sprache.js` (`App.sprachen`: Deutsch, Englisch, Finnisch, Türkisch, Französisch, Spanisch, Japanisch, Arabisch). Mit dem Zahnrad oben links auf der Startseite wählt man Sprache 1 und Sprache 2; der Knopf DE EN (aktuelle in Blau) wechselt nur zwischen diesen zwei. Gespeichert unter `mathe-sprachpaar` und `mathe-sprache`. Texte stehen als `{ de: ..., en: ..., fi: ... }`; fehlt eine Sprache, springt Deutsch ein. Neue Level und neue Texte immer in allen Sprachen anlegen. Arabisch (`rtl: true`): nur Texte laufen von rechts nach links, Leisten und Zeichnung bleiben.
 - Offline: Der Service Worker liest die Dateiliste aus `kern/dateien.js`, `bereiche/liste.js` und den `reihenfolge.js`. Ändert sich eine dieser Dateien, installiert er sich neu und speichert alles. Eine neue Kern-Datei muss in `kern/dateien.js` eingetragen werden.
 
 ## Hängt eine alte Version

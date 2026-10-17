@@ -7,7 +7,25 @@ App.level('funktionen', {
           done: 'Richtig! Eine Funktion gibt zu jeder Eingabe immer dasselbe aus.' },
     en: { title: 'Two machines',
           task: 'One machine is broken. Feed both with numbers, also with the same number more than once. Which one is reliable?',
-          done: 'Right! A function always gives the same output for each input.' }
+          done: 'Right! A function always gives the same output for each input.' },
+    fi: { title: 'Kaksi konetta',
+          task: 'Yksi kone on rikki. Syötä molempiin lukuja, myös samaa lukua monta kertaa. Kumpi on luotettava?',
+          done: 'Oikein! Funktio antaa jokaisella syötteellä aina saman tuloksen.' },
+    tr: { title: 'İki makine',
+          task: 'Makinelerden biri bozuk. İkisine de sayılar ver, aynı sayıyı birkaç kez de. Hangisi güvenilir?',
+          done: 'Doğru! Bir fonksiyon her girdi için hep aynı çıktıyı verir.' },
+    fr: { title: 'Deux machines',
+          task: 'Une machine est en panne. Donne des nombres aux deux, plusieurs fois le même aussi. Laquelle est fiable ?',
+          done: 'Bravo ! Une fonction donne toujours la même sortie pour chaque entrée.' },
+    es: { title: 'Dos máquinas',
+          task: 'Una máquina está rota. Dale números a las dos, también el mismo varias veces. ¿Cuál es fiable?',
+          done: '¡Correcto! Una función siempre da la misma salida para cada entrada.' },
+    ja: { title: '2つのマシン',
+          task: '1つのマシンはこわれています。両方に数を入れてみよう。同じ数を何回か入れてもいいよ。信頼できるのはどっち？',
+          done: '正解！関数は、同じ入力にはいつも同じ出力を返します。' },
+    ar: { title: 'آلتان',
+          task: 'إحدى الآلتين معطلة. أدخل أعدادًا في كلتيهما، وأدخل العدد نفسه أكثر من مرة. أيهما يمكن الاعتماد عليها؟',
+          done: 'صحيح! الدالة تعطي دائمًا الناتج نفسه لكل مدخل.' }
   },
   start: function (M) {
     var rnd = App.funk.rnd;
@@ -18,19 +36,29 @@ App.level('funktionen', {
   },
   html: function (M) {
     var K = App.funk, names = ['A', 'B'], html = '<div class="cols">', dis = M.done ? ' disabled' : '';
+    function maschine(nm) {
+      return App.wahl({ de: 'Maschine ' + nm, en: 'Machine ' + nm, fi: 'Kone ' + nm, tr: 'Makine ' + nm, fr: 'Machine ' + nm,
+        es: 'Máquina ' + nm, ja: 'マシン' + nm, ar: 'الآلة ' + nm });
+    }
+    function verlaesslich(nm) {
+      return App.wahl({ de: nm + ' ist verlässlich', en: nm + ' is reliable', fi: nm + ' on luotettava', tr: nm + ' güvenilir',
+        fr: nm + ' est fiable', es: nm + ' es fiable', ja: nm + 'が信頼できる', ar: 'الآلة ' + nm + ' موثوقة' });
+    }
     for (var i = 0; i < 2; i++) {
       var ls = M.last[i], run2 = M.run === i;
-      html += '<div class="mcol"><h3>' + App.wahl({ de: 'Maschine ', en: 'Machine ' }) + names[i] + '</h3><div class="mbox' + (run2 ? ' run' : '') + '">?</div>' +
+      html += '<div class="mcol"><h3>' + maschine(names[i]) + '</h3><div class="mbox' + (run2 ? ' run' : '') + '">?</div>' +
         '<div class="last">' + (ls ? ls.x + ' → <b>' + ls.y + '</b>' : '–') + '</div>' +
-        '<button class="feedbtn" data-act="feedm" data-i="' + i + '"' + dis + '>' + App.wahl({ de: 'Füttern', en: 'Feed' }) + '</button>' +
+        '<button class="feedbtn" data-act="feedm" data-i="' + i + '"' + dis + '>' +
+        App.wahl({ de: 'Füttern', en: 'Feed', fi: 'Syötä', tr: 'Besle', fr: 'Donner', es: 'Dar', ja: '入れる', ar: 'أدخل' }) + '</button>' +
         '<div class="log">' + M.logs[i].map(function (p) { return p.x + '→' + p.y; }).join(' · ') + '</div></div>';
     }
     M.run = false;
     html += '</div>' + K.keypad('sel', M.sel);
-    html += '<p class="hint">' + App.wahl({ de: 'Wähle eine Zahl und füttere damit eine Maschine.', en: 'Pick a number and feed it to a machine.' }) + '</p>';
-    var rel = App.wahl({ de: ' ist verlässlich', en: ' is reliable' });
-    html += '<div class="opts"><button class="opt" data-act="rel" data-i="0"' + dis + '>A' + rel + '</button>' +
-      '<button class="opt" data-act="rel" data-i="1"' + dis + '>B' + rel + '</button></div>';
+    html += '<p class="hint">' + App.wahl({ de: 'Wähle eine Zahl und füttere damit eine Maschine.', en: 'Pick a number and feed it to a machine.',
+      fi: 'Valitse luku ja syötä se koneeseen.', tr: 'Bir sayı seç ve bir makineye ver.', fr: 'Choisis un nombre et donne-le à une machine.',
+      es: 'Elige un número y dáselo a una máquina.', ja: '数を選んで、マシンに入れよう。', ar: 'اختر عددًا وأدخله في إحدى الآلتين.' }) + '</p>';
+    html += '<div class="opts"><button class="opt" data-act="rel" data-i="0"' + dis + '>' + verlaesslich('A') + '</button>' +
+      '<button class="opt" data-act="rel" data-i="1"' + dis + '>' + verlaesslich('B') + '</button></div>';
     return html;
   },
   click: function (M, act, d) {
@@ -52,18 +80,36 @@ App.level('funktionen', {
       });
       if (!tested) {
         M.fb = { de: 'Teste erst beide Maschinen: Füttere jede mindestens zweimal mit derselben Zahl.',
-                 en: 'Test both machines first: feed each one the same number at least twice.' };
+                 en: 'Test both machines first: feed each one the same number at least twice.',
+                 fi: 'Testaa ensin molemmat koneet: syötä kumpaankin sama luku vähintään kahdesti.',
+                 tr: 'Önce iki makineyi de dene: her birine aynı sayıyı en az iki kez ver.',
+                 fr: 'Teste d’abord les deux machines : donne à chacune le même nombre au moins deux fois.',
+                 es: 'Primero prueba las dos máquinas: dale a cada una el mismo número al menos dos veces.',
+                 ja: 'まず両方のマシンをためそう。それぞれに同じ数を2回以上入れてね。',
+                 ar: 'اختبر الآلتين أولًا: أدخل في كل منهما العدد نفسه مرتين على الأقل.' };
       } else if (i === 1 - M.bad) {
         var bx = null;
         M.logs[M.bad].forEach(function (p) { if (bx === null && M.logs[M.bad].some(function (q) { return q.x === p.x && q.y !== p.y; })) bx = p.x; });
-        var outs = M.logs[M.bad].filter(function (p) { return p.x === bx; }).map(function (p) { return p.y; });
+        var o = M.logs[M.bad].filter(function (p) { return p.x === bx; }).map(function (p) { return p.y; }).slice(0, 2);
         var nm = M.bad ? 'B' : 'A';
-        M.fb = { de: 'Richtig! Maschine ' + nm + ' gibt bei ' + bx + ' mal ' + outs.slice(0, 2).join(' und ') + ' aus.',
-                 en: 'Right! For ' + bx + ', machine ' + nm + ' gives ' + outs.slice(0, 2).join(' and ') + '.' };
+        M.fb = { de: 'Richtig! Maschine ' + nm + ' gibt bei ' + bx + ' mal ' + o.join(' und ') + ' aus.',
+                 en: 'Right! For ' + bx + ', machine ' + nm + ' gives ' + o.join(' and ') + '.',
+                 fi: 'Oikein! Kone ' + nm + ' antaa luvulla ' + bx + ' välillä ' + o.join(' ja ') + '.',
+                 tr: 'Doğru! ' + nm + ' makinesi ' + bx + ' için ' + o.join(' ve ') + ' veriyor.',
+                 fr: 'Bravo ! Pour ' + bx + ', la machine ' + nm + ' donne ' + o.join(' et ') + '.',
+                 es: '¡Correcto! Con ' + bx + ', la máquina ' + nm + ' da ' + o.join(' y ') + '.',
+                 ja: '正解！マシン' + nm + 'は' + bx + 'に対して' + o.join('と') + 'を出します。',
+                 ar: 'صحيح! الآلة ' + nm + ' تعطي عند ' + bx + ' القيمتين ' + o.join(' و') + '.' };
         App.funk.finish();
       } else {
         M.fb = { de: 'Nein. Schau, welche Maschine bei derselben Zahl verschiedene Ergebnisse liefert.',
-                 en: 'No. Look for the machine that gives different results for the same number.' };
+                 en: 'No. Look for the machine that gives different results for the same number.',
+                 fi: 'Ei. Katso, kumpi kone antaa samalla luvulla eri tuloksia.',
+                 tr: 'Hayır. Aynı sayı için farklı sonuç veren makineye bak.',
+                 fr: 'Non. Cherche la machine qui donne des résultats différents pour le même nombre.',
+                 es: 'No. Busca la máquina que da resultados distintos con el mismo número.',
+                 ja: 'ちがいます。同じ数で違う結果を出すマシンをさがそう。',
+                 ar: 'لا. ابحث عن الآلة التي تعطي نتائج مختلفة للعدد نفسه.' };
       }
     }
   }

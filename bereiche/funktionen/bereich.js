@@ -114,7 +114,7 @@ function drawTable(ctx) {
       return { a: fmt(x), b: ok ? fmt(y) : '?', ok: ok };
     });
   } else {
-    title = App.wahl({ de: 'Punkte', en: 'Points' });
+    title = App.wahl({ de: 'Punkte', en: 'Points', fi: 'Pisteet', tr: 'Noktalar', fr: 'Points', es: 'Puntos', ja: '点', ar: 'النقاط' });
     rows = lv.pts.map(function (p) {
       var ok = fHas(p.x, p.y);
       return { a: p.n + '(' + fmt(p.x) + '|' + fmt(p.y) + ')', b: ok ? '✓' : '', ok: ok, wide: true };
@@ -323,7 +323,7 @@ App.funk = {
 
 App.bereich({
   id: 'funktionen',
-  name: { de: 'Funktionen', en: 'Functions' },
+  name: { de: 'Funktionen', en: 'Functions', fi: 'Funktiot', tr: 'Fonksiyonlar', fr: 'Fonctions', es: 'Funciones', ja: '関数', ar: 'الدوال' },
   icon: '<svg viewBox="0 0 40 44"><path d="M6 6V38H38M10 33C18 32 25 22 34 9"/></svg>',
   werkzeuge: ['point', 'line'],
   drehen: false,   // Koordinatensystem bleibt gerade
