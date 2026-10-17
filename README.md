@@ -79,8 +79,8 @@ Leitidee: Der Schüler erlebt zuerst, dann bekommt es einen Namen, dann wird es 
 | 5 | Koordinatensystem | Wie Level 3 und 4, nur sind die drei Paare Punkte im Koordinatensystem (x nach rechts, y nach oben). Namen stehen in den Kästchen rein und raus. |
 | 6 | Funktion aufschreiben | Regel geheim, drei Paare in der vollen Tabelle; man schreibt die Funktion selbst in zwei Kästchen und drückt Prüfen (Kennung `maschine`). |
 | 7 | Taxipreis | Alltag: Grundgebühr plus Preis pro km (zufällig). Tabelle für 1, 2, 3, 5 km, falsche Antworten sind typische Denkfehler. |
-| 8 | Punkte setzen | Koordinaten. A(3\|2), B(−2\|4). Keine Liste, unten nur der Papierkorb; ein Punkt verschwindet beim zweiten Antippen. |
-| 9 | Punkte verbinden | Zwei zufällige Punkte sind vorgegeben (Kennung `punkte-verbinden`). Unten nur der Papierkorb: Gerade durch beide ziehen, dann unten y = □·x + □ selbst ausfüllen und prüfen. |
+| 8 | Punkte setzen | Koordinaten. A(3\|2), B(−2\|4). Keine Liste, unten nur der Papierkorb; ein Punkt verschwindet beim zweiten Antippen. Falsche Punkte werden rot, mit Hinweis unten; gelöst erst ohne falsche Punkte. |
+| 9 | Punkte verbinden | Zwei zufällige Punkte sind vorgegeben (Kennung `punkte-verbinden`). Unten nur der Papierkorb: Gerade durch beide ziehen, dann unten y = □·x + □ selbst ausfüllen und prüfen. Eine Linie, die einen Punkt verfehlt, wird rot, mit Hinweis. |
 | 10 | Wertetabelle | y = x + 1, Tabelle rechnen, Punkte setzen, Gerade ziehen. |
 | 11 | Steigung | y = 2x |
 | 12 | Achsenabschnitt | y = x + 2 |

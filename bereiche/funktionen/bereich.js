@@ -99,12 +99,14 @@ function buildFunk(ctx, ws) {
 
   ctx.lineCap = 'round';
   F.lines.forEach(function (l) {
-    ctx.strokeStyle = BLUE; extLine(ctx, l.a, l.b, 2.5 * ws * k);
-    ctx.fillStyle = BLUE; dotAt(ctx, l.a, false); dotAt(ctx, l.b, false);
+    var col = fLinieFalsch(l) ? C.RED : BLUE;   // falsche Linie rot
+    ctx.strokeStyle = col; extLine(ctx, l.a, l.b, 2.5 * ws * k);
+    ctx.fillStyle = col; dotAt(ctx, l.a, false); dotAt(ctx, l.b, false);
   });
   F.pts.forEach(function (p) {
-    ctx.fillStyle = BLUE; dotAt(ctx, [p.x * U, -p.y * U], false, 5);
-    text(ctx, '(' + fmt(p.x) + '|' + fmt(p.y) + ')', p.x * U + 24 * k, -p.y * U - 13 * k, BLUE, 12);
+    var col = fPunktFalsch(p) ? C.RED : BLUE;   // falscher Punkt rot
+    ctx.fillStyle = col; dotAt(ctx, [p.x * U, -p.y * U], false, 5);
+    text(ctx, '(' + fmt(p.x) + '|' + fmt(p.y) + ')', p.x * U + 24 * k, -p.y * U - 13 * k, col, 12);
   });
   var lv = FLEVELS[F.level], q = lv && lv.verbinden && F.fn ? fRegel() : null;
   if (q) {
@@ -225,6 +227,63 @@ function fLineOk(l, q) {
     return Math.abs((px - l.a[0]) * dy - (py - l.a[1]) * dx) / n <= 0.15 * U;
   });
 }
+// Punkt, der in einem Level mit vorgegebenen Punkten (A, B, ...) keiner von ihnen ist
+function fPunktFalsch(p) {
+  var lv = FLEVELS[F.level];
+  return !!(lv && lv.pts && !p.fest) && !lv.pts.some(function (q) { return q.x === p.x && q.y === p.y; });
+}
+function fLinieFalsch(l) {
+  var lv = FLEVELS[F.level], q = lv && lv.verbinden ? fRegel() : null;
+  return !!q && !fLineOk(l, q);
+}
+var RICHTUNG = {
+  de: [' nach rechts', ' nach links', ' nach oben', ' nach unten'], en: [' to the right', ' to the left', ' up', ' down'],
+  fi: [' oikealle', ' vasemmalle', ' ylös', ' alas'], tr: [' sağa', ' sola', ' yukarı', ' aşağı'],
+  fr: [' vers la droite', ' vers la gauche', ' vers le haut', ' vers le bas'], es: [' a la derecha', ' a la izquierda', ' hacia arriba', ' hacia abajo'],
+  ja: ['右へ', '左へ', '上へ', '下へ'], ar: [' إلى اليمين', ' إلى اليسار', ' إلى الأعلى', ' إلى الأسفل']
+};
+// Hinweis zu einem falschen Punkt: welcher Punkt gemeint war und wie man ihn findet
+function punktHinweis(p) {
+  var lv = FLEVELS[F.level];
+  var ziel = lv.pts.filter(function (q) { return !fHas(q.x, q.y); })[0];
+  function paar(x, y) { return '<bdi dir="ltr">(' + fmt(x) + '|' + fmt(y) + ')</bdi>'; }
+  if (!ziel) {
+    // alle richtigen Punkte liegen schon: nur sagen, wie der falsche verschwindet
+    var R = paar(p.x, p.y);
+    return { de: 'Der Punkt ' + R + ' gehört nicht dazu. Tippe ihn an, dann verschwindet er.',
+             en: 'The point ' + R + ' does not belong here. Tap it to remove it.',
+             fi: 'Piste ' + R + ' ei kuulu tähän. Napauta sitä, niin se häviää.',
+             tr: R + ' noktası buraya ait değil. Ona dokun, kaybolur.',
+             fr: 'Le point ' + R + ' n’a rien à faire ici. Touche-le pour l’enlever.',
+             es: 'El punto ' + R + ' no va aquí. Tócalo para quitarlo.',
+             ja: '点 ' + R + ' はいりません。タップすると消えます。',
+             ar: 'النقطة ' + R + ' لا تنتمي إلى هنا. انقر عليها لتختفي.' };
+  }
+  var P = paar(p.x, p.y), Z = ziel.n + ' ' , Q = paar(ziel.x, ziel.y);
+  function weg(l) {
+    var r = RICHTUNG[l], t = [];
+    function teil(n, i) { return l === 'ja' ? r[i] + n : n + r[i]; }
+    if (ziel.x) t.push(teil(Math.abs(ziel.x), ziel.x > 0 ? 0 : 1));
+    if (ziel.y) t.push(teil(Math.abs(ziel.y), ziel.y > 0 ? 2 : 3));
+    return t;
+  }
+  var h = {}, W = {
+    de: function (t) { return 'Das ist ' + P + '. ' + Z + 'ist ' + Q + ': erst ' + t.join(', dann ') + '.'; },
+    en: function (t) { return 'This is ' + P + '. ' + Z + 'is ' + Q + ': first ' + t.join(', then ') + '.'; },
+    fi: function (t) { return 'Tämä on ' + P + '. ' + Z + 'on ' + Q + ': ensin ' + t.join(', sitten ') + '.'; },
+    tr: function (t) { return 'Bu ' + P + '. ' + Z + 'noktası ' + Q + ': önce ' + t.join(', sonra ') + '.'; },
+    fr: function (t) { return 'Ici, c’est ' + P + '. ' + Z + 'est ' + Q + ' : d’abord ' + t.join(', puis ') + '.'; },
+    es: function (t) { return 'Esto es ' + P + '. ' + Z + 'es ' + Q + ': primero ' + t.join(', luego ') + '.'; },
+    ja: function (t) { return 'これは ' + P + ' です。' + Z + 'は ' + Q + '：まず' + t.join('、次に') + '。'; },
+    ar: function (t) { return 'هذه ' + P + '. النقطة ' + Z + 'هي ' + Q + ': أولًا ' + t.join('، ثم ') + '.'; }
+  };
+  Object.keys(W).forEach(function (l) { h[l] = W[l](weg(l)); });
+  return h;
+}
+var LINIE_FALSCH = { de: 'Die Linie muss durch beide Punkte gehen.', en: 'The line must go through both points.',
+  fi: 'Suoran täytyy kulkea molempien pisteiden kautta.', tr: 'Doğru iki noktadan da geçmeli.',
+  fr: 'La droite doit passer par les deux points.', es: 'La recta tiene que pasar por los dos puntos.',
+  ja: '直線は2つの点を両方通らないといけません。', ar: 'يجب أن يمر المستقيم بالنقطتين.' };
 function fCheck() {
   var lv = FLEVELS[F.level];
   if (isMach(lv)) return;
@@ -232,9 +291,16 @@ function fCheck() {
   if (lv.verbinden) {
     var q = fRegel(), linie = !!q && F.lines.some(function (l) { return fLineOk(l, q); });
     ok = linie && F.fn;
-    fSchreib(linie && !F.fn);
+    fSchreib(linie && !F.fn, F.lines.length && !linie ? LINIE_FALSCH : null);
   } else {
     ok = fNeed(lv).every(function (r) { return fHas(r[0], r[1]); });
+    if (lv.pts) {
+      // Gelöst erst, wenn kein falscher Punkt mehr liegt; zum neuesten falschen Punkt ein Hinweis
+      var falsch = F.pts.filter(fPunktFalsch);
+      if (falsch.length) ok = false;
+      var neu = falsch.reduce(function (t, p) { return !t || p.gid > t.gid ? p : t; }, null);
+      fSchreib(false, neu ? punktHinweis(neu) : null);
+    }
     if (ok && lv.eq) ok = F.lines.some(function (l) { return fLineOk(l, lv.eq); });
   }
   if (ok !== S.done) {
@@ -315,10 +381,11 @@ var PRUEFEN = { de: 'Prüfen', en: 'Check', fi: 'Tarkista', tr: 'Kontrol et', fr
 var BEIDE = { de: 'Fülle beide Kästchen aus.', en: 'Fill in both boxes.', fi: 'Täytä molemmat laatikot.', tr: 'İki kutuyu da doldur.',
               fr: 'Remplis les deux cases.', es: 'Rellena las dos casillas.', ja: '2つの□をうめよう。', ar: 'املأ المربعين.' };
 var schreib = null;
-function fSchreib(zeigen) {
+function fSchreib(zeigen, hinweis) {
   if (!schreib) return;
-  schreib.hidden = !zeigen;
-  if (!zeigen) return;
+  schreib.hidden = !zeigen && !hinweis;
+  schreib.classList.toggle('hinweis', !zeigen && !!hinweis);
+  if (!zeigen) { schreib.innerHTML = hinweis ? '<p class="fb">' + App.wahl(hinweis) + '</p>' : ''; return; }
   function slot(k) { return '<button class="slot' + (F.slot === k ? ' sel' : '') + '" data-act="slot" data-i="' + k + '">' + F.ein[k] + '</button>'; }
   var keys = '';
   for (var d = 0; d < 10; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + d + '</button>';
@@ -773,6 +840,6 @@ App.bereich({
   down: fDown, move: fMove, up: fUp, check: fCheck,
   undo: fUndo, clear: fClear, next: fNext,
   persist: function () { fStore(); fSave(); },
-  sprache: function () { if (M && !mach.hidden) machRender(); if (schreib && !schreib.hidden) fSchreib(true); }
+  sprache: function () { if (M && !mach.hidden) machRender(); if (schreib && !schreib.hidden) { fCheck(); render(); } }
 });
 })();
