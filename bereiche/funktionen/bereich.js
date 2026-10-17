@@ -410,6 +410,8 @@ function koordHTML(M) {
   s += '<text class="an rein" x="' + (px(xmax) + 6) + '" y="' + (py(0) + 6) + '">' + M.names[0] + '</text>';
   s += '<text class="an raus" x="' + (px(0) + 7) + '" y="' + (py(ymax) - 2) + '">' + M.names[1] + '</text>';
   M.fed.forEach(function (p) {
+    // Vorgegebene Punkte (ohne Fütterung): auf beiden Achsen ein Punkt in Orange und Lila, wie bei den zwei Achsen
+    if (!M.last) s += '<circle class="pr" cx="' + px(p.x) + '" cy="' + py(0) + '" r="4"/><circle class="pa" cx="' + px(0) + '" cy="' + py(p.y) + '" r="4"/>';
     if (M.last && p.x === M.last.x) {
       s += '<line class="weg rein" x1="' + px(p.x) + '" y1="' + py(0) + '" x2="' + px(p.x) + '" y2="' + py(p.y) + '"/>';
       s += '<line class="weg raus" x1="' + px(0) + '" y1="' + py(p.y) + '" x2="' + px(p.x) + '" y2="' + py(p.y) + '"/>';
