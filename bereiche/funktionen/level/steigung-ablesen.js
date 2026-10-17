@@ -1,32 +1,32 @@
-// Level im Gitter: Was ist Steigung? Drei Geraden mit Steigung 1, 2 und 3 (gemischt) und gestricheltem Steigungsdreieck.
-// Die Steigungen unten eintippen. Nach dem Lösen stehen die Gleichungen an den Geraden.
+// Level im Gitter: Was ist Steigung? Fünf Geraden nacheinander, steigende und fallende, jede mit gestricheltem
+// Steigungsdreieck, das 1, 2 oder 3 Kästchen nach rechts geht. Die Steigung unten eintippen; grün erst nach der fünften.
 App.level('funktionen', {
   id: 'steigung-ablesen',
   text: {
     de: { title: 'Was ist Steigung?',
-          task: 'Die Steigung sagt, wie viele Kästchen eine Gerade nach oben geht, wenn man 1 Kästchen nach rechts geht. Wie groß ist die Steigung von A, B und C?',
-          done: 'Richtig! Die Steigung ist die Zahl vor dem x. Je größer sie ist, desto steiler ist die Gerade.' },
+          task: 'Steigung = Kästchen nach oben geteilt durch Kästchen nach rechts. Geht die Gerade nach unten, ist sie negativ.',
+          done: 'Richtig! Du hast die Steigung von fünf Geraden bestimmt. Je größer die Zahl, desto steiler. Ist sie negativ, fällt die Gerade.' },
     en: { title: 'What is slope?',
-          task: 'The slope tells how many squares a line goes up when you go 1 square to the right. What is the slope of A, B and C?',
-          done: 'Right! The slope is the number in front of x. The bigger it is, the steeper the line.' },
+          task: 'Slope = squares up divided by squares to the right. If the line goes down, the slope is negative.',
+          done: 'Right! You found the slope of five lines. The bigger the number, the steeper. If it is negative, the line goes down.' },
     fi: { title: 'Mikä on kulmakerroin?',
-          task: 'Kulmakerroin kertoo, montako ruutua suora nousee, kun mennään 1 ruutu oikealle. Mikä on suorien A, B ja C kulmakerroin?',
-          done: 'Oikein! Kulmakerroin on x:n edessä oleva luku. Mitä suurempi se on, sitä jyrkempi suora.' },
+          task: 'Kulmakerroin = ruudut ylös jaettuna ruuduilla oikealle. Jos suora laskee, se on negatiivinen.',
+          done: 'Oikein! Määritit viiden suoran kulmakertoimen. Mitä suurempi luku, sitä jyrkempi. Jos se on negatiivinen, suora laskee.' },
     tr: { title: 'Eğim nedir?',
-          task: 'Eğim, sağa 1 kare gidince doğrunun kaç kare yukarı çıktığını söyler. A, B ve C’nin eğimi kaç?',
-          done: 'Doğru! Eğim, x’in önündeki sayıdır. Ne kadar büyükse doğru o kadar diktir.' },
+          task: 'Eğim = yukarı kare sayısı bölü sağa kare sayısı. Doğru aşağı iniyorsa eğim negatiftir.',
+          done: 'Doğru! Beş doğrunun eğimini buldun. Sayı ne kadar büyükse doğru o kadar dik. Negatifse doğru aşağı iner.' },
     fr: { title: 'Qu’est-ce que la pente ?',
-          task: 'La pente indique de combien de carreaux une droite monte quand on avance de 1 carreau vers la droite. Quelle est la pente de A, B et C ?',
-          done: 'Bravo ! La pente est le nombre devant le x. Plus il est grand, plus la droite est raide.' },
+          task: 'Pente = carreaux vers le haut divisés par carreaux vers la droite. Si la droite descend, la pente est négative.',
+          done: 'Bravo ! Tu as trouvé la pente de cinq droites. Plus le nombre est grand, plus c’est raide. S’il est négatif, la droite descend.' },
     es: { title: '¿Qué es la pendiente?',
-          task: 'La pendiente dice cuántos cuadritos sube una recta cuando avanzas 1 cuadrito a la derecha. ¿Cuál es la pendiente de A, B y C?',
-          done: '¡Correcto! La pendiente es el número delante de la x. Cuanto mayor es, más empinada es la recta.' },
+          task: 'Pendiente = cuadritos hacia arriba entre cuadritos a la derecha. Si la recta baja, la pendiente es negativa.',
+          done: '¡Correcto! Has hallado la pendiente de cinco rectas. Cuanto mayor el número, más empinada. Si es negativo, la recta baja.' },
     ja: { title: '傾きってなに？',
-          task: '傾きは、右へ1ます進むと直線が上へ何ます進むかを表します。A、B、C の傾きはいくつ？',
-          done: '正解！傾きは x の前の数です。大きいほど直線は急になります。' },
+          task: '傾き＝上へのます数÷右へのます数。直線が下がるときは、傾きはマイナスです。',
+          done: '正解！5本の直線の傾きを求めました。数が大きいほど急です。マイナスなら直線は下がります。' },
     ar: { title: 'ما هو الميل؟',
-          task: 'الميل يخبرنا بعدد المربعات التي يصعدها المستقيم عندما نتحرك مربعًا واحدًا إلى اليمين. ما ميل A وB وC؟',
-          done: 'صحيح! الميل هو العدد الذي أمام x. كلما كان أكبر كان المستقيم أشد انحدارًا.' }
+          task: 'الميل = عدد المربعات إلى الأعلى مقسومًا على عدد المربعات إلى اليمين. إذا نزل المستقيم يكون الميل سالبًا.',
+          done: 'صحيح! وجدت ميل خمسة مستقيمات. كلما كبر العدد زاد الانحدار. وإذا كان سالبًا ينزل المستقيم.' }
   },
   steigung: true, tabelle: false, werkzeuge: ['clear']   // nichts zeichnen, unten nur der Papierkorb
 });

@@ -31,10 +31,10 @@ function fcopy(sn) {
   return {
     pts: sn.pts.map(function (p) { return p.fest ? { x: p.x, y: p.y, gid: 0, fest: true } : { x: p.x, y: p.y, gid: p.gid }; }),
     lines: sn.lines.map(function (l) { return l.fest ? { a: l.a.slice(), b: l.b.slice(), gid: 0, fest: true } : { a: l.a.slice(), b: l.b.slice(), gid: l.gid }; }),
-    fn: !!sn.fn
+    fn: !!sn.fn, runde: sn.runde || 0
   };
 }
-function fnow() { return fcopy({ pts: F.pts, lines: F.lines, fn: F.fn }); }
+function fnow() { return fcopy({ pts: F.pts, lines: F.lines, fn: F.fn, runde: F.runde }); }
 // Gerade durch die zwei vorgegebenen Punkte (Level mit verbinden)
 function fRegel() {
   var q = F.pts.filter(function (p) { return p.fest; });
@@ -57,17 +57,35 @@ function fFestLinie() {
   while (!xs) xs = rnd(9) - 4;
   return { a: [xs * U, 0], b: [0, -ys * U], gid: 0, fest: true };
 }
-// Level mit steigung: drei Geraden mit Steigung 1, 2, 3 (gemischt). Jede beginnt ihr Steigungsdreieck
-// bei x = −4, −2 bzw. 1 (nicht an der y-Achse): a ist der Anfang, b liegt 1 nach rechts und m nach oben.
+// Level mit steigung: fünf Geraden nacheinander, auch fallende. Jede hat ein Steigungsdreieck:
+// a ist der Anfang, b liegt d nach rechts und m·d nach oben (bei negativem m nach unten). d ist 1, 2 oder 3.
 function fFestSteigung() {
-  return shuffle([1, 2, 3]).map(function (m, i) {
-    var x = [-4, -2, 1][i], y = 1 + rnd(2);   // y ab 1, damit die 1 nicht auf der x-Achse steht
-    return { a: [x * U, -y * U], b: [(x + 1) * U, -(y + m) * U], gid: 0, fest: true };
-  });
+  var paare = [];
+  [-3, -2, -1, 1, 2, 3].forEach(function (m) { [1, 2, 3].forEach(function (d) { if (Math.abs(m * d) <= 4) paare.push([m, d]); }); });
+  for (;;) {
+    var w = shuffle(paare.slice()).slice(0, 5);
+    // mindestens eine steigende, eine fallende und eine mit mehr als 1 nach rechts
+    if (w.some(function (p) { return p[0] > 0; }) && w.some(function (p) { return p[0] < 0; }) && w.some(function (p) { return p[1] > 1; })) {
+      return w.map(function (p) {
+        var m = p[0], d = p[1], x = 1, y = m > 0 ? 1 : 1 - m * d;
+        return { a: [x * U, -y * U], b: [(x + d) * U, -(y + m * d) * U], gid: 0, fest: true };
+      });
+    }
+  }
 }
-function fSteig(l) { return Math.round((l.a[1] - l.b[1]) / U); }
-// neutrale Töne: Orange und Lila bleiben für rein und raus
-var SFARBE = ['rgb(56,41,26)', 'rgb(110,96,80)', 'rgb(150,140,126)'], SNAME = ['A', 'B', 'C'];
+function fLauf(l) { return Math.round((l.b[0] - l.a[0]) / U); }
+function fSteig(l) { return Math.round((l.a[1] - l.b[1]) / U) / fLauf(l); }
+// Ansicht so legen, dass das Dreieck der aktuellen Geraden zwischen Aufgabe und Eingabekarte liegt
+function steigAnsicht() {
+  var l = F.lines[F.runde], hud = document.getElementById('hud');
+  if (!l || !schreib) return;
+  var oben = hud && hud.firstChild ? hud.getBoundingClientRect().bottom : 60;
+  var unten = schreib.hidden ? S.h - (S.unten || 70) : schreib.getBoundingClientRect().top;
+  var ym = (-l.a[1] - l.b[1]) / 2 / U, xm = (l.a[0] + l.b[0]) / 2 / U;
+  S.oy = (oben + unten) / 2 + ym * U;
+  S.ox = S.w / 2 - xm * U;
+  App.applyView();
+}
 function fSchnitt() {
   var l = F.lines.filter(function (l) { return l.fest; })[0];
   return l ? { x: Math.round(l.a[0] / U), y: -Math.round(l.b[1] / U) } : null;
@@ -121,29 +139,18 @@ function buildFunk(ctx, ws) {
   ctx.lineCap = 'round';
   var lvz = FLEVELS[F.level], nurFeste = !!(lvz && (lvz.verbinden || lvz.schnitt || lvz.steigung));   // nur die vorgegebenen Punkte zeigen
   F.lines.forEach(function (l, i) {
-    var col = lvz && lvz.steigung ? SFARBE[i] : l.fest ? INK : fLinieFalsch(l) ? C.RED : BLUE;   // vorgegebene Gerade dunkel, falsche Linie rot
+    if (lvz && lvz.steigung && i !== F.runde) return;   // immer nur die aktuelle Gerade
+    var col = l.fest ? INK : fLinieFalsch(l) ? C.RED : BLUE;   // vorgegebene Gerade dunkel, falsche Linie rot
     ctx.strokeStyle = col; extLine(ctx, l.a, l.b, 2.5 * ws * k);
     if (!nurFeste) { ctx.fillStyle = col; dotAt(ctx, l.a, false); dotAt(ctx, l.b, false); }
   });
-  if (lvz && lvz.steigung) F.lines.forEach(function (l, i) {
-    // Steigungsdreieck gestrichelt: 1 nach rechts (beschriftet), dann nach oben (zum Zählen). Name an der Spitze,
-    // nach dem Lösen die Gleichung dazu
-    var col = SFARBE[i], ecke = [l.b[0], l.a[1]];
-    ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 2 * ws * k; ctx.setLineDash([6 * k, 5 * k]);
-    ctx.beginPath(); ctx.moveTo(l.a[0], l.a[1]); ctx.lineTo(ecke[0], ecke[1]); ctx.lineTo(l.b[0], l.b[1]); ctx.stroke(); ctx.restore();
-    text(ctx, '1', (l.a[0] + ecke[0]) / 2, ecke[1] + 12 * k, col, 13);
-    var m = fSteig(l), sx = l.a[0] / U, sy = -l.a[1] / U;
-    if (!F.fn) { text(ctx, SNAME[i], l.b[0] + 16 * k, l.b[1] - 16 * k, col, 16); return; }
-    // gelöst: Name und Gleichung links über der Spitze, auf hellem Schild
-    var et = SNAME[i] + ':  ' + eqStr({ m: m, b: sy - m * sx });
-    ctx.font = '400 ' + (13 * k) + 'px ' + C.FONT;
-    var tw = ctx.measureText(et).width + 12 * k, th = 20 * k, tx = Math.max(x0 + tw / 2 + 6 * k, l.b[0] - tw / 2 - 8 * k), ty = l.b[1] - 18 * k;
-    ctx.fillStyle = 'rgba(251,244,226,0.95)';
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(tx - tw / 2, ty - th / 2, tw, th, 7 * k); else ctx.rect(tx - tw / 2, ty - th / 2, tw, th);
-    ctx.fill();
-    text(ctx, et, tx, ty, col, 13);
-  });
+  if (lvz && lvz.steigung && F.lines[F.runde]) {
+    // Steigungsdreieck gestrichelt: d nach rechts (beschriftet), dann nach oben oder unten (zum Zählen)
+    var sl = F.lines[F.runde], ecke = [sl.b[0], sl.a[1]], hoch = sl.b[1] < sl.a[1];
+    ctx.save(); ctx.strokeStyle = INK; ctx.globalAlpha = 0.75; ctx.lineWidth = 2 * ws * k; ctx.setLineDash([6 * k, 5 * k]);
+    ctx.beginPath(); ctx.moveTo(sl.a[0], sl.a[1]); ctx.lineTo(ecke[0], ecke[1]); ctx.lineTo(sl.b[0], sl.b[1]); ctx.stroke(); ctx.restore();
+    text(ctx, String(fLauf(sl)), (sl.a[0] + ecke[0]) / 2, ecke[1] + (hoch ? 13 : -13) * k, INK, 14);
+  }
   F.pts.forEach(function (p) {
     var col = fPunktFalsch(p) ? C.RED : BLUE;   // falscher Punkt rot
     ctx.fillStyle = col; dotAt(ctx, [p.x * U, -p.y * U], false, 5);
@@ -367,7 +374,7 @@ function fCheck() {
   }
 }
 function fLoadLevel(n, restore) {
-  F.level = n; F.pts = []; F.lines = []; F.gid = 0; F.fn = false; F.ein = ['', '', '', '']; F.slot = 0; F.fb = '';
+  F.level = n; F.pts = []; F.lines = []; F.gid = 0; F.fn = false; F.ein = ['', '', '', '']; F.slot = 0; F.fb = ''; F.fbOk = false; F.runde = 0;
   fSchreib(false);
   App.setTool('point');
   S.done = false;
@@ -384,7 +391,7 @@ function fLoadLevel(n, restore) {
     var sn = F.solutions[n] || F.work[n];
     if (sn) {
       var c = fcopy(sn);
-      F.pts = c.pts; F.lines = c.lines; F.fn = c.fn;
+      F.pts = c.pts; F.lines = c.lines; F.fn = c.fn; F.runde = c.runde;
       F.gid = Math.max.apply(null, [0].concat(F.pts.map(function (p) { return p.gid; }), F.lines.map(function (l) { return l.gid; })));
     }
   }
@@ -398,9 +405,8 @@ function fLoadLevel(n, restore) {
     S.oy = S.h - (S.unten || 70) - 300;
   }
   if (lv.steigung) {
-    if (!F.lines.some(function (l) { return l.fest; })) F.lines = fFestSteigung();
-    F.ein = ['', '', ''];
-    S.oy = S.h - (S.unten || 70) - 290;
+    if (!F.lines.some(function (l) { return l.fest; })) { F.lines = fFestSteigung(); F.runde = 0; }
+    F.ein = [''];
   }
   // Nur die Knöpfe unten, die das Level braucht
   var wz = lv.werkzeuge || ['point', 'line', 'undo', 'clear', 'view'];
@@ -411,6 +417,7 @@ function fLoadLevel(n, restore) {
   App.applyView();
   if (S.onLevel) S.onLevel(n, false);
   fCheck();
+  if (lv.steigung) steigAnsicht();
 }
 function fStore() { if (!isMach(FLEVELS[F.level]) && !F.solved.has(F.level)) F.work[F.level] = fnow(); }
 function fUndo() {
@@ -480,36 +487,59 @@ function fSchreib(zeigen, hinweis) {
 }
 function slotHTML(k) { return '<button class="slot' + (F.slot === k ? ' sel' : '') + '" data-act="slot" data-i="' + k + '">' + F.ein[k] + '</button>'; }
 var STEIG = { de: 'Steigung', en: 'Slope', fi: 'Kulmakerroin', tr: 'Eğim', fr: 'Pente', es: 'Pendiente', ja: '傾き', ar: 'الميل' };
-// drei Kästchen für die Steigungen von A, B und C, Tasten von −3 bis 3
+// ein Kästchen für die Steigung der aktuellen Geraden, Tasten von −3 bis 3, oben der Stand 1 / 5
 function steigKarte() {
   var keys = '';
   for (var d = -3; d <= 3; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + fmt(d) + '</button>';
-  schreib.innerHTML = '<p class="steig-titel">' + App.wahl(STEIG) + '</p><div class="schnitt">' + SNAME.map(function (n, i) {
-    return '<p><span style="color:' + SFARBE[i] + '">' + n + '</span>' + slotHTML(i) + '</p>';
-  }).join('') + '</div><div class="keys reihe sieben">' + keys + '</div>' +
+  schreib.innerHTML = '<div class="steig"><span>' + App.wahl(STEIG) + '</span>' + slotHTML(0) +
+    '<span class="stand">' + (F.runde + 1) + ' / ' + F.lines.length + '</span></div>' +
+    '<div class="keys reihe sieben">' + keys + '</div>' +
     '<button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button>' +
-    (F.fb ? '<p class="fb">' + App.wahl(F.fb) + '</p>' : '');
+    (F.fb ? '<p class="fb' + (F.fbOk ? ' ok' : '') + '">' + App.wahl(F.fb) + '</p>' : '');
+}
+var STEIG_FB = {
+  weiter: { de: 'Richtig! Jetzt die nächste Gerade.', en: 'Right! Now the next line.', fi: 'Oikein! Nyt seuraava suora.', tr: 'Doğru! Şimdi sıradaki doğru.',
+            fr: 'Bravo ! Maintenant la droite suivante.', es: '¡Correcto! Ahora la siguiente recta.', ja: '正解！次の直線へ。', ar: 'صحيح! الآن المستقيم التالي.' },
+  neg: { de: 'Nicht ganz. Die Gerade geht nach rechts unten, also ist die Steigung negativ.', en: 'Not quite. The line goes down to the right, so the slope is negative.',
+         fi: 'Ei aivan. Suora laskee oikealle, joten kulmakerroin on negatiivinen.', tr: 'Tam değil. Doğru sağa doğru iniyor, yani eğim negatif.',
+         fr: 'Pas tout à fait. La droite descend vers la droite, donc la pente est négative.', es: 'Casi. La recta baja hacia la derecha, así que la pendiente es negativa.',
+         ja: 'おしい。直線は右下がりなので、傾きはマイナスです。', ar: 'ليس تمامًا. المستقيم ينزل نحو اليمين، إذن الميل سالب.' },
+  pos: { de: 'Nicht ganz. Die Gerade geht nach rechts oben, also ist die Steigung positiv.', en: 'Not quite. The line goes up to the right, so the slope is positive.',
+         fi: 'Ei aivan. Suora nousee oikealle, joten kulmakerroin on positiivinen.', tr: 'Tam değil. Doğru sağa doğru çıkıyor, yani eğim pozitif.',
+         fr: 'Pas tout à fait. La droite monte vers la droite, donc la pente est positive.', es: 'Casi. La recta sube hacia la derecha, así que la pendiente es positiva.',
+         ja: 'おしい。直線は右上がりなので、傾きはプラスです。', ar: 'ليس تمامًا. المستقيم يصعد نحو اليمين، إذن الميل موجب.' },
+  eins: { de: 'Nicht ganz. Zähle: 1 Kästchen nach rechts, wie viele Kästchen nach oben oder unten?', en: 'Not quite. Count: 1 square to the right, how many squares up or down?',
+          fi: 'Ei aivan. Laske: 1 ruutu oikealle, montako ruutua ylös tai alas?', tr: 'Tam değil. Say: sağa 1 kare, yukarı ya da aşağı kaç kare?',
+          fr: 'Pas tout à fait. Compte : 1 carreau vers la droite, combien vers le haut ou le bas ?', es: 'Casi. Cuenta: 1 cuadrito a la derecha, ¿cuántos hacia arriba o abajo?',
+          ja: 'おしい。数えよう：右へ1ます、上か下へ何ます？', ar: 'ليس تمامًا. عُدّ: مربع واحد إلى اليمين، كم مربعًا إلى الأعلى أو الأسفل؟' }
+};
+function teilenFB(d) {
+  return { de: 'Nicht ganz. Das Dreieck geht ' + d + ' Kästchen nach rechts. Zähle die Kästchen nach oben oder unten und teile durch ' + d + '.',
+           en: 'Not quite. The triangle goes ' + d + ' squares to the right. Count the squares up or down and divide by ' + d + '.',
+           fi: 'Ei aivan. Kolmio menee ' + d + ' ruutua oikealle. Laske ruudut ylös tai alas ja jaa luvulla ' + d + '.',
+           tr: 'Tam değil. Üçgen sağa ' + d + ' kare gidiyor. Yukarı ya da aşağı kareleri say ve ' + d + ' ile böl.',
+           fr: 'Pas tout à fait. Le triangle va de ' + d + ' carreaux vers la droite. Compte les carreaux vers le haut ou le bas et divise par ' + d + '.',
+           es: 'Casi. El triángulo va ' + d + ' cuadritos a la derecha. Cuenta los cuadritos hacia arriba o abajo y divide entre ' + d + '.',
+           ja: 'おしい。三角形は右へ ' + d + ' ます。上か下へのます数を数えて、' + d + ' でわろう。',
+           ar: 'ليس تمامًا. المثلث يذهب ' + d + ' مربعات إلى اليمين. عُدّ المربعات إلى الأعلى أو الأسفل واقسم على ' + d + '.' };
 }
 function steigPruefen() {
-  var falsch = F.lines.map(function (l, i) { return Number(F.ein[i].replace('−', '-')) !== fSteig(l); }).indexOf(true);
-  if (F.ein.some(function (s) { return s === ''; })) { F.fb = ALLE; return; }
-  if (falsch < 0) { F.fn = true; F.fb = ''; return; }
-  var N = '<span style="color:' + SFARBE[falsch] + '">' + SNAME[falsch] + '</span>';
-  F.fb = { de: 'Nicht ganz. Zähle bei ' + N + ': 1 Kästchen nach rechts, wie viele Kästchen nach oben?',
-           en: 'Not quite. Count at ' + N + ': 1 square to the right, how many squares up?',
-           fi: 'Ei aivan. Laske suoralla ' + N + ': 1 ruutu oikealle, montako ruutua ylös?',
-           tr: 'Tam değil. ' + N + ' doğrusunda say: sağa 1 kare, yukarı kaç kare?',
-           fr: 'Pas tout à fait. Compte pour ' + N + ' : 1 carreau vers la droite, combien vers le haut ?',
-           es: 'Casi. Cuenta en ' + N + ': 1 cuadrito a la derecha, ¿cuántos hacia arriba?',
-           ja: 'おしい。' + N + ' で数えよう：右へ1ます、上へ何ます？',
-           ar: 'ليس تمامًا. عُدّ عند ' + N + ': مربع واحد إلى اليمين، كم مربعًا إلى الأعلى؟' };
+  var l = F.lines[F.runde], m = fSteig(l), w = Number(F.ein[0].replace('−', '-'));
+  F.fbOk = false;
+  if (F.ein[0] === '') { F.fb = ALLE; return; }
+  if (w === m) {
+    if (F.runde < F.lines.length - 1) { F.runde++; F.ein = ['']; F.fb = STEIG_FB.weiter; F.fbOk = true; F.neueAnsicht = true; }
+    else { F.fn = true; F.fb = ''; }
+    return;
+  }
+  F.fb = m < 0 && w >= 0 ? STEIG_FB.neg : m > 0 && w <= 0 ? STEIG_FB.pos : fLauf(l) > 1 ? teilenFB(fLauf(l)) : STEIG_FB.eins;
 }
 function schreibClick(e) {
   var b = e.target.closest ? e.target.closest('button') : null;
   if (!b) return;
   var act = b.getAttribute('data-act');
   if (act === 'slot') F.slot = Number(b.getAttribute('data-i'));
-  else if (act === 'ziffer') { F.ein[F.slot] = fmt(Number(b.getAttribute('data-n'))); F.slot = Math.min(F.ein.length - 1, F.slot + 1); F.fb = ''; }
+  else if (act === 'ziffer') { F.ein[F.slot] = fmt(Number(b.getAttribute('data-n'))); F.slot = Math.min(F.ein.length - 1, F.slot + 1); F.fb = ''; F.fbOk = false; }
   else if (act === 'pruefen' && FLEVELS[F.level].steigung) steigPruefen();
   else if (act === 'pruefen') {
     var z = fSchnitt(), w = F.ein.map(function (s) { return Number(s.replace('−', '-')); });
@@ -521,6 +551,7 @@ function schreibClick(e) {
     else { F.fn = true; F.fb = ''; }
   } else return;
   fCheck();
+  if (F.neueAnsicht) { F.neueAnsicht = false; steigAnsicht(); }
   render();
 }
 
