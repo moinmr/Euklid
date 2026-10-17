@@ -131,6 +131,8 @@ body {
 .chip.on { opacity: 1; }
 /* Leerer Platz für Zahl rein / Zahl raus: gestrichelter Rahmen, ohne Wörter, in jeder Sprache gleich */
 .chip:empty { border-color: currentColor; }
+.chip.namechip { border-color: currentColor; border-style: solid; }
+.chip.namechip .vn { font-size: 30px; }
 .chip.out { color: var(--raus); }
 .chip.out.on { opacity: 1; animation: popin .35s .35s both; }
 .arr { width: 30px; height: 14px; fill: none; stroke: var(--ink); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; flex: none; opacity: .7; }

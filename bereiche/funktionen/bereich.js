@@ -417,7 +417,7 @@ function koordHTML(M) {
     }
   });
   M.fed.forEach(function (p) {
-    s += '<circle class="pt' + (M.last && p.x === M.last.x ? ' neu' : '') + '" cx="' + px(p.x) + '" cy="' + py(p.y) + '" r="4.5"/>';
+    s += '<circle class="pt' + (!M.last || p.x === M.last.x ? ' neu' : '') + '" cx="' + px(p.x) + '" cy="' + py(p.y) + '" r="4.5"/>';
   });
   return s + '</svg>';
 }
@@ -504,6 +504,17 @@ function falschFB(M, c) {
              ja: 'おしい。点では先に ' + X + '、次に ' + Y + ' を書きます。',
              ar: 'ليس تمامًا. في النقطة نكتب ' + X + ' أولًا ثم ' + Y + '.' };
   }
+  if (c.frage === 'funktion' && c.koord) {
+    var PX = vn(M.names[0], 'rein'), PY = vn(M.names[1], 'raus');
+    return { de: 'Nicht ganz. Nimm einen Punkt: Setze ' + PX + ' in die Funktion ein und vergleiche mit ' + PY + '.',
+             en: 'Not quite. Take one point: put ' + PX + ' into the function and compare with ' + PY + '.',
+             fi: 'Ei aivan. Valitse yksi piste: sijoita ' + PX + ' funktioon ja vertaa arvoon ' + PY + '.',
+             tr: 'Tam değil. Bir nokta seç: ' + PX + ' değerini fonksiyona koy ve ' + PY + ' ile karşılaştır.',
+             fr: 'Pas tout à fait. Prends un point : mets ' + PX + ' dans la fonction et compare avec ' + PY + '.',
+             es: 'Casi. Toma un punto: pon ' + PX + ' en la función y compáralo con ' + PY + '.',
+             ja: 'おしい。点を1つ選んで、' + PX + ' を関数に入れ、' + PY + ' とくらべよう。',
+             ar: 'ليس تمامًا. خذ نقطة واحدة: ضع ' + PX + ' في الدالة وقارن الناتج بـ ' + PY + '.' };
+  }
   if (c.frage === 'funktion' && c.achsen) {
     return { de: 'Nicht ganz. Nimm eine Linie: Setze die obere Zahl in die Funktion ein und vergleiche mit der unteren.',
              en: 'Not quite. Take one line: put the top number into the function and compare with the bottom one.',
@@ -556,10 +567,12 @@ App.funk.einstieg = function (c) {
       var l = M.last, run = M.run, i = M.names[0], o = M.names[1], html = '', zeigen = !c.geheim || M.done;
       M.run = false;
       function chip(art, wert) {
+        // Vorgegebene Paare: der Name steht im Kästchen selbst, es wird ja nichts gefüttert
+        if (c.vorgabe) return '<div class="chip namechip on' + (art === 'raus' ? ' out' : '') + '">' + vn(art === 'rein' ? i : o, art) + '</div>';
         var el = '<div class="chip' + (art === 'raus' ? ' out' : '') + (l ? ' on' : '') + '">' + (l ? wert : '') + '</div>';
         return i ? '<div class="vk">' + vn(art === 'rein' ? i : o, art) + el + '</div>' : el;
       }
-      html += '<div class="flow' + (i ? ' vflow' : '') + '">' + chip('rein', l && l.x) + ARROW +
+      html += '<div class="flow' + (i && !c.vorgabe ? ' vflow' : '') + '">' + chip('rein', l && l.x) + ARROW +
         '<div class="mbox' + (zeigen ? ' regel' : '') + (run ? ' run' : '') + '">' + (!zeigen ? '?' : c.einsetzen && i && l ? regelMit(M.r, '<span class="rein">' + l.x + '</span>') : regelHTML(M.r, i, l && l.x)) + '</div>' + ARROW +
         chip('raus', l && l.y) + '</div>';
       if (c.fn && i) html += '<p class="fn">' + funktionHTML(M.r, M.names) + '</p>';
