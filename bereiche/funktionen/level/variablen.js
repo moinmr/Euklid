@@ -8,6 +8,9 @@ var PAARE = [['a', 'b'], ['x', 'y'], ['n', 'm'], ['t', 's']];
 function vn(name, art) { return '<bdi class="vn ' + art + '">' + name + '</bdi>'; }
 function gleich(name, art, wert) { return '<bdi>' + vn(name, art) + ' = ' + wert + '</bdi>'; }
 
+// Die Regel mit dem Namen der Eingabe, z. B. 2·a + 1 (bei m = 1 nur a + 1)
+function regel(M) { return '<bdi>' + (M.r.m === 1 ? '' : M.r.m + '·') + vn(M.names[0], 'rein') + ' + ' + M.r.b + '</bdi>'; }
+
 function frageStellen(M) {
   var frei = [];
   for (var x = 0; x < 10; x++) if (!M.fed.some(function (p) { return p.x === x; })) frei.push(x);
@@ -18,9 +21,9 @@ function frageStellen(M) {
 
 // Zwei parallele Zahlenachsen: oben die Eingabe, unten die Ausgabe, jede Fütterung als Verbindung
 function achsen(M) {
-  var W = 340, L = 34, R = 12, y1 = 24, y2 = 86, max = M.max, i;
+  var W = 340, L = 34, R = 12, y1 = 20, y2 = 72, max = M.max, i;
   function px(v) { return L + v * (W - L - R) / max; }
-  var s = '<svg class="achsen" viewBox="0 0 ' + W + ' 112" aria-hidden="true">';
+  var s = '<svg class="achsen" viewBox="0 0 ' + W + ' 98" aria-hidden="true">';
   s += '<text class="an rein" x="8" y="' + (y1 + 6) + '">' + M.names[0] + '</text>';
   s += '<text class="an raus" x="8" y="' + (y2 + 6) + '">' + M.names[1] + '</text>';
   s += '<line class="ax" x1="' + L + '" y1="' + y1 + '" x2="' + (W - R) + '" y2="' + y1 + '"/>';
@@ -31,7 +34,7 @@ function achsen(M) {
     s += '<line class="tk" x1="' + px(i) + '" y1="' + (y2 - h) + '" x2="' + px(i) + '" y2="' + (y2 + h) + '"/>';
     if (lang) {
       s += '<text class="zl" x="' + px(i) + '" y="' + (y1 - 10) + '">' + i + '</text>';
-      s += '<text class="zl" x="' + px(i) + '" y="' + (y2 + 21) + '">' + i + '</text>';
+      s += '<text class="zl" x="' + px(i) + '" y="' + (y2 + 19) + '">' + i + '</text>';
     }
   }
   M.fed.forEach(function (p) {
@@ -94,9 +97,11 @@ App.level('funktionen', {
     var K = App.funk, l = M.last, run = M.run, i = M.names[0], o = M.names[1], html = '';
     M.run = false;
     html += '<div class="flow vflow"><div class="vk">' + vn(i, 'rein') + '<div class="chip' + (l ? ' on' : '') + '">' + (l ? l.x : '') + '</div></div>' + K.ARROW +
-      '<div class="mbox' + (run ? ' run' : '') + '">?</div>' + K.ARROW +
+      '<div class="mbox regel' + (run ? ' run' : '') + '">' + regel(M) + '</div>' + K.ARROW +
       '<div class="vk">' + vn(o, 'raus') + '<div class="chip out' + (l ? ' on' : '') + '">' + (l ? l.y : '') + '</div></div></div>';
     // Tasten in einer Reihe und Antworten nebeneinander, damit alles auf einen Handy-Bildschirm passt
+    // Die ganze Funktion: Ausgabe = Regel. Beim Namenswechsel ändern sich nur die Buchstaben.
+    html += '<p class="fn"><bdi>' + vn(o, 'raus') + ' = ' + regel(M) + '</bdi></p>';
     html += K.keypad('feed', -1).replace('class="keys"', 'class="keys reihe"');
     html += tabelle(M) + achsen(M);
     if (M.done) {
@@ -135,14 +140,15 @@ App.level('funktionen', {
       else if (M.q === d.n) frageStellen(M);   // gefragte Zahl selbst gefüttert: neue Frage
     } else if (act === 'ans') {
       if (d.v !== M.ans) {
-        M.fb = { de: 'Nicht ganz. Schau in die Tabelle: Wie wird aus der oberen Zahl die untere?',
-                 en: 'Not quite. Look at the table: how does the top number turn into the bottom one?',
-                 fi: 'Ei aivan. Katso taulukkoa: miten ylemmästä luvusta tulee alempi?',
-                 tr: 'Tam değil. Tabloya bak: Üstteki sayı alttakine nasıl dönüşüyor?',
-                 fr: 'Pas tout à fait. Regarde le tableau : comment le nombre du haut devient-il celui du bas ?',
-                 es: 'Casi. Mira la tabla: ¿cómo se convierte el número de arriba en el de abajo?',
-                 ja: 'おしい。表を見よう。上の数はどうやって下の数になる？',
-                 ar: 'ليس تمامًا. انظر إلى الجدول: كيف يصبح العدد العلوي العدد السفلي؟' };
+        var R = regel(M), E = vn(M.names[0], 'rein');
+        M.fb = { de: 'Nicht ganz. Setze für ' + E + ' die Zahl ' + M.q + ' in ' + R + ' ein.',
+                 en: 'Not quite. Put ' + M.q + ' in place of ' + E + ' in ' + R + '.',
+                 fi: 'Ei aivan. Sijoita ' + E + ':n paikalle ' + M.q + ' lausekkeeseen ' + R + '.',
+                 tr: 'Tam değil. ' + R + ' içinde ' + E + ' yerine ' + M.q + ' koy.',
+                 fr: 'Pas tout à fait. Remplace ' + E + ' par ' + M.q + ' dans ' + R + '.',
+                 es: 'Casi. Pon ' + M.q + ' en lugar de ' + E + ' en ' + R + '.',
+                 ja: 'おしい。' + R + ' の ' + E + ' に ' + M.q + ' を入れて計算しよう。',
+                 ar: 'ليس تمامًا. ضع ' + M.q + ' مكان ' + E + ' في ' + R + '.' };
         return;
       }
       M.fed.push({ x: M.q, y: M.ans }); M.last = M.fed[M.fed.length - 1];

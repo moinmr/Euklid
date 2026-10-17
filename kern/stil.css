@@ -157,8 +157,10 @@ body {
 .vn { font-family: Georgia, "Times New Roman", serif; font-style: italic; font-size: 1.1em; }
 .vk { position: relative; }
 .vk > .vn { position: absolute; left: 0; right: 0; top: -30px; text-align: center; font-size: 24px; line-height: 1; }
-#mach > .vflow { margin-top: 26px; }
+#mach > .vflow { margin-top: 22px; }
 #mach > .vtab { width: auto; }
+.mbox.regel { width: auto; min-width: 92px; padding: 0 10px; font-size: 21px; white-space: nowrap; }
+.fn { margin: 0; text-align: center; font-size: 20px; direction: ltr; }
 .vtab { border-collapse: collapse; margin: 0 auto; width: auto; max-width: 100%; direction: ltr; font-size: 18px; }
 .vtab th, .vtab td { min-width: 28px; padding: 5px 6px; text-align: center; border-left: 1px solid rgba(56,41,26,.25); }
 .vtab th { border-left: 0; padding-right: 10px; font-weight: 400; }
@@ -167,7 +169,7 @@ body {
 .vtab tr:last-child td { color: var(--raus); }
 .vtab td.neu { font-weight: 700; }
 .achsen { display: block; flex: none; direction: ltr; height: auto; }
-#mach:has(> .vtab) { gap: 14px; }
+#mach:has(> .vtab) { gap: 12px; }
 .keys.reihe { grid-template-columns: repeat(10, 1fr); gap: 5px; }
 .keys.reihe .key { height: 48px; padding: 0; font-size: 20px; border-radius: 10px; }
 .opts.vier { grid-template-columns: repeat(4, 1fr); gap: 8px; }
