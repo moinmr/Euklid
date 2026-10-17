@@ -73,6 +73,17 @@ body {
 #hud:empty { display: none; }
 #hud b { display: block; font-weight: 700; }
 #hud.ok { color: var(--green); font-weight: 400; }
+/* Geschafft: Karte unten über der Werkzeugleiste, Text und › nebeneinander */
+#hud.ok { top: auto; display: flex; align-items: center; gap: 12px; text-align: start; padding: 10px 10px 10px 16px; }
+#hud.ok > span { flex: 1; }
+#hud .weiter {
+  flex: none; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
+  background: none; border: 1.6px solid var(--green); border-radius: 50%; color: var(--green); cursor: pointer; padding: 0;
+}
+#hud .weiter svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#hud .weiter:active { opacity: .5; }
+.geschafft #mach { padding-bottom: calc(170px + env(safe-area-inset-bottom, 0px)); }
+.feld:empty::before { content: '\200b'; }
 [hidden] { display: none !important; }
 #home {
   position: absolute; inset: 0; z-index: 5; background: var(--parchment);
@@ -245,3 +256,6 @@ body {
 .rtl #hud, .rtl #mach .hint, .rtl #mach .q, .rtl #mach .fb, .rtl #mach .mcol h3, .rtl .area .t, .rtl #home h1, .rtl #home .sub, .rtl #langpick .sheet { direction: rtl; }
 /* Lange Antworten (z. B. "A ist verlässlich") dürfen umbrechen, ohne aus dem Knopf zu ragen */
 .opt { height: auto; min-height: 52px; line-height: 1.2; padding: 6px 8px; }
+/* Rechts-nach-links: der Knopf › bleibt rechts wie oben in der Leiste, nur der Text läuft von rechts */
+.rtl #hud.ok { direction: ltr; }
+.rtl #hud.ok > span { direction: rtl; }

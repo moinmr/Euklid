@@ -569,9 +569,10 @@ App.funk.einstieg = function (c) {
         frageStellen(M, c);
         return;
       }
+      // Immer von links nach rechts lesen, auch in Arabisch: rein → raus
       M.fb = c.frage === 'funktion' ? funktionHTML(M.r, M.names)
-        : M.names[0] ? gleich(M.names[0], 'rein', M.q) + ' → ' + gleich(M.names[1], 'raus', M.ans)
-        : '<span class="rein">' + M.q + '</span> → <span class="raus">' + M.ans + '</span>';
+        : '<bdi dir="ltr">' + (M.names[0] ? gleich(M.names[0], 'rein', M.q) + ' → ' + gleich(M.names[1], 'raus', M.ans)
+        : '<span class="rein">' + M.q + '</span> → <span class="raus">' + M.ans + '</span>') + '</bdi>';
       M.q = null;
       finish();
     }

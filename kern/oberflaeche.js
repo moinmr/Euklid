@@ -34,23 +34,27 @@ App.start = function () {
   function showHud(level, done) {
     var a = App.aktiv();
     hud.classList.toggle('ok', !!done);
+    document.body.classList.toggle('geschafft', !!done && level !== null);
+    hud.style.bottom = done ? ((S.unten || 70) + 8) + 'px' : '';
     hud.textContent = '';
     document.getElementById('b-task').classList.toggle('on', taskOpen);
     if (level === null || !a) return;
     if (!done && !taskOpen) return;
     var L = a.levels(), sv = a.solved(), lv = L[level];
     if (done) {
-      var fertig = App.txt(lv, 'done');
-      hud.textContent = sv.size === L.length ? T('alle')
-        : fertig ? fertig + ' ' + T('weiter')
-        : T('geschafft', level + 1);
+      // Geschafft-Karte unten, mit › direkt daneben: weiter mit dem Daumen
+      var fertig = App.txt(lv, 'done'), t = document.createElement('span'), w = document.createElement('button');
+      t.textContent = sv.size === L.length ? T('alle') : fertig || T('geschafft', level + 1);
+      w.className = 'weiter'; w.setAttribute('aria-label', T('naechstes'));
+      w.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5L16 12L9.5 18.5"/></svg>';
+      hud.appendChild(t); hud.appendChild(w);
     } else {
       var b = document.createElement('b');
       b.textContent = T('level') + ' ' + (level + 1) + ': ' + App.txt(lv, 'title') + (sv.has(level) ? T('schon') : '');
       hud.appendChild(b);
       hud.appendChild(document.createTextNode(App.txt(lv, 'task')));
     }
-    merkePlatz(level);
+    if (!done) merkePlatz(level);
   }
   S.onLevel = function (level, done) {
     var key = S.mode + ':' + level;
@@ -110,7 +114,11 @@ App.start = function () {
   bind('b-lang', App.wechsleSprache);
   bind('b-task', function () { taskOpen = !taskOpen; if (last) showHud(last[0], last[1]); });
 
-  hud.addEventListener('click', function () { if (taskOpen && last && !last[1]) { taskOpen = false; showHud(last[0], last[1]); } });
+  hud.addEventListener('click', function () {
+    if (!last) return;
+    if (last[1]) { var a = App.aktiv(); if (a) a.next(1); }   // Geschafft-Karte: ganz antippbar, geht weiter
+    else if (taskOpen) { taskOpen = false; showHud(last[0], last[1]); }
+  });
 
   // Höhe der unteren Leiste, damit z. B. die Wertetabelle darüber steht
   var bottom = document.getElementById('bottom');
