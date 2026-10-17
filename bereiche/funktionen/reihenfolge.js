@@ -2,6 +2,7 @@
 // Eine Kennung nie ändern: der Fortschritt hängt an ihr.
 App.ordnung.funktionen = [
   'maschine',
+  'variablen',
   'zwei-maschinen',
   'taxi',
   'punkte',
