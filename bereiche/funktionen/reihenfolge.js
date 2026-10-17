@@ -9,6 +9,7 @@ App.ordnung.funktionen = [
   'maschine',
   'taxi',
   'punkte',
+  'punkte-verbinden',
   'wertetabelle',
   'steigung',
   'achsenabschnitt',

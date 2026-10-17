@@ -29,11 +29,28 @@ function fNeed(lv) {
 function fHas(x, y) { return F.pts.some(function (p) { return p.x === x && p.y === y; }); }
 function fcopy(sn) {
   return {
-    pts: sn.pts.map(function (p) { return { x: p.x, y: p.y, gid: p.gid }; }),
-    lines: sn.lines.map(function (l) { return { a: l.a.slice(), b: l.b.slice(), gid: l.gid }; })
+    pts: sn.pts.map(function (p) { return p.fest ? { x: p.x, y: p.y, gid: 0, fest: true } : { x: p.x, y: p.y, gid: p.gid }; }),
+    lines: sn.lines.map(function (l) { return { a: l.a.slice(), b: l.b.slice(), gid: l.gid }; }),
+    fn: !!sn.fn
   };
 }
-function fnow() { return fcopy({ pts: F.pts, lines: F.lines }); }
+function fnow() { return fcopy({ pts: F.pts, lines: F.lines, fn: F.fn }); }
+// Gerade durch die zwei vorgegebenen Punkte (Level mit verbinden)
+function fRegel() {
+  var q = F.pts.filter(function (p) { return p.fest; });
+  if (q.length < 2) return null;
+  var m = (q[1].y - q[0].y) / (q[1].x - q[0].x);
+  return { m: m, b: q[0].y - m * q[0].x };
+}
+// Zwei zufällige Punkte auf y = m·x + b mit m 1 oder 2, b 0 bis 3, beide mit y von 0 bis 4
+function fFestPunkte() {
+  for (;;) {
+    var m = 1 + rnd(2), b = rnd(4), x1 = rnd(7) - 3, x2 = rnd(7) - 3, y1 = m * x1 + b, y2 = m * x2 + b;
+    if (x2 - x1 >= 2 && y1 >= 0 && y2 >= 0 && y1 <= 4 && y2 <= 4) {
+      return [{ x: x1, y: y1, gid: 0, fest: true }, { x: x2, y: y2, gid: 0, fest: true }];
+    }
+  }
+}
 function fLattice(pos) { return V([Math.round(pos[0] / U) * U, Math.round(pos[1] / U) * U]); }
 function fSnap(pos) {
   var g = fLattice(pos);
@@ -89,6 +106,18 @@ function buildFunk(ctx, ws) {
     ctx.fillStyle = BLUE; dotAt(ctx, [p.x * U, -p.y * U], false, 5);
     text(ctx, '(' + fmt(p.x) + '|' + fmt(p.y) + ')', p.x * U + 24 * k, -p.y * U - 13 * k, BLUE, 12);
   });
+  var lv = FLEVELS[F.level], q = lv && lv.verbinden && F.fn ? fRegel() : null;
+  if (q) {
+    // links oberhalb des oberen Punkts, auf hellem Schild, damit Achse und Zahlen nicht stören
+    var hp = F.pts.reduce(function (t, p) { return p.y > t.y ? p : t; }), tx = hp.x * U - 1.4 * U, ty = -hp.y * U - 0.8 * U, et = eqStr(q);
+    ctx.font = '400 ' + (15 * k) + 'px ' + C.FONT;
+    var tw = ctx.measureText(et).width + 14 * k, th = 24 * k;
+    ctx.fillStyle = 'rgba(251,244,226,0.95)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(tx - tw / 2, ty - th / 2, tw, th, 8 * k); else ctx.rect(tx - tw / 2, ty - th / 2, tw, th);
+    ctx.fill();
+    text(ctx, et, tx, ty, C.GREEN, 15);
+  }
   // Vorschau
   ctx.fillStyle = BLUE; ctx.strokeStyle = BLUE;
   if (S.ls) dotAt(ctx, vp(S.ls), true);
@@ -105,7 +134,7 @@ function buildFunk(ctx, ws) {
 // Tabelle bzw. Punkteliste unten rechts über den Werkzeugen (Bildschirmkoordinaten)
 function drawTable(ctx) {
   var lv = FLEVELS[F.level];
-  if (!lv || isMach(lv)) return;
+  if (!lv || isMach(lv) || lv.tabelle === false) return;
   var title, head = null, rows;
   if (lv.eq) {
     title = eqStr(lv.eq); head = ['x', 'y'];
@@ -168,7 +197,9 @@ function fUp(pos) {
     var b = S.target ? vp(S.target) : S.end;
     if (S.tool === 'point') {
       var px = Math.round(b[0] / U), py = -Math.round(b[1] / U);
-      if (!fHas(px, py)) {
+      if (fHas(px, py)) {
+        F.pts = F.pts.filter(function (p) { return p.fest || p.x !== px || p.y !== py; });
+      } else {
         F.gid += 1; F.pts.push({ x: px, y: py, gid: F.gid });
         var lv = FLEVELS[F.level];
         if (lv.eq && !F.lines.length && fNeed(lv).every(function (r) { return fHas(r[0], r[1]); })) App.setTool('line');
@@ -177,6 +208,7 @@ function fUp(pos) {
       S.ls = V(b);
     } else if (S.ls && Math.hypot(b[0] - S.ls.x, b[1] - S.ls.y) > 12 * S.k) {
       F.gid += 1;
+      if (FLEVELS[F.level].verbinden) { F.lines = []; F.fn = false; F.ein = ['', '']; F.slot = 0; F.fb = ''; }
       F.lines.push({ a: vp(S.ls), b: b, gid: F.gid });
       S.ls = null;
     }
@@ -196,8 +228,15 @@ function fLineOk(l, q) {
 function fCheck() {
   var lv = FLEVELS[F.level];
   if (isMach(lv)) return;
-  var ok = fNeed(lv).every(function (r) { return fHas(r[0], r[1]); });
-  if (ok && lv.eq) ok = F.lines.some(function (l) { return fLineOk(l, lv.eq); });
+  var ok;
+  if (lv.verbinden) {
+    var q = fRegel(), linie = !!q && F.lines.some(function (l) { return fLineOk(l, q); });
+    ok = linie && F.fn;
+    fSchreib(linie && !F.fn);
+  } else {
+    ok = fNeed(lv).every(function (r) { return fHas(r[0], r[1]); });
+    if (ok && lv.eq) ok = F.lines.some(function (l) { return fLineOk(l, lv.eq); });
+  }
   if (ok !== S.done) {
     S.done = ok;
     if (ok) {
@@ -210,7 +249,8 @@ function fCheck() {
   }
 }
 function fLoadLevel(n, restore) {
-  F.level = n; F.pts = []; F.lines = []; F.gid = 0;
+  F.level = n; F.pts = []; F.lines = []; F.gid = 0; F.fn = false; F.ein = ['', '']; F.slot = 0; F.fb = '';
+  fSchreib(false);
   App.setTool('point');
   S.done = false;
   if (isMach(FLEVELS[n])) {
@@ -226,10 +266,22 @@ function fLoadLevel(n, restore) {
     var sn = F.solutions[n] || F.work[n];
     if (sn) {
       var c = fcopy(sn);
-      F.pts = c.pts; F.lines = c.lines;
+      F.pts = c.pts; F.lines = c.lines; F.fn = c.fn;
       F.gid = Math.max.apply(null, [0].concat(F.pts.map(function (p) { return p.gid; }), F.lines.map(function (l) { return l.gid; })));
     }
   }
+  var lv = FLEVELS[n];
+  if (lv.verbinden) {
+    if (!F.pts.some(function (p) { return p.fest; })) F.pts = fFestPunkte();
+    // y = 0 knapp über der Eingabekarte, damit Punkte und Gerade frei bleiben
+    S.oy = S.h - (S.unten || 70) - 250;
+  }
+  // Nur die Knöpfe unten, die das Level braucht
+  var wz = lv.werkzeuge || ['point', 'line', 'undo', 'clear', 'view'];
+  [['b-point', 'point'], ['b-line', 'line'], ['b-undo', 'undo'], ['b-clear', 'clear'], ['b-view', 'view']].forEach(function (b) {
+    document.getElementById(b[0]).hidden = wz.indexOf(b[1]) < 0;
+  });
+  if (wz.indexOf('point') < 0) App.setTool(wz[0]);
   App.applyView();
   if (S.onLevel) S.onLevel(n, false);
   fCheck();
@@ -240,6 +292,7 @@ function fUndo() {
   var g = F.pts.map(function (p) { return p.gid; }).concat(F.lines.map(function (l) { return l.gid; }));
   if (!g.length) return;
   var last = Math.max.apply(null, g);
+  if (!last) return;   // vorgegebene Punkte bleiben
   F.pts = F.pts.filter(function (p) { return p.gid !== last; });
   F.lines = F.lines.filter(function (l) { return l.gid !== last; });
   render(); fCheck();
@@ -255,6 +308,49 @@ function fSave() { App.speichern(FKEY, FLEVELS, F, F.level); }
 function fLoad() {
   var n = App.laden(FKEY, OLD_FKEY, FLEVELS, F);
   if (n !== null) F.level = n;
+}
+
+// Eingabekarte unten: Funktion der Geraden selbst aufschreiben (Level mit verbinden)
+var PRUEFEN = { de: 'Prüfen', en: 'Check', fi: 'Tarkista', tr: 'Kontrol et', fr: 'Vérifier', es: 'Comprobar', ja: 'たしかめる', ar: 'تحقق' };
+var BEIDE = { de: 'Fülle beide Kästchen aus.', en: 'Fill in both boxes.', fi: 'Täytä molemmat laatikot.', tr: 'İki kutuyu da doldur.',
+              fr: 'Remplis les deux cases.', es: 'Rellena las dos casillas.', ja: '2つの□をうめよう。', ar: 'املأ المربعين.' };
+var schreib = null;
+function fSchreib(zeigen) {
+  if (!schreib) return;
+  schreib.hidden = !zeigen;
+  if (!zeigen) return;
+  function slot(k) { return '<button class="slot' + (F.slot === k ? ' sel' : '') + '" data-act="slot" data-i="' + k + '">' + F.ein[k] + '</button>'; }
+  var keys = '';
+  for (var d = 0; d < 10; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + d + '</button>';
+  schreib.innerHTML = '<p class="schreib"><bdi dir="ltr">' + vn('y', 'raus') + ' = ' + slot(0) + '·' + vn('x', 'rein') + ' + ' + slot(1) + '</bdi></p>' +
+    '<div class="keys reihe">' + keys + '</div><button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button>' +
+    (F.fb ? '<p class="fb">' + App.wahl(F.fb) + '</p>' : '');
+}
+function schreibClick(e) {
+  var b = e.target.closest ? e.target.closest('button') : null;
+  if (!b) return;
+  var act = b.getAttribute('data-act');
+  if (act === 'slot') F.slot = Number(b.getAttribute('data-i'));
+  else if (act === 'ziffer') { F.ein[F.slot] = b.getAttribute('data-n'); F.slot = 1; F.fb = ''; }
+  else if (act === 'pruefen') {
+    var q = fRegel(), m = Number(F.ein[0]), c = Number(F.ein[1]);
+    if (F.ein[0] === '' || F.ein[1] === '') F.fb = BEIDE;
+    else if (m === q.m && c === q.b) { F.fn = true; F.fb = ''; }
+    else {
+      var p = F.pts.filter(function (r) { return r.fest && m * r.x + c !== r.y; })[0] || F.pts[0];
+      var X = vn('x', 'rein') + ' = ' + fmt(p.x), w = fmt(m * p.x + c), Y = vn('y', 'raus') + ' = ' + fmt(p.y);
+      F.fb = { de: 'Nicht ganz. Mit deiner Funktion gibt ' + X + ' den Wert ' + w + ', der Punkt hat aber ' + Y + '.',
+               en: 'Not quite. With your function, ' + X + ' gives ' + w + ', but the point has ' + Y + '.',
+               fi: 'Ei aivan. Funktiollasi ' + X + ' antaa ' + w + ', mutta pisteessä ' + Y + '.',
+               tr: 'Tam değil. Senin fonksiyonunla ' + X + ' için ' + w + ' çıkıyor, ama noktada ' + Y + '.',
+               fr: 'Pas tout à fait. Avec ta fonction, ' + X + ' donne ' + w + ', mais le point a ' + Y + '.',
+               es: 'Casi. Con tu función, ' + X + ' da ' + w + ', pero el punto tiene ' + Y + '.',
+               ja: 'おしい。きみの関数だと ' + X + ' のとき ' + w + ' ですが、点は ' + Y + ' です。',
+               ar: 'ليس تمامًا. بدالتك يعطي ' + X + ' القيمة ' + w + '، لكن النقطة فيها ' + Y + '.' };
+    }
+  } else return;
+  fCheck();
+  render();
 }
 
 /* ===================== Maschinen-Level (Funktionsbegriff entdecken) ===================== */
@@ -305,6 +401,7 @@ function machShow(n) {
   var isM = n !== null;
   mach.hidden = !isM;
   ['b-point', 'b-line', 'b-undo', 'b-view'].forEach(function (id) { document.getElementById(id).hidden = isM; });
+  if (isM) document.getElementById('b-clear').hidden = false;
   if (isM) { machStart(n); mach.scrollTop = 0; }
 }
 function machClick(e) {
@@ -662,6 +759,11 @@ App.bereich({
     fLoad();
     mach = document.getElementById('mach');
     mach.addEventListener('click', machClick);
+    schreib = document.createElement('div');
+    schreib.id = 'fschreib'; schreib.hidden = true;
+    var hud = document.getElementById('hud');
+    hud.parentNode.insertBefore(schreib, hud.nextSibling);
+    schreib.addEventListener('click', schreibClick);
   },
   levels: function () { return FLEVELS; },
   solved: function () { return F.solved; },
@@ -671,6 +773,6 @@ App.bereich({
   down: fDown, move: fMove, up: fUp, check: fCheck,
   undo: fUndo, clear: fClear, next: fNext,
   persist: function () { fStore(); fSave(); },
-  sprache: function () { if (M && !mach.hidden) machRender(); }
+  sprache: function () { if (M && !mach.hidden) machRender(); if (schreib && !schreib.hidden) fSchreib(true); }
 });
 })();

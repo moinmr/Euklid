@@ -27,5 +27,6 @@ App.level('funktionen', {
           task: 'حدّد A(3|2) و B(−2|4). العدد الأول يذهب إلى اليمين، والثاني إلى الأعلى. السالب يعني اليسار أو الأسفل.',
           done: 'صحيح! القيمة الأولى هي الموضع نحو اليمين، والثانية نحو الأعلى.' }
   },
-  pts: [{ n: 'A', x: 3, y: 2 }, { n: 'B', x: -2, y: 4 }]
+  pts: [{ n: 'A', x: 3, y: 2 }, { n: 'B', x: -2, y: 4 }],
+  tabelle: false, werkzeuge: ['point']   // nur Punkte setzen, keine Liste unten rechts; nochmal antippen entfernt einen Punkt
 });

@@ -79,14 +79,15 @@ Leitidee: Der Schüler erlebt zuerst, dann bekommt es einen Namen, dann wird es 
 | 5 | Koordinatensystem | Wie Level 3 und 4, nur sind die drei Paare Punkte im Koordinatensystem (x nach rechts, y nach oben). Namen stehen in den Kästchen rein und raus. |
 | 6 | Funktion aufschreiben | Regel geheim, drei Paare in der vollen Tabelle; man schreibt die Funktion selbst in zwei Kästchen und drückt Prüfen (Kennung `maschine`). |
 | 7 | Taxipreis | Alltag: Grundgebühr plus Preis pro km (zufällig). Tabelle für 1, 2, 3, 5 km, falsche Antworten sind typische Denkfehler. |
-| 8 | Punkte setzen | Koordinaten. A(3\|2), B(−2\|4). |
-| 9 | Wertetabelle | y = x + 1, Tabelle rechnen, Punkte setzen, Gerade ziehen. |
-| 10 | Steigung | y = 2x |
-| 11 | Achsenabschnitt | y = x + 2 |
-| 12 | Steigung und Achsenabschnitt | y = 2x − 1 |
+| 8 | Punkte setzen | Koordinaten. A(3\|2), B(−2\|4). Nur das Punkt-Werkzeug, keine Liste; ein Punkt verschwindet beim zweiten Antippen. |
+| 9 | Punkte verbinden | Zwei zufällige Punkte sind vorgegeben (Kennung `punkte-verbinden`). Nur das Linien-Werkzeug: Gerade durch beide ziehen, dann unten y = □·x + □ selbst ausfüllen und prüfen. |
+| 10 | Wertetabelle | y = x + 1, Tabelle rechnen, Punkte setzen, Gerade ziehen. |
+| 11 | Steigung | y = 2x |
+| 12 | Achsenabschnitt | y = x + 2 |
+| 13 | Steigung und Achsenabschnitt | y = 2x − 1 |
 | 13 | Fallende Gerade | y = −x + 3 |
 
-- Level 1 bis 7 sind DOM-Overlays (`#mach`). Level 2 bis 6 entstehen aus Bausteinen in `App.funk.einstieg` (bereich.js). Farben: Orange = rein, Lila = raus, Grün = richtig, Menüs braun. Level 8 bis 13 laufen auf dem Canvas mit Koordinatensystem (1 Einheit = 40 px, y nach oben).
+- Level 1 bis 7 sind DOM-Overlays (`#mach`). Level 2 bis 6 entstehen aus Bausteinen in `App.funk.einstieg` (bereich.js). Farben: Orange = rein, Lila = raus, Grün = richtig, Menüs braun. Level 8 bis 14 laufen auf dem Canvas mit Koordinatensystem (1 Einheit = 40 px, y nach oben).
 - Punkte rasten auf Gitterpunkte, die Gerade wird über zwei Punkte unendlich verlängert. Prüfung über die Gleichung, nicht über irgendeine Gerade.
 - Nach den Punkten schaltet die App selbst auf das Linien-Werkzeug um.
 
