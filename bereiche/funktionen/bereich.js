@@ -276,7 +276,7 @@ function options(correct, cands) {
 function keypad(act, sel) {
   var s = '';
   for (var d = 0; d < 10; d++) {
-    s += '<button class="key' + (sel === d ? ' sel' : '') + '" data-act="' + act + '" data-n="' + d + '"' + (M.done || M.zwischen ? ' disabled' : '') + '>' + d + '</button>';
+    s += '<button class="key' + (sel === d ? ' sel' : '') + '" data-act="' + act + '" data-n="' + d + '"' + (M.done ? ' disabled' : '') + '>' + d + '</button>';
   }
   return '<div class="keys">' + s + '</div>';
 }
@@ -308,7 +308,7 @@ function machShow(n) {
   if (isM) { machStart(n); mach.scrollTop = 0; }
 }
 function machClick(e) {
-  var b = e.target.closest ? e.target.closest('[data-act]') : null;
+  var b = e.target.closest ? e.target.closest('button') : null;
   if (!b || !M || M.done || !isMach(FLEVELS[F.level])) return;
   FLEVELS[F.level].click(M, b.getAttribute('data-act'), {
     n: Number(b.getAttribute('data-n')), v: Number(b.getAttribute('data-v')), i: Number(b.getAttribute('data-i'))
@@ -556,9 +556,9 @@ App.funk.einstieg = function (c) {
       if (c.achsen) html += achsenHTML(M);
       if (c.koord) html += koordHTML(M);
       if (M.done) return html;
-      if (M.zwischen) {
-        // Runde 1 geschafft: Karte unten wie beim Lösen, › startet Runde 2 mit neuen Namen
-        return html + '<div class="zwischen" data-act="runde2" role="button"><span>' + App.wahl({
+      if (M.hinweis) {
+        // Runde 1 geschafft: grüne Karte unten, ohne ›, denn das Level geht hier weiter. Die Namen sind schon neu.
+        html += '<div class="zwischen" aria-live="polite"><span>' + App.wahl({
           de: 'Richtig! Jetzt bekommen die Zahlen neue Namen. Die Maschine bleibt gleich.',
           en: 'Right! Now the numbers get new names. The machine stays the same.',
           fi: 'Oikein! Nyt luvut saavat uudet nimet. Kone pysyy samana.',
@@ -567,18 +567,12 @@ App.funk.einstieg = function (c) {
           es: '¡Correcto! Ahora los números tienen nombres nuevos. La máquina es la misma.',
           ja: '正解！今度は数に新しい名前がつきます。マシンは同じです。',
           ar: 'صحيح! الآن تأخذ الأعداد أسماء جديدة. الآلة نفسها لم تتغير.'
-        }) + '</span><button class="weiter" data-act="runde2" aria-label="›"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5L16 12L9.5 18.5"/></svg></button></div>';
+        }) + '</span></div>';
       }
       return html + (M.q === null ? '<p class="hint">' + feedHint(3 - M.fed.length) + '</p>' : frageHTML(M, c));
     },
     click: function (M, act, d) {
-      if (act === 'runde2') {
-        // Gleiche Maschine, neue Namen. Immer y für die Eingabe und x für die Ausgabe.
-        M.zwischen = false; M.round = 2; M.names = ['y', 'x']; M.fb = ''; M.last = null;
-        frageStellen(M, c);
-        return;
-      }
-      if (M.zwischen) return;
+      M.hinweis = false;
       if (act === 'feed') {
         var p = { x: d.n, y: f(M.r, d.n) };
         if (!hatX(M, p.x)) M.fed.push(p);
@@ -593,7 +587,12 @@ App.funk.einstieg = function (c) {
       if (richtig === null) return;
       if (!richtig) { M.wrong++; M.fb = falschFB(M, c); return; }
       if (c.frage !== 'funktion') { M.fed.push({ x: M.q, y: M.ans }); M.last = M.fed[M.fed.length - 1]; }
-      if (c.namen === 'wechsel' && M.round === 1) { M.zwischen = true; M.q = null; M.fb = ''; return; }
+      if (c.namen === 'wechsel' && M.round === 1) {
+        // Runde 2: gleiche Maschine, neue Namen. Immer y für die Eingabe und x für die Ausgabe.
+        M.round = 2; M.names = ['y', 'x']; M.fb = ''; M.last = null; M.hinweis = true;
+        frageStellen(M, c);
+        return;
+      }
       // Immer von links nach rechts lesen, auch in Arabisch: rein → raus
       M.fb = c.frage === 'funktion' ? funktionHTML(M.r, M.names)
         : '<bdi dir="ltr">' + (M.names[0] ? gleich(M.names[0], 'rein', M.q) + ' → ' + gleich(M.names[1], 'raus', M.ans)
