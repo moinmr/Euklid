@@ -751,11 +751,12 @@ function nullFalschFB(w, y) {
            ar: 'ليس تمامًا. مع ' + fmt(w) + ' يخرج ' + fmt(y) + '، وهي النقطة ' + P + '. إنها ليست على محور y. على محور y يكون x دائمًا 0.' };
 }
 function nullKarte() {
-  var h = fNull(), keys = '', w = F.ein[0];
+  var h = fNull(), keys = '';
   for (var d = -4; d <= 4; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + fmt(d) + '</button>';
-  var regel = (h.m === 1 ? '' : h.m === -1 ? '−' : fmt(h.m) + '·') + (w === '' ? 'x' : '<span class="rein">' + (w.charAt(0) === '−' ? '(' + w + ')' : w) + '</span>') + ' + ' + h.b;
+  // die Regel bleibt geheim; nach dem Prüfen steht der y-Wert hinten in Lila
+  var raus = F.nullFalsch === null || F.nullFalsch === undefined ? '?' : fmt(h.m * F.nullFalsch + h.b);
   schreib.innerHTML = '<p class="fb">' + App.wahl(NULLF.frage) + '</p>' +
-    '<div class="steig nullm"><span class="rein">' + slotHTML(0) + '</span><span class="pf">→</span><span class="mregel">' + regel + '</span><span class="pf">→</span><span class="raus">?</span></div>' +
+    '<div class="steig nullm"><span class="rein">' + slotHTML(0) + '</span><span class="pf">→</span><span class="mregel">?</span><span class="pf">→</span><span class="raus">' + raus + '</span></div>' +
     '<div class="keys reihe neun">' + keys + '</div><button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button>' +
     (F.fb ? '<p class="fb">' + App.wahl(F.fb) + '</p>' : '');
 }
