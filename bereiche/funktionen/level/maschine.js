@@ -41,7 +41,8 @@ App.level('funktionen', {
     html += '<div class="flow"><div class="chip' + (l ? ' on' : '') + '">' + (l ? l.x : '') + '</div>' + K.ARROW +
       '<div class="mbox' + (run ? ' run' : '') + '">?</div>' + K.ARROW +
       '<div class="chip out' + (l ? ' on' : '') + '">' + (l ? l.y : '') + '</div></div>';
-    html += K.keypad('feed', l ? l.x : -1);
+    // Keine markierte Taste: die Zahl steht ja schon orange links neben der Maschine
+    html += K.keypad('feed', -1);
     html += '<div class="hist">' + M.fed.map(function (p) { return '<span><span class="rein">' + p.x + '</span> → <span class="raus">' + p.y + '</span></span>'; }).join('') + '</div>';
     if (M.fed.length < 3) {
       var n = 3 - M.fed.length;
