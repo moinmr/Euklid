@@ -85,7 +85,7 @@ Leitidee: Der Schüler erlebt zuerst, dann bekommt es einen Namen, dann wird es 
 | 11 | Steigung | y = 2x |
 | 12 | Achsenabschnitt | y = x + 2 |
 | 13 | Steigung und Achsenabschnitt | y = 2x − 1 |
-| 13 | Fallende Gerade | y = −x + 3 |
+| 14 | Fallende Gerade | y = −x + 3 |
 
 - Level 1 bis 7 sind DOM-Overlays (`#mach`). Level 2 bis 6 entstehen aus Bausteinen in `App.funk.einstieg` (bereich.js). Farben: Orange = rein, Lila = raus, Grün = richtig, Menüs braun. Level 8 bis 14 laufen auf dem Canvas mit Koordinatensystem (1 Einheit = 40 px, y nach oben).
 - Punkte rasten auf Gitterpunkte, die Gerade wird über zwei Punkte unendlich verlängert. Prüfung über die Gleichung, nicht über irgendeine Gerade.
