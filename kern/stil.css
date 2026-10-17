@@ -289,8 +289,8 @@ body {
 #fschreib .schnitt { display: flex; justify-content: space-around; gap: 8px; }
 #fschreib .schnitt p { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 13px; opacity: .95; }
 #fschreib .schnitt bdi { font-size: 24px; }
-#fschreib .slot { width: 56px; height: 44px; margin: 0 2px; font-size: 22px; }
-#fschreib .zeile { display: flex; gap: 8px; }
-#fschreib .zeile .minus { flex: none; width: 64px; font-size: 26px; }
+#fschreib .slot { width: 46px; height: 44px; margin: 0 2px; font-size: 20px; }
+#fschreib .keys.neun { grid-template-columns: repeat(9, 1fr); }
+#fschreib .keys.neun .key { font-size: 18px; }
 /* Rechts-nach-links: der Knopf › bleibt rechts wie oben in der Leiste, nur der Text läuft von rechts */
 .rtl #fertig > span { direction: rtl; }

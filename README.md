@@ -81,7 +81,7 @@ Leitidee: Der Schüler erlebt zuerst, dann bekommt es einen Namen, dann wird es 
 | 7 | Taxipreis | Alltag: Grundgebühr plus Preis pro km (zufällig). Tabelle für 1, 2, 3, 5 km, falsche Antworten sind typische Denkfehler. |
 | 8 | Punkte setzen | Koordinaten. A(3\|2), B(−2\|4). Keine Liste, unten nur der Papierkorb; ein Punkt verschwindet beim zweiten Antippen. Falsche Punkte werden rot, mit Hinweis unten, und verschwinden beim nächsten Tippen; gelöst erst ohne falsche Punkte. |
 | 9 | Punkte verbinden | Zwei zufällige Punkte sind vorgegeben (Kennung `punkte-verbinden`). Unten nur der Papierkorb. Die Linie rastet nur an den zwei Punkten ein, sonst werden keine Punkte gezeigt. Verfehlt sie einen Punkt, wird sie rot, mit Hinweis, und verschwindet beim nächsten Versuch. Gelöst: „Jede Gerade ist durch zwei Punkte bestimmt.“ |
-| 10 | Schnittpunkte mit den Achsen | Eine zufällige Gerade ist vorgegeben (Kennung `achsen-schnitt`), Schnittpunkte ganzzahlig. Unten (□\|0) und (0\|□) eintippen, mit Minus-Taste, dann Prüfen. Papierkorb gibt eine neue Gerade. |
+| 10 | Schnittpunkte mit den Achsen | Eine zufällige Gerade ist vorgegeben (Kennung `achsen-schnitt`), Schnittpunkte ganzzahlig. Unten beide Schnittpunkte ganz eintippen, x-Achse (□\|□) und y-Achse (□\|□), mit Tasten von −4 bis 4, dann Prüfen. Hinweise: auf der x-Achse ist y immer 0 usw. Papierkorb gibt eine neue Gerade. |
 | 11 | Wertetabelle | y = x + 1, Tabelle rechnen, Punkte setzen, Gerade ziehen. |
 | 12 | Steigung | y = 2x |
 | 13 | Achsenabschnitt | y = x + 2 |

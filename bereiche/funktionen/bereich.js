@@ -337,7 +337,7 @@ function fCheck() {
   }
 }
 function fLoadLevel(n, restore) {
-  F.level = n; F.pts = []; F.lines = []; F.gid = 0; F.fn = false; F.ein = ['', '']; F.slot = 0; F.fb = '';
+  F.level = n; F.pts = []; F.lines = []; F.gid = 0; F.fn = false; F.ein = ['', '', '', '']; F.slot = 0; F.fb = '';
   fSchreib(false);
   App.setTool('point');
   S.done = false;
@@ -403,8 +403,8 @@ function fLoad() {
 
 // Karte unten: Hinweise im Gitter, und im Level mit schnitt die Eingabe der zwei Schnittpunkte
 var PRUEFEN = { de: 'Prüfen', en: 'Check', fi: 'Tarkista', tr: 'Kontrol et', fr: 'Vérifier', es: 'Comprobar', ja: 'たしかめる', ar: 'تحقق' };
-var BEIDE = { de: 'Fülle beide Kästchen aus.', en: 'Fill in both boxes.', fi: 'Täytä molemmat laatikot.', tr: 'İki kutuyu da doldur.',
-              fr: 'Remplis les deux cases.', es: 'Rellena las dos casillas.', ja: '2つの□をうめよう。', ar: 'املأ المربعين.' };
+var ALLE = { de: 'Fülle alle Kästchen aus.', en: 'Fill in all the boxes.', fi: 'Täytä kaikki laatikot.', tr: 'Bütün kutuları doldur.',
+             fr: 'Remplis toutes les cases.', es: 'Rellena todas las casillas.', ja: 'ぜんぶの□をうめよう。', ar: 'املأ كل المربعات.' };
 var ACHSE = {
   de: ['x-Achse', 'y-Achse'], en: ['x-axis', 'y-axis'], fi: ['x-akseli', 'y-akseli'], tr: ['x ekseni', 'y ekseni'],
   fr: ['axe des x', 'axe des y'], es: ['eje x', 'eje y'], ja: ['x 軸', 'y 軸'], ar: ['محور x', 'محور y']
@@ -419,35 +419,43 @@ var SCHAU = [
     fr: 'Pas tout à fait. Regarde bien où la droite coupe l’axe des y.', es: 'Casi. Mira bien dónde corta la recta el eje y.',
     ja: 'おしい。直線が y 軸と交わるところをよく見よう。', ar: 'ليس تمامًا. انظر جيدًا أين يقطع المستقيم محور y.' }
 ];
+var NULL_AUF = [
+  { de: 'Auf der x-Achse ist y immer 0.', en: 'On the x-axis, y is always 0.', fi: 'x-akselilla y on aina 0.', tr: 'x ekseninde y her zaman 0’dır.',
+    fr: 'Sur l’axe des x, y vaut toujours 0.', es: 'En el eje x, y siempre vale 0.', ja: 'x 軸の上では、y はいつも 0 です。', ar: 'على محور x تكون y دائمًا 0.' },
+  { de: 'Auf der y-Achse ist x immer 0.', en: 'On the y-axis, x is always 0.', fi: 'y-akselilla x on aina 0.', tr: 'y ekseninde x her zaman 0’dır.',
+    fr: 'Sur l’axe des y, x vaut toujours 0.', es: 'En el eje y, x siempre vale 0.', ja: 'y 軸の上では、x はいつも 0 です。', ar: 'على محور y تكون x دائمًا 0.' }
+];
 var schreib = null;
 function fSchreib(zeigen, hinweis) {
   if (!schreib) return;
   schreib.hidden = !zeigen && !hinweis;
   schreib.classList.toggle('hinweis', !zeigen && !!hinweis);
   if (!zeigen) { schreib.innerHTML = hinweis ? '<p class="fb">' + App.wahl(hinweis) + '</p>' : ''; return; }
+  // vier Kästchen: beide Schnittpunkte ganz eintippen, auch die 0; Tasten von −4 bis 4, Minuszahlen direkt
   function slot(k) { return '<button class="slot' + (F.slot === k ? ' sel' : '') + '" data-act="slot" data-i="' + k + '">' + F.ein[k] + '</button>'; }
   var keys = '', t = App.wahl(ACHSE);
-  for (var d = 0; d < 10; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + d + '</button>';
+  for (var d = -4; d <= 4; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + fmt(d) + '</button>';
   schreib.innerHTML =
-    '<div class="schnitt"><p><span>' + t[0] + '</span><bdi dir="ltr">(' + slot(0) + '|0)</bdi></p>' +
-    '<p><span>' + t[1] + '</span><bdi dir="ltr">(0|' + slot(1) + ')</bdi></p></div>' +
-    '<div class="keys reihe">' + keys + '</div>' +
-    '<div class="zeile"><button class="key minus" data-act="minus" aria-label="minus">−</button>' +
-    '<button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button></div>' +
+    '<div class="schnitt"><p><span>' + t[0] + '</span><bdi dir="ltr">(' + slot(0) + '|' + slot(1) + ')</bdi></p>' +
+    '<p><span>' + t[1] + '</span><bdi dir="ltr">(' + slot(2) + '|' + slot(3) + ')</bdi></p></div>' +
+    '<div class="keys reihe neun">' + keys + '</div>' +
+    '<button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button>' +
     (F.fb ? '<p class="fb">' + App.wahl(F.fb) + '</p>' : '');
 }
 function schreibClick(e) {
   var b = e.target.closest ? e.target.closest('button') : null;
   if (!b) return;
-  var act = b.getAttribute('data-act'), v = F.ein[F.slot], neg = v.charAt(0) === '−';
+  var act = b.getAttribute('data-act');
   if (act === 'slot') F.slot = Number(b.getAttribute('data-i'));
-  else if (act === 'ziffer') { F.ein[F.slot] = (neg ? '−' : '') + b.getAttribute('data-n'); F.slot = 1; F.fb = ''; }
-  else if (act === 'minus') { F.ein[F.slot] = neg ? v.slice(1) : '−' + v; F.fb = ''; }
+  else if (act === 'ziffer') { F.ein[F.slot] = fmt(Number(b.getAttribute('data-n'))); F.slot = Math.min(3, F.slot + 1); F.fb = ''; }
   else if (act === 'pruefen') {
     var z = fSchnitt(), w = F.ein.map(function (s) { return Number(s.replace('−', '-')); });
-    if (!/\d/.test(F.ein[0]) || !/\d/.test(F.ein[1])) F.fb = BEIDE;
-    else if (w[0] === z.x && w[1] === z.y) { F.fn = true; F.fb = ''; }
-    else F.fb = SCHAU[w[0] === z.x ? 1 : 0];
+    if (F.ein.some(function (s) { return s === ''; })) F.fb = ALLE;
+    else if (w[1] !== 0) F.fb = NULL_AUF[0];
+    else if (w[0] !== z.x) F.fb = SCHAU[0];
+    else if (w[2] !== 0) F.fb = NULL_AUF[1];
+    else if (w[3] !== z.y) F.fb = SCHAU[1];
+    else { F.fn = true; F.fb = ''; }
   } else return;
   fCheck();
   render();
