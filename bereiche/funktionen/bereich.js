@@ -87,6 +87,12 @@ function fFestHerleitung() {
     }
   }
 }
+// Level mit nullfrage: eine Gerade y = mx + b mit b von 1 bis 3; a = (0|b), b = (1|b+m)
+function fFestNull() {
+  var m = [-2, -1, 1, 2][rnd(4)], b = 1 + rnd(3);
+  return { a: [0, -b * U], b: [U, -(b + m) * U], gid: 0, fest: true };
+}
+function fNull() { var l = F.lines[0]; return { m: fSteig(l), b: -Math.round(l.a[1] / U) }; }
 function fHerl() { var l = F.lines[F.runde]; return { m: fSteig(l), b: -Math.round(l.a[1] / U), xs: fLauf(l) }; }
 function fLauf(l) { return Math.round((l.b[0] - l.a[0]) / U); }
 function fSteig(l) { return Math.round((l.a[1] - l.b[1]) / U) / fLauf(l); }
@@ -97,6 +103,11 @@ function steigAnsicht() {
   var oben = hud && hud.firstChild ? hud.getBoundingClientRect().bottom : 60;
   var unten = schreib.hidden ? S.h - (S.unten || 70) : schreib.getBoundingClientRect().top;
   var ym = (-l.a[1] - l.b[1]) / 2 / U, xm = (l.a[0] + l.b[0]) / 2 / U;
+  if (FLEVELS[F.level].nullfrage) {
+    // Schnittpunkt mit der y-Achse und ein falsch eingegebener Punkt beide sichtbar
+    var nh = fNull(), w = F.nullFalsch === null || F.nullFalsch === undefined ? 0 : F.nullFalsch;
+    xm = w / 2; ym = nh.b + nh.m * w / 2;
+  }
   if (FLEVELS[F.level].herleitung && (F.phase === 3 || F.phase === 4)) { var h = fHerl(), g = herlGmax(); xm = g / 2; ym = h.b + h.m * g / 2; }
   S.oy = (oben + unten) / 2 + ym * U;
   S.ox = S.w / 2 - xm * U;
@@ -153,7 +164,7 @@ function buildFunk(ctx, ws) {
   if (x0 < 0 && x1 > 0) text(ctx, 'y', 13 * k, y0 + 122 * k, INK, 13);
 
   ctx.lineCap = 'round';
-  var lvz = FLEVELS[F.level], nurFeste = !!(lvz && (lvz.verbinden || lvz.schnitt || lvz.steigung || lvz.herleitung));   // nur die vorgegebenen Punkte zeigen
+  var lvz = FLEVELS[F.level], nurFeste = !!(lvz && (lvz.verbinden || lvz.schnitt || lvz.steigung || lvz.herleitung || lvz.nullfrage));   // nur die vorgegebenen Punkte zeigen
   F.lines.forEach(function (l, i) {
     if (lvz && (lvz.steigung || lvz.herleitung) && i !== F.runde) return;   // immer nur die aktuelle Gerade
     var col = l.fest ? INK : fLinieFalsch(l) ? C.RED : BLUE;   // vorgegebene Gerade dunkel, falsche Linie rot
@@ -167,15 +178,26 @@ function buildFunk(ctx, ws) {
     ctx.beginPath(); ctx.moveTo(sl.a[0], sl.a[1]); ctx.lineTo(ecke[0], ecke[1]); ctx.lineTo(sl.b[0], sl.b[1]); ctx.stroke(); ctx.restore();
     text(ctx, String(fLauf(sl)), (sl.a[0] + ecke[0]) / 2, ecke[1] + (hoch ? 13 : -13) * k, INK, 14);
   }
+  if (lvz && lvz.nullfrage && F.lines[0]) {
+    // Schnittpunkt mit der y-Achse, x noch offen; ein falsch eingegebener Wert als roter Punkt
+    var nf = fNull();
+    ctx.fillStyle = INK; dotAt(ctx, [0, -nf.b * U], false, 6);
+    text(ctx, '(' + (F.fn ? '0' : '?') + '|' + nf.b + ')', (nf.m > 0 ? -36 : 36) * k, -nf.b * U - 14 * k, INK, 14);
+    if (F.nullFalsch !== null && F.nullFalsch !== undefined && !F.fn) {
+      var wy = nf.m * F.nullFalsch + nf.b;
+      ctx.fillStyle = C.RED; dotAt(ctx, [F.nullFalsch * U, -wy * U], false, 6);
+      text(ctx, '(' + fmt(F.nullFalsch) + '|' + fmt(wy) + ')', F.nullFalsch * U + (nf.m > 0 ? -36 : 36) * k, -wy * U - 14 * k, C.RED, 14);
+    }
+  }
   if (lvz && lvz.herleitung && F.lines[F.runde]) {
     // beide Achsenschnittpunkte mit Koordinaten; ab Schritt 2 der Erklärung das Steigungsdreieck dazwischen.
     // Die Ecke liegt bei (xs|b), so liegen die Katheten nie auf den Achsen. Beschriftungen in den freien Ecken.
     var hm = fHerl(), steigt = hm.m > 0, sx = hm.xs > 0 ? 1 : -1, sb = hm.b > 0 ? 1 : -1, P = [0, -hm.b * U], Q = [hm.xs * U, 0], ecke = [Q[0], P[1]];
     if (F.phase === 3 || F.phase === 4) {
       // allgemeiner Punkt (x|y) auf der Geraden, Dreieck von (0|b) bis dorthin: x nach rechts, y − b nach oben oder unten
-      var G = [F.gx * U, -(hm.b + hm.m * F.gx) * U], C = [G[0], P[1]];
+      var G = [F.gx * U, -(hm.b + hm.m * F.gx) * U], E = [G[0], P[1]];
       ctx.save(); ctx.strokeStyle = INK; ctx.globalAlpha = 0.75; ctx.lineWidth = 2 * ws * k; ctx.setLineDash([6 * k, 5 * k]);
-      ctx.beginPath(); ctx.moveTo(P[0], P[1]); ctx.lineTo(C[0], C[1]); ctx.lineTo(G[0], G[1]); ctx.stroke(); ctx.restore();
+      ctx.beginPath(); ctx.moveTo(P[0], P[1]); ctx.lineTo(E[0], E[1]); ctx.lineTo(G[0], G[1]); ctx.stroke(); ctx.restore();
       text(ctx, 'x', G[0] / 2, P[1] + (steigt ? 14 : -14) * k, INK, 15);
       text(ctx, 'y − b', G[0] + 26 * k, (P[1] + G[1]) / 2, INK, 15);
       ctx.fillStyle = INK; dotAt(ctx, G, false, 7);
@@ -273,7 +295,7 @@ function herlZiehen(pos) {
 }
 function fDown(pos) {
   herlZiehen(pos);
-  if (FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung || FLEVELS[F.level].herleitung) return true;
+  if (FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung || FLEVELS[F.level].herleitung || FLEVELS[F.level].nullfrage) return true;
   S.drawing = true; S.lmode = S.ls ? 'end' : 'start';
   S.end = [pos[0], pos[1]]; S.target = fTarget(pos);
   S.loupe = S.sp; render();
@@ -281,7 +303,7 @@ function fDown(pos) {
 }
 function fMove(pos) {
   herlZiehen(pos);
-  if (FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung || FLEVELS[F.level].herleitung) return true;
+  if (FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung || FLEVELS[F.level].herleitung || FLEVELS[F.level].nullfrage) return true;
   if (S.drawing) { S.end = [pos[0], pos[1]]; S.target = fTarget(pos); }
   S.loupe = S.sp; render();
   return true;
@@ -397,7 +419,7 @@ function fCheck() {
     var q = fRegel(), linie = !!q && F.lines.some(function (l) { return fLineOk(l, q); });
     ok = linie;
     fSchreib(false, F.lines.length && !linie ? LINIE_FALSCH : null);
-  } else if (lv.schnitt || lv.steigung || lv.herleitung) {
+  } else if (lv.schnitt || lv.steigung || lv.herleitung || lv.nullfrage) {
     ok = F.fn;
     fSchreib(!F.fn);
   } else {
@@ -423,7 +445,7 @@ function fCheck() {
   }
 }
 function fLoadLevel(n, restore) {
-  F.level = n; F.pts = []; F.lines = []; F.gid = 0; F.fn = false; F.ein = ['', '', '', '']; F.slot = 0; F.fb = ''; F.fbOk = false; F.runde = 0; F.phase = 0;
+  F.level = n; F.pts = []; F.lines = []; F.gid = 0; F.fn = false; F.ein = ['', '', '', '']; F.slot = 0; F.fb = ''; F.fbOk = false; F.runde = 0; F.phase = 0; F.nullFalsch = null;
   fSchreib(false);
   App.setTool('point');
   S.done = false;
@@ -457,6 +479,10 @@ function fLoadLevel(n, restore) {
     if (!F.lines.some(function (l) { return l.fest; })) { F.lines = fFestSteigung(); F.runde = 0; }
     F.ein = [''];
   }
+  if (lv.nullfrage) {
+    if (!F.lines.some(function (l) { return l.fest; })) F.lines = [fFestNull()];
+    F.ein = [''];
+  }
   if (lv.herleitung) {
     // auch neu, wenn noch Geraden aus der alten Fassung gespeichert sind (zweiter Punkt nicht auf der x-Achse)
     if (!F.lines.some(function (l) { return l.fest; }) || F.lines.some(function (l) { return l.b[1] !== 0; })) { F.lines = fFestHerleitung(); F.runde = 0; }
@@ -471,7 +497,7 @@ function fLoadLevel(n, restore) {
   App.applyView();
   if (S.onLevel) S.onLevel(n, false);
   fCheck();
-  if (lv.steigung || lv.herleitung) steigAnsicht();
+  if (lv.steigung || lv.herleitung || lv.nullfrage) steigAnsicht();
 }
 function fStore() { if (!isMach(FLEVELS[F.level]) && !F.solved.has(F.level)) F.work[F.level] = fnow(); }
 function fUndo() {
@@ -529,6 +555,7 @@ function fSchreib(zeigen, hinweis) {
   if (!zeigen) { schreib.innerHTML = hinweis ? '<p class="fb">' + App.wahl(hinweis) + '</p>' : ''; return; }
   if (FLEVELS[F.level].steigung) return steigKarte();
   if (FLEVELS[F.level].herleitung) return herlKarte();
+  if (FLEVELS[F.level].nullfrage) return nullKarte();
   // vier Kästchen: beide Schnittpunkte ganz eintippen, auch die 0; Tasten von −4 bis 4, Minuszahlen direkt
   function slot(k) { return '<button class="slot' + (F.slot === k ? ' sel' : '') + '" data-act="slot" data-i="' + k + '">' + F.ein[k] + '</button>'; }
   var keys = '', t = App.wahl(ACHSE);
@@ -701,6 +728,43 @@ function herlKarte() {
     (F.fb ? '<p class="fb' + (F.fbOk ? ' ok' : '') + '">' + App.wahl(F.fb) + '</p>' : '');
 }
 // Weiter in der Erklärung; nach Schritt 3 kommt die zweite Gerade zum Selbermachen
+// Level mit nullfrage: unten die Maschine der Geraden, x → [m·x + b] → y. Welche Zahl muss hinein?
+var NULLF = {
+  frage: { de: 'Welche Zahl muss hinein, damit der Schnittpunkt mit der y-Achse herauskommt?',
+           en: 'Which number must go in so that the point on the y-axis comes out?',
+           fi: 'Mikä luku pitää syöttää, jotta ulos tulee y-akselin leikkauspiste?',
+           tr: 'y eksenini kestiği noktanın çıkması için hangi sayı girmeli?',
+           fr: 'Quel nombre faut-il mettre pour obtenir le point sur l’axe des y ?',
+           es: '¿Qué número tiene que entrar para que salga el punto del eje y?',
+           ja: 'y 軸との交点が出てくるには、どの数を入れればいい？',
+           ar: 'أي عدد يجب إدخاله حتى تخرج نقطة التقاطع مع محور y؟' }
+};
+function nullFalschFB(w, y) {
+  var P = '<bdi dir="ltr">(' + fmt(w) + '|' + fmt(y) + ')</bdi>';
+  return { de: 'Nicht ganz. Mit ' + fmt(w) + ' kommt ' + fmt(y) + ' heraus, das ist der Punkt ' + P + '. Er liegt nicht auf der y-Achse. Auf der y-Achse ist x immer 0.',
+           en: 'Not quite. With ' + fmt(w) + ', out comes ' + fmt(y) + ': the point ' + P + '. It is not on the y-axis. On the y-axis, x is always 0.',
+           fi: 'Ei aivan. Luvulla ' + fmt(w) + ' ulos tulee ' + fmt(y) + ', eli piste ' + P + '. Se ei ole y-akselilla. y-akselilla x on aina 0.',
+           tr: 'Tam değil. ' + fmt(w) + ' ile ' + fmt(y) + ' çıkar, bu ' + P + ' noktası. y ekseninde değil. y ekseninde x her zaman 0’dır.',
+           fr: 'Pas tout à fait. Avec ' + fmt(w) + ', on obtient ' + fmt(y) + ' : le point ' + P + '. Il n’est pas sur l’axe des y. Sur l’axe des y, x vaut toujours 0.',
+           es: 'Casi. Con ' + fmt(w) + ' sale ' + fmt(y) + ': el punto ' + P + '. No está en el eje y. En el eje y, x siempre vale 0.',
+           ja: 'おしい。' + fmt(w) + ' を入れると ' + fmt(y) + ' が出て、点 ' + P + ' になります。y 軸の上にはありません。y 軸の上では x はいつも 0 です。',
+           ar: 'ليس تمامًا. مع ' + fmt(w) + ' يخرج ' + fmt(y) + '، وهي النقطة ' + P + '. إنها ليست على محور y. على محور y يكون x دائمًا 0.' };
+}
+function nullKarte() {
+  var h = fNull(), keys = '', w = F.ein[0];
+  for (var d = -4; d <= 4; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + fmt(d) + '</button>';
+  var regel = (h.m === 1 ? '' : h.m === -1 ? '−' : fmt(h.m) + '·') + (w === '' ? 'x' : '<span class="rein">' + (w.charAt(0) === '−' ? '(' + w + ')' : w) + '</span>') + ' + ' + h.b;
+  schreib.innerHTML = '<p class="fb">' + App.wahl(NULLF.frage) + '</p>' +
+    '<div class="steig nullm"><span class="rein">' + slotHTML(0) + '</span><span class="pf">→</span><span class="mregel">' + regel + '</span><span class="pf">→</span><span class="raus">?</span></div>' +
+    '<div class="keys reihe neun">' + keys + '</div><button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button>' +
+    (F.fb ? '<p class="fb">' + App.wahl(F.fb) + '</p>' : '');
+}
+function nullPruefen() {
+  var h = fNull(), w = Number(F.ein[0].replace('−', '-'));
+  if (F.ein[0] === '') { F.fb = ALLE; return; }
+  if (w === 0) { F.fn = true; F.fb = ''; F.nullFalsch = null; return; }
+  F.nullFalsch = w; F.fb = nullFalschFB(w, h.m * w + h.b); F.neueAnsicht = true;
+}
 function herlSchritt() {
   if (F.phase < 5) F.phase++;
   else { F.runde++; F.phase = 6; F.ein = ['', '']; F.slot = 0; F.fb = ''; }
@@ -720,9 +784,10 @@ function schreibClick(e) {
   if (!b) return;
   var act = b.getAttribute('data-act');
   if (act === 'slot') F.slot = Number(b.getAttribute('data-i'));
-  else if (act === 'ziffer') { F.ein[F.slot] = fmt(Number(b.getAttribute('data-n'))); F.slot = Math.min(F.ein.length - 1, F.slot + 1); F.fb = ''; F.fbOk = false; }
+  else if (act === 'ziffer') { F.ein[F.slot] = fmt(Number(b.getAttribute('data-n'))); F.slot = Math.min(F.ein.length - 1, F.slot + 1); F.fb = ''; F.fbOk = false; F.nullFalsch = null; }
   else if (act === 'pruefen' && FLEVELS[F.level].steigung) steigPruefen();
   else if (act === 'pruefen' && FLEVELS[F.level].herleitung) herlPruefen();
+  else if (act === 'pruefen' && FLEVELS[F.level].nullfrage) nullPruefen();
   else if (act === 'schritt') herlSchritt();
   else if (act === 'pruefen') {
     var z = fSchnitt(), w = F.ein.map(function (s) { return Number(s.replace('−', '-')); });
@@ -827,8 +892,7 @@ function machClick(e) {
 
 App.funk = {
   ARROW: ARROW, rnd: rnd, shuffle: shuffle, options: options, keypad: keypad, optButtons: optButtons,
-  f: f, finish: finish, falsch: falsch, koordHTML: function (M) { return koordHTML(M); },
-  regelMit: function (r, t) { return regelMit(r, t); }, funktionHTML: function (r, n) { return funktionHTML(r, n); }, M: function () { return M; }
+  f: f, finish: finish, falsch: falsch, M: function () { return M; }
 };
 
 /* ---------- Einstiegs-Level: eine Maschine mit sichtbarer oder geheimer Regel ----------

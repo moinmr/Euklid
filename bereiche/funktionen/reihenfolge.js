@@ -11,7 +11,5 @@ App.ordnung.funktionen = [
   'punkte',
   'punkte-verbinden',
   'null-einwerfen',
-  'achsen-schnitt',
-  'steigung-ablesen',
-  'mx-plus-b'
+  'steigung-ablesen'
 ];

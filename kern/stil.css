@@ -310,3 +310,9 @@ body {
 .rtl #mach .erkl, .rtl #fschreib .erkl { direction: rtl; }
 #fschreib .erkl .zeilen { margin-top: 6px; font-size: 18px; }
 #fschreib .erkl .zeilen i { display: inline-block; width: 3.2em; margin-left: .6em; text-align: left; font-style: normal; opacity: .6; }
+/* Maschine der Geraden in der Eingabekarte: □ → [Regel] → ? */
+#fschreib .nullm { gap: 8px; font-weight: 400; font-size: 20px; }
+#fschreib .nullm .mregel { border: 1.6px solid var(--ink); border-radius: 12px; padding: 8px 12px; }
+#fschreib .nullm .rein .slot { color: var(--rein); }
+#fschreib .nullm .raus { color: var(--raus); font-size: 24px; }
+#fschreib .nullm .pf { opacity: .7; }
