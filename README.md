@@ -73,8 +73,8 @@ Leitidee: Der Schüler erlebt zuerst, dann bekommt es einen Namen, dann wird es 
 | Level | Titel | Erkenntnis |
 |---|---|---|
 | 1 | Die Maschine | Zahl rein, Zahl raus. Die Regel steht sichtbar in der Box (z. B. 2·□ + 1), □ ist der Platz für die Zahl. Dreimal füttern, dann "Was kommt bei ... heraus?". |
-| 2 | Zahlen mit Namen | Variablen: Eingabe und Ausgabe bekommen Namen (zufällig, z. B. a und b), Funktion als Zeile, volle Tabelle 0 bis 9, nach dem Füttern steht die Zahl in der Box. Eine Frage. |
-| 3 | Zwei Achsen | Jede Fütterung als Linie zwischen zwei parallelen Zahlenachsen (oben rein, unten raus). Namen zufällig. |
+| 2 | Zahlen mit Namen | Variablen: Eingabe und Ausgabe haben Namen (zufällig, auch y rein und x raus). Drei zufällige Paare stehen in der vollen Tabelle, Box zeigt ?, Frage: Welche Funktion? (vier Antworten) |
+| 3 | Zwei Achsen | Wie Level 2, nur stehen die drei Paare als Linien zwischen zwei parallelen Zahlenachsen (oben rein, unten raus). |
 | 4 | Ins Koordinatensystem | Die Achse für y steht senkrecht, jedes Paar wird ein Punkt. Frage: Welcher Punkt gehört zu x = ...? |
 | 5 | Funktion raten | Regel geheim, Tabelle mit x und y, dann "Welche Funktion steckt in der Maschine?" (Kennung `maschine`). |
 | 6 | Zwei Maschinen | Gleiche Eingabe gibt immer gleiche Ausgabe. Eine Maschine ist zufällig kaputt. Antwort erst möglich, wenn beide mit derselben Zahl mindestens zweimal getestet wurden. |

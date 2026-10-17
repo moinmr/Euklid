@@ -324,7 +324,7 @@ App.funk = {
 /* ---------- Einstiegs-Level: eine Maschine mit sichtbarer oder geheimer Regel ----------
    App.funk.einstieg(c) baut start/html/click aus Bausteinen. c: id, text, regel() -> {m, b},
    namen (null = noch keine, 'zufall' = zufälliges Paar, auch y rein und x raus, oder [rein, raus]),
-   geheim (Regel versteckt), einsetzen (in der Box steht nach dem Füttern die Zahl statt des Namens), fn (Funktion als Zeile), liste, tabelle, achsen, koord,
+   vorgabe (so viele zufällige Paare stehen schon da, keine Tasten), geheim (Regel versteckt), einsetzen (in der Box steht nach dem Füttern die Zahl statt des Namens), fn (Funktion als Zeile), liste, tabelle, achsen, koord,
    frage ('wert' | 'punkt' | 'funktion'). Farben: Orange = rein, Lila = raus. */
 var PAARE = [['a', 'b'], ['x', 'y'], ['n', 'm'], ['t', 's']];
 
@@ -386,7 +386,7 @@ function achsenHTML(M) {
     }
   }
   M.fed.forEach(function (p) {
-    var neu = M.last && p.x === M.last.x;
+    var neu = !M.last || p.x === M.last.x;   // ohne Fütterung (vorgegebene Paare) alle gleich deutlich
     s += '<line class="vb' + (neu ? ' neu' : '') + '" x1="' + px(p.x) + '" y1="' + y1 + '" x2="' + px(p.y) + '" y2="' + y2 + '"/>';
     s += '<circle class="pr" cx="' + px(p.x) + '" cy="' + y1 + '" r="4.5"/>';
     s += '<circle class="pa" cx="' + px(p.y) + '" cy="' + y2 + '" r="4.5"/>';
@@ -441,6 +441,7 @@ function frageStellen(M, c) {
           all.findIndex(function (p) { return p.m === o.m && p.b === o.b; }) === k;
       });
     M.fopts = shuffle([r].concat(shuffle(fk).slice(0, 3)));
+    M.q = null;   // gefragt ist die Funktion, keine einzelne Zahl
   } else {
     M.opts = options(a, [a + r.m, a - r.m, a + 1, a - 1, q + r.b, r.m * q]);
   }
@@ -503,6 +504,16 @@ function falschFB(M, c) {
              ja: 'おしい。点では先に ' + X + '、次に ' + Y + ' を書きます。',
              ar: 'ليس تمامًا. في النقطة نكتب ' + X + ' أولًا ثم ' + Y + '.' };
   }
+  if (c.frage === 'funktion' && c.achsen) {
+    return { de: 'Nicht ganz. Nimm eine Linie: Setze die obere Zahl in die Funktion ein und vergleiche mit der unteren.',
+             en: 'Not quite. Take one line: put the top number into the function and compare with the bottom one.',
+             fi: 'Ei aivan. Valitse yksi viiva: sijoita ylempi luku funktioon ja vertaa alempaan.',
+             tr: 'Tam değil. Bir çizgi seç: üstteki sayıyı fonksiyona koy ve alttakiyle karşılaştır.',
+             fr: 'Pas tout à fait. Prends un trait : mets le nombre du haut dans la fonction et compare avec celui du bas.',
+             es: 'Casi. Toma una línea: pon el número de arriba en la función y compáralo con el de abajo.',
+             ja: 'おしい。線を1本選んで、上の数を関数に入れ、下の数とくらべよう。',
+             ar: 'ليس تمامًا. خذ خطًا واحدًا: ضع العدد العلوي في الدالة وقارنه بالعدد السفلي.' };
+  }
   if (c.frage === 'funktion') {
     return { de: 'Nicht ganz. Setze eine Zahl aus der Tabelle in die Funktion ein und vergleiche.',
              en: 'Not quite. Put a number from the table into the function and compare.',
@@ -534,7 +545,12 @@ App.funk.einstieg = function (c) {
       M.max = Math.max(5, Math.ceil(f(M.r, 9) / 5) * 5);
       var pool = c.namen === 'zufall' ? PAARE.concat([['y', 'x']]) : PAARE;
       M.names = !c.namen ? [null, null] : Array.isArray(c.namen) ? c.namen.slice() : pool[rnd(pool.length)].slice();
-      M.fed = []; M.last = null; M.q = null;
+      M.fed = []; M.last = null; M.q = null; M.fopts = null;
+      if (c.vorgabe) {
+        // Paare schon vorgegeben, keine Tasten: gleich die Frage nach der Funktion
+        shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, c.vorgabe).forEach(function (x) { M.fed.push({ x: x, y: f(M.r, x) }); });
+        frageStellen(M, c);
+      }
     },
     html: function (M) {
       var l = M.last, run = M.run, i = M.names[0], o = M.names[1], html = '', zeigen = !c.geheim || M.done;
@@ -548,7 +564,7 @@ App.funk.einstieg = function (c) {
         chip('raus', l && l.y) + '</div>';
       if (c.fn && i) html += '<p class="fn">' + funktionHTML(M.r, M.names) + '</p>';
       var tasten = keypad('feed', -1);
-      html += c.eng ? tasten.replace('class="keys"', 'class="keys reihe"') : tasten;
+      if (!c.vorgabe) html += c.eng ? tasten.replace('class="keys"', 'class="keys reihe"') : tasten;
       if (c.liste) html += '<div class="hist">' + M.fed.map(function (p) {
         return '<span><span class="rein">' + p.x + '</span> → <span class="raus">' + p.y + '</span></span>';
       }).join('') + '</div>';
@@ -556,7 +572,7 @@ App.funk.einstieg = function (c) {
       if (c.achsen) html += achsenHTML(M);
       if (c.koord) html += koordHTML(M);
       if (M.done) return html;
-      return html + (M.q === null ? '<p class="hint">' + feedHint(3 - M.fed.length) + '</p>' : frageHTML(M, c));
+      return html + (M.q === null && !M.fopts ? '<p class="hint">' + feedHint(3 - M.fed.length) + '</p>' : frageHTML(M, c));
     },
     click: function (M, act, d) {
       if (act === 'feed') {
@@ -564,7 +580,7 @@ App.funk.einstieg = function (c) {
         if (!hatX(M, p.x)) M.fed.push(p);
         M.last = p; M.run = true;
         M.fb = '';
-        if ((M.q === null && M.fed.length >= 3) || (M.q === d.n && c.frage !== 'funktion')) frageStellen(M, c);
+        if ((M.q === null && !M.fopts && M.fed.length >= 3) || (M.q === d.n && c.frage !== 'funktion')) frageStellen(M, c);
         return;
       }
       var richtig = act === 'ans' ? d.v === M.ans
