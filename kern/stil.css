@@ -188,8 +188,8 @@ body {
   border: 1.2px solid rgba(56,41,26,.45); border-radius: 10px; cursor: pointer; touch-action: manipulation;
 }
 #langpick .chip-l { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; }
-#langpick .chip-l .kz { font-size: 12px; letter-spacing: .04em; opacity: .55; }
-#langpick .chip-l.on { border-color: var(--blue); color: var(--blue); border-width: 2px; }
+#langpick .chip-l .kz { flex: none; width: 2.2em; text-align: left; font-size: 12px; letter-spacing: .04em; opacity: .55; }   /* eigene Spalte, links bündig */
+#langpick .chip-l.on { border-color: var(--blue); color: var(--blue); border-width: 2px; padding: 0 11.2px; }
 #langpick p { margin: 14px 0; font-size: 14px; text-align: center; opacity: .75; }
 #langpick .done { width: 100%; border-color: var(--ink); }
 #langpick button:active { opacity: .5; }
