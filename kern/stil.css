@@ -299,3 +299,5 @@ body {
 #fschreib .schnitt p > span { font-size: 18px; font-weight: 700; }
 /* Rechts-nach-links: der Knopf › bleibt rechts wie oben in der Leiste, nur der Text läuft von rechts */
 .rtl #fertig > span { direction: rtl; }
+#fschreib .zeilen { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 17px; }
+#fschreib .zeilen p { margin: 0; }

@@ -83,10 +83,9 @@ Leitidee: Der Schüler erlebt zuerst, dann bekommt es einen Namen, dann wird es 
 | 9 | Punkte verbinden | Zwei zufällige Punkte sind vorgegeben (Kennung `punkte-verbinden`). Unten nur der Papierkorb. Die Linie rastet nur an den zwei Punkten ein, sonst werden keine Punkte gezeigt. Verfehlt sie einen Punkt, wird sie rot, mit Hinweis, und verschwindet beim nächsten Versuch. Gelöst: „Jede Gerade ist durch zwei Punkte bestimmt.“ |
 | 10 | Schnittpunkte mit den Achsen | Eine zufällige Gerade ist vorgegeben (Kennung `achsen-schnitt`), Schnittpunkte ganzzahlig. Unten beide Schnittpunkte ganz eintippen, x-Achse (□\|□) und y-Achse (□\|□), mit Tasten von −4 bis 4, dann Prüfen. Hinweise: auf der x-Achse ist y immer 0 usw. Papierkorb gibt eine neue Gerade. |
 | 11 | Was ist Steigung? | Fünf Geraden nacheinander (Kennung `steigung-ablesen`), steigend und fallend, Steigung −3 bis 3. Jede mit gestricheltem Steigungsdreieck, 1, 2 oder 3 Kästchen nach rechts (beschriftet). Keine Gleichungen im Gitter. Steigung eintippen (Tasten −3 bis 3), Prüfen, „n / 5“. Grün erst nach der fünften Geraden. |
-| 12 | Steigung und Achsenabschnitt | y = 2x − 1 |
-| 13 | Fallende Gerade | y = −x + 3 |
+| 12 | Die Geradengleichung | y = mx + b herleiten (Kennung `mx-plus-b`). Drei zufällige Geraden nacheinander, mindestens eine fallende. Je Gerade: Schnitt mit der y-Achse (0\|□) eintippen, dann die Steigung, dann dreimal „1 nach rechts“: Dreiecke und Zeilen x = 0 bis 3 (y = 1 + 2·2 = 5). Zum Schluss y = □x + □ eintippen. Grün erst nach der dritten Geraden. |
 
-- Level 1 bis 7 sind DOM-Overlays (`#mach`). Level 2 bis 6 entstehen aus Bausteinen in `App.funk.einstieg` (bereich.js). Farben: Orange = rein, Lila = raus, Grün = richtig, Menüs braun. Level 8 bis 13 laufen auf dem Canvas mit Koordinatensystem (1 Einheit = 40 px, y nach oben).
+- Level 1 bis 7 sind DOM-Overlays (`#mach`). Level 2 bis 6 entstehen aus Bausteinen in `App.funk.einstieg` (bereich.js). Farben: Orange = rein, Lila = raus, Grün = richtig, Menüs braun. Level 8 bis 12 laufen auf dem Canvas mit Koordinatensystem (1 Einheit = 40 px, y nach oben).
 - Punkte rasten auf Gitterpunkte, die Gerade wird über zwei Punkte unendlich verlängert. Prüfung über die Gleichung, nicht über irgendeine Gerade.
 - Nach den Punkten schaltet die App selbst auf das Linien-Werkzeug um.
 
