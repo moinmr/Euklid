@@ -20,9 +20,22 @@
 <div id="app">
   <canvas id="board"></canvas>
   <div id="mach" hidden></div>
+  <!-- Oben: Allgemeines und der Aufgabentext. Unten: die Werkzeuge des Levels. -->
   <div id="top">
-    <div id="bar" role="toolbar" data-aria="werkzeuge">
+    <div id="bar" class="bar" role="toolbar" data-aria="navigation">
       <button class="ib" id="b-home" data-aria="startseite"><svg viewBox="0 0 24 24"><path d="M4.5 11L12 4.5L19.5 11M6.5 9.5V19.5H17.5V9.5"/></svg></button>
+      <span class="gap"></span>
+      <button class="ib" id="b-prev" data-aria="vorheriges"><svg viewBox="0 0 24 24"><path d="M14.5 5.5L8 12L14.5 18.5"/></svg></button>
+      <span class="lvnum" id="lv-num" aria-hidden="true"></span>
+      <button class="ib" id="b-level" data-aria="naechstes"><svg viewBox="0 0 24 24"><path d="M9.5 5.5L16 12L9.5 18.5"/></svg></button>
+      <span class="gap"></span>
+      <button class="ib" id="b-task" data-aria="aufgabe"><svg viewBox="0 0 24 24"><path d="M4.5 5.5H19.5V15.5H11L7 19V15.5H4.5Z"/></svg></button>
+      <button class="ib lang" id="b-lang" data-aria="sprache"></button>
+    </div>
+    <div id="hud" aria-live="polite"></div>
+  </div>
+  <div id="bottom">
+    <div id="tools" class="bar" role="toolbar" data-aria="werkzeuge">
       <button class="ib" id="b-point" data-aria="punkt" hidden><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 3V6.5M12 17.5V21M3 12H6.5M17.5 12H21"/></svg></button>
       <button class="ib" id="b-line" data-aria="linie"><svg viewBox="0 0 24 24"><path d="M4.8 17.4 L19.2 6.6"/><circle class="f" cx="4.8" cy="17.4" r="1.4"/><circle class="f" cx="19.2" cy="6.6" r="1.4"/></svg></button>
       <button class="ib" id="b-compass" data-aria="zirkel"><svg viewBox="0 0 24 24"><path d="M6.6 20.1 L12 3.9 L17.4 20.1"/></svg></button>
@@ -31,13 +44,8 @@
       <button class="ib" id="b-undo" data-aria="zurueck"><svg viewBox="0 0 24 24"><path d="M8.5 5.5L5 9L8.5 12.5M5 9H14.5A4.75 4.75 0 0 1 14.5 18.5H9"/></svg></button>
       <button class="ib" id="b-clear" data-aria="loeschen"><svg viewBox="0 0 24 24"><path d="M4.8 6.6H19.2M6.6 6.6L7.5 20.1H16.5L17.4 6.6"/></svg></button>
       <button class="ib" id="b-view" data-aria="ansicht"><svg viewBox="0 0 24 24"><path d="M4.35 8.4V4.35H8.4M19.65 8.4V4.35H15.6M4.35 15.6V19.65H8.4M19.65 15.6V19.65H15.6"/></svg></button>
-      <button class="ib" id="b-prev" data-aria="vorheriges"><svg viewBox="0 0 24 24"><path d="M14.5 5.5L8 12L14.5 18.5"/></svg></button>
-      <span class="lvnum" id="lv-num" aria-hidden="true"></span>
-      <button class="ib" id="b-level" data-aria="naechstes"><svg viewBox="0 0 24 24"><path d="M9.5 5.5L16 12L9.5 18.5"/></svg></button>
-      <button class="ib lang" id="b-lang" data-aria="sprache"></button>
     </div>
   </div>
-  <div id="hud" aria-live="polite"></div>
   <div id="home">
     <button id="h-lang" data-aria="sprache"></button>
     <h1 data-t="mathe"></h1>

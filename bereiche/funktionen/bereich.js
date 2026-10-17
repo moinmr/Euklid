@@ -121,7 +121,7 @@ function drawTable(ctx) {
     });
   }
   var rh = 22, bw = lv.eq ? 96 : 124, bh = 34 + (head ? rh : 0) + rows.length * rh + 6;
-  var bx = S.w - bw - 12, by = 72, y = by + 27;
+  var bx = S.w - bw - 12, by = (S.oben || 72) + 4, y = by + 27;   // unter der oberen Leiste und dem Aufgabentext
   ctx.save();
   ctx.fillStyle = 'rgba(245,235,209,0.94)';
   ctx.strokeStyle = 'rgba(56,41,26,0.45)'; ctx.lineWidth = 1;

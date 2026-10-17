@@ -49,7 +49,8 @@ App ganz schließen und neu öffnen. Hilft das nicht: in Chrome `.../index.html?
 
 - Pergament (`#f5ebd1`), Tinte (`#382919`), Bleistift (grau), Blau für Linien (`#1a59cc`), Grün für Treffer und Erfolg, Rot zum Trennen.
 - Schrift Jost: Normal für alles, nur die Level-Überschrift unten fett. Zahlen im Bild und Text unten gleiche Schrift.
-- Symbolleiste oben: dünne Linien-Symbole ohne Hintergrund (Haus, Punkt, Linie, Zirkel, Ecke schieben, Trennen, Zurück, Papierkorb, Ansicht zurücksetzen, Pfeil ‹ Level-Nummer Pfeil ›; Rückgängig ist ein gebogener Pfeil). Aufgabentext unten.
+- Leiste oben (allgemein): Haus, Pfeil ‹ Level-Nummer Pfeil ›, Sprechblase (Aufgabentext ein/aus), Sprache DE/EN. Darunter der Aufgabentext; er erscheint bei jedem neuen Level, "Geschafft" wird immer gezeigt.
+- Leiste unten (Werkzeuge des Levels): Punkt, Linie, Zirkel, Ecke schieben, Trennen, Rückgängig (gebogener Pfeil), Papierkorb, Ansicht zurücksetzen. Bei Maschinen-Leveln nur der Papierkorb.
 - Startseite "Mathe" mit zwei Karten: Euklid, Funktionen. Haus-Symbol und Zurück-Taste führen zur Startseite.
 - Keine Längenwerte. Winkel nur als Zahl mit Gradzeichen.
 - Lupe über dem Finger (2,5-fach), darf aus dem Bildschirm laufen.

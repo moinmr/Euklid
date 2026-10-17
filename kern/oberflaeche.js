@@ -20,11 +20,16 @@ App.start = function () {
       document.getElementById(tools[k]).classList.toggle('on', k === t);
     });
   };
+  // Aufgabentext: erscheint bei jedem neuen Level, die Sprechblase blendet ihn aus und ein.
+  // "Geschafft" wird immer gezeigt.
+  var taskOpen = true, shownFor = null;
   function showHud(level, done) {
     var a = App.aktiv();
     hud.classList.toggle('ok', !!done);
     hud.textContent = '';
+    document.getElementById('b-task').classList.toggle('on', taskOpen);
     if (level === null || !a) return;
+    if (!done && !taskOpen) return;
     var L = a.levels(), sv = a.solved(), lv = L[level];
     if (done) {
       var fertig = App.txt(lv, 'done');
@@ -39,6 +44,8 @@ App.start = function () {
     }
   }
   S.onLevel = function (level, done) {
+    var key = S.mode + ':' + level;
+    if (key !== shownFor) { shownFor = key; taskOpen = true; }
     last = [level, done];
     document.getElementById('lv-num').textContent = level === null ? '' : level + 1;
     showHud(level, done);
@@ -93,6 +100,15 @@ App.start = function () {
   bind('b-level', function () { var a = App.aktiv(); if (a) a.next(1); });
   bind('b-prev', function () { var a = App.aktiv(); if (a) a.next(-1); });
   bind('b-lang', App.wechsleSprache);
+  bind('b-task', function () { taskOpen = !taskOpen; if (last) showHud(last[0], last[1]); });
+
+  // Wie weit die obere Leiste mit Aufgabentext reicht: für die Wertetabelle und die Maschinen-Fläche
+  var top = document.getElementById('top');
+  new ResizeObserver(function () {
+    S.oben = Math.round(top.getBoundingClientRect().bottom) - 14;
+    document.getElementById('app').style.setProperty('--oben', S.oben + 'px');
+    App.render();
+  }).observe(top);
   bind('h-lang', App.wechsleSprache);
 
   // ----- Startseite -----
@@ -120,6 +136,7 @@ App.start = function () {
     App.cancelAction();
     S.mode = 'home';
     inArea = false;
+    shownFor = null;
     updateStand();
     home.hidden = false;
   }
