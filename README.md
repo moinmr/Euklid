@@ -76,7 +76,7 @@ Leitidee: Der Schüler erlebt zuerst, dann bekommt es einen Namen, dann wird es 
 | 2 | Zahlen mit Namen | Variablen: Eingabe und Ausgabe haben Namen (zufällig, auch y rein und x raus). Drei zufällige Paare stehen in der vollen Tabelle, Box zeigt ?, Frage: Welche Funktion? (vier Antworten) |
 | 3 | Zwei Achsen | Wie Level 2, nur stehen die drei Paare als Linien zwischen zwei parallelen Zahlenachsen (oben rein, unten raus). |
 | 4 | Ins Koordinatensystem | Wie Level 2 und 3, nur sind die drei Paare Punkte im Koordinatensystem (x nach rechts, y nach oben). Namen stehen in den Kästchen rein und raus. |
-| 5 | Funktion raten | Regel geheim, Tabelle mit x und y, dann "Welche Funktion steckt in der Maschine?" (Kennung `maschine`). |
+| 5 | Funktion aufschreiben | Regel geheim, drei Paare in der vollen Tabelle; man schreibt die Funktion selbst in zwei Kästchen und drückt Prüfen (Kennung `maschine`). |
 | 6 | Zwei Maschinen | Gleiche Eingabe gibt immer gleiche Ausgabe. Eine Maschine ist zufällig kaputt. Antwort erst möglich, wenn beide mit derselben Zahl mindestens zweimal getestet wurden. |
 | 7 | Das Taxi | Alltag: Grundgebühr plus Preis pro km (zufällig). Tabelle für 1, 2, 3, 5 km, falsche Antworten sind typische Denkfehler. |
 | 8 | Punkte setzen | Koordinaten. A(3\|2), B(−2\|4). |

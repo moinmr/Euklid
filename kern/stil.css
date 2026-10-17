@@ -135,6 +135,7 @@ body {
 .chip.namechip .vn { font-size: 30px; }
 .chip.out { color: var(--raus); }
 .chip.out.on { opacity: 1; animation: popin .35s .35s both; }
+.chip.out.namechip { animation: none; }   /* Name steht fest da, nicht bei jedem Tippen neu einblenden */
 .arr { width: 30px; height: 14px; fill: none; stroke: var(--ink); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; flex: none; opacity: .7; }
 .mbox {
   flex: none; width: 92px; height: 70px; display: flex; align-items: center; justify-content: center;
@@ -268,5 +269,11 @@ body {
 .rtl #hud, .rtl #mach .hint, .rtl #mach .q, .rtl #mach .fb, .rtl #mach .mcol h3, .rtl .area .t, .rtl #home h1, .rtl #home .sub, .rtl #langpick .sheet { direction: rtl; }
 /* Lange Antworten (z. B. "A ist verlässlich") dürfen umbrechen, ohne aus dem Knopf zu ragen */
 .opt { height: auto; min-height: 52px; line-height: 1.2; padding: 6px 8px; }
+/* Funktion selbst aufschreiben: zwei Kästchen zum Antippen */
+.schreib { margin: 0; text-align: center; font-size: 28px; direction: ltr; }
+.slot { width: 52px; height: 52px; margin: 0 4px; padding: 0; vertical-align: middle; background: none; color: var(--ink);
+  font-family: var(--font-ui); font-size: 26px; border: 1.4px dashed var(--ink); border-radius: 10px; cursor: pointer; touch-action: manipulation; }
+.slot.sel { border: 2px solid var(--menu); }
+.pruefen { width: 100%; font-weight: 700; }
 /* Rechts-nach-links: der Knopf › bleibt rechts wie oben in der Leiste, nur der Text läuft von rechts */
 .rtl #fertig > span { direction: rtl; }

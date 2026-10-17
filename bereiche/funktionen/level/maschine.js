@@ -1,33 +1,33 @@
-// Level: Funktion raten. Die Regel ist geheim (zufällig y = m·x + b), Tabelle mit x und y.
-// Nach drei Fütterungen: Welche Funktion steckt in der Maschine? Die Kennung bleibt 'maschine' (Fortschritt).
+// Level: Funktion aufschreiben. Die Regel ist geheim (zufällig y = m·x + b), drei Paare stehen schon in der Tabelle.
+// Man schreibt die Funktion selbst: Kästchen antippen, dann Zahl. Die Kennung bleibt 'maschine' (Fortschritt).
 App.level('funktionen', App.funk.einstieg({
   id: 'maschine',
   text: {
-    de: { title: 'Funktion raten',
-          task: 'Die Regel ist geheim. Füttere die Maschine, schau dir die Tabelle an und finde die Funktion.',
-          done: 'Richtig! Du hast die Funktion aus der Tabelle erkannt.' },
-    en: { title: 'Guess the function',
-          task: 'The rule is secret. Feed the machine, look at the table and find the function.',
-          done: 'Right! You found the function from the table.' },
-    fi: { title: 'Arvaa funktio',
-          task: 'Sääntö on salainen. Syötä koneeseen, katso taulukkoa ja löydä funktio.',
-          done: 'Oikein! Löysit funktion taulukon avulla.' },
-    tr: { title: 'Fonksiyonu bul',
-          task: 'Kural gizli. Makineyi besle, tabloya bak ve fonksiyonu bul.',
-          done: 'Doğru! Fonksiyonu tablodan buldun.' },
-    fr: { title: 'Devine la fonction',
-          task: 'La règle est secrète. Nourris la machine, regarde le tableau et trouve la fonction.',
-          done: 'Bravo ! Tu as trouvé la fonction grâce au tableau.' },
-    es: { title: 'Adivina la función',
-          task: 'La regla es secreta. Alimenta la máquina, mira la tabla y encuentra la función.',
-          done: '¡Correcto! Encontraste la función a partir de la tabla.' },
-    ja: { title: '関数を当てよう',
-          task: 'きまりはひみつです。マシンに数を入れて、表を見て、関数を見つけよう。',
-          done: '正解！表から関数を見つけました。' },
-    ar: { title: 'خمّن الدالة',
-          task: 'القاعدة سرية. أدخل أعدادًا في الآلة، وانظر إلى الجدول، واكتشف الدالة.',
-          done: 'صحيح! اكتشفت الدالة من الجدول.' }
+    de: { title: 'Funktion aufschreiben',
+          task: 'Die Regel ist geheim. In der Tabelle stehen drei Paare. Schreib die Funktion selbst: Tippe auf ein Kästchen und dann auf eine Zahl.',
+          done: 'Richtig! Du hast die Funktion selbst aufgeschrieben.' },
+    en: { title: 'Write the function',
+          task: 'The rule is secret. The table shows three pairs. Write the function yourself: tap a box, then a number.',
+          done: 'Right! You wrote the function yourself.' },
+    fi: { title: 'Kirjoita funktio',
+          task: 'Sääntö on salainen. Taulukossa on kolme paria. Kirjoita funktio itse: napauta laatikkoa ja sitten lukua.',
+          done: 'Oikein! Kirjoitit funktion itse.' },
+    tr: { title: 'Fonksiyonu yaz',
+          task: 'Kural gizli. Tabloda üç çift var. Fonksiyonu kendin yaz: bir kutuya, sonra bir sayıya dokun.',
+          done: 'Doğru! Fonksiyonu kendin yazdın.' },
+    fr: { title: 'Écris la fonction',
+          task: 'La règle est secrète. Le tableau montre trois paires. Écris la fonction toi-même : touche une case, puis un nombre.',
+          done: 'Bravo ! Tu as écrit la fonction toi-même.' },
+    es: { title: 'Escribe la función',
+          task: 'La regla es secreta. La tabla muestra tres parejas. Escribe tú la función: toca una casilla y luego un número.',
+          done: '¡Correcto! Has escrito la función tú solo.' },
+    ja: { title: '関数を書こう',
+          task: 'きまりはひみつです。表に3つの組があります。関数を自分で書こう：□をタップしてから数をタップします。',
+          done: '正解！関数を自分で書けました。' },
+    ar: { title: 'اكتب الدالة',
+          task: 'القاعدة سرية. في الجدول ثلاثة أزواج. اكتب الدالة بنفسك: انقر على مربع ثم على عدد.',
+          done: 'صحيح! كتبت الدالة بنفسك.' }
   },
   regel: function () { return { m: 2 + App.funk.rnd(2), b: App.funk.rnd(5) }; },
-  namen: ['x', 'y'], geheim: true, tabelle: true, frage: 'funktion'
+  namen: ['x', 'y'], vorgabe: 3, geheim: true, tabelle: 'voll', frage: 'schreiben'
 }));

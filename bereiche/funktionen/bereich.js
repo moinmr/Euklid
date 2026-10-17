@@ -442,6 +442,10 @@ function frageStellen(M, c) {
       });
     M.fopts = shuffle([r].concat(shuffle(fk).slice(0, 3)));
     M.q = null;   // gefragt ist die Funktion, keine einzelne Zahl
+  } else if (c.frage === 'schreiben') {
+    // Funktion selbst aufschreiben: zwei leere Kästchen für m und b
+    M.ein = ['', '']; M.slot = 0;
+    M.q = null;
   } else {
     M.opts = options(a, [a + r.m, a - r.m, a + 1, a - 1, q + r.b, r.m * q]);
   }
@@ -470,6 +474,16 @@ function frageHTML(M, c) {
     return '<p class="q">' + App.wahl(t) + '</p><div class="opts vier">' + M.popts.map(function (p, k) {
       return '<button class="opt" data-act="pkt" data-i="' + k + '"><bdi>(<span class="rein">' + p[0] + '</span>|<span class="raus">' + p[1] + '</span>)</bdi></button>';
     }).join('') + '</div>';
+  }
+  if (c.frage === 'schreiben') {
+    t = { de: 'Wie lautet die Funktion?', en: 'What is the function?', fi: 'Mikä funktio on?',
+          tr: 'Fonksiyon nedir?', fr: 'Quelle est la fonction ?', es: '¿Cuál es la función?',
+          ja: '関数は何かな？', ar: 'ما هي الدالة؟' };
+    var pr = { de: 'Prüfen', en: 'Check', fi: 'Tarkista', tr: 'Kontrol et', fr: 'Vérifier', es: 'Comprobar', ja: 'たしかめる', ar: 'تحقق' };
+    function slot(k) { return '<button class="slot' + (M.slot === k ? ' sel' : '') + '" data-act="slot" data-i="' + k + '">' + M.ein[k] + '</button>'; }
+    return '<p class="q">' + App.wahl(t) + '</p><p class="schreib"><bdi dir="ltr">' + vn(o, 'raus') + ' = ' + slot(0) + '·' + vn(i, 'rein') + ' + ' + slot(1) + '</bdi></p>' +
+      keypad('ziffer', -1).replace('class="keys"', 'class="keys reihe"') +
+      '<button class="opt pruefen" data-act="pruefen">' + App.wahl(pr) + '</button>';
   }
   if (c.frage === 'funktion') {
     t = { de: 'Welche Funktion steckt in der Maschine?', en: 'Which function is inside the machine?',
@@ -503,6 +517,19 @@ function falschFB(M, c) {
              es: 'Casi. En un punto va primero ' + X + ' y después ' + Y + '.',
              ja: 'おしい。点では先に ' + X + '、次に ' + Y + ' を書きます。',
              ar: 'ليس تمامًا. في النقطة نكتب ' + X + ' أولًا ثم ' + Y + '.' };
+  }
+  if (c.frage === 'schreiben') {
+    var m = Number(M.ein[0]), b = Number(M.ein[1]);
+    var p = M.fed.filter(function (q) { return m * q.x + b !== q.y; })[0] || M.fed[0];
+    var I = gleich(M.names[0], 'rein', p.x), w = m * p.x + b, y = p.y;
+    return { de: 'Nicht ganz. Mit deiner Funktion gibt ' + I + ' den Wert ' + w + ', in der Tabelle steht ' + y + '.',
+             en: 'Not quite. With your function, ' + I + ' gives ' + w + ', but the table says ' + y + '.',
+             fi: 'Ei aivan. Funktiollasi ' + I + ' antaa ' + w + ', mutta taulukossa on ' + y + '.',
+             tr: 'Tam değil. Senin fonksiyonunla ' + I + ' için ' + w + ' çıkıyor, tabloda ise ' + y + ' yazıyor.',
+             fr: 'Pas tout à fait. Avec ta fonction, ' + I + ' donne ' + w + ', mais le tableau indique ' + y + '.',
+             es: 'Casi. Con tu función, ' + I + ' da ' + w + ', pero en la tabla pone ' + y + '.',
+             ja: 'おしい。きみの関数だと ' + I + ' のとき ' + w + ' ですが、表では ' + y + ' です。',
+             ar: 'ليس تمامًا. بدالتك يعطي ' + I + ' القيمة ' + w + '، لكن الجدول يقول ' + y + '.' };
   }
   if (c.frage === 'funktion' && c.koord) {
     var PX = vn(M.names[0], 'rein'), PY = vn(M.names[1], 'raus');
@@ -556,7 +583,7 @@ App.funk.einstieg = function (c) {
       M.max = Math.max(5, Math.ceil(f(M.r, 9) / 5) * 5);
       var pool = c.namen === 'zufall' ? PAARE.concat([['y', 'x']]) : PAARE;
       M.names = !c.namen ? [null, null] : Array.isArray(c.namen) ? c.namen.slice() : pool[rnd(pool.length)].slice();
-      M.fed = []; M.last = null; M.q = null; M.fopts = null;
+      M.fed = []; M.last = null; M.q = null; M.fopts = null; M.ein = null;
       if (c.vorgabe) {
         // Paare schon vorgegeben, keine Tasten: gleich die Frage nach der Funktion
         shuffle([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, c.vorgabe).forEach(function (x) { M.fed.push({ x: x, y: f(M.r, x) }); });
@@ -585,7 +612,7 @@ App.funk.einstieg = function (c) {
       if (c.achsen) html += achsenHTML(M);
       if (c.koord) html += koordHTML(M);
       if (M.done) return html;
-      return html + (M.q === null && !M.fopts ? '<p class="hint">' + feedHint(3 - M.fed.length) + '</p>' : frageHTML(M, c));
+      return html + (M.q === null && !M.fopts && !M.ein ? '<p class="hint">' + feedHint(3 - M.fed.length) + '</p>' : frageHTML(M, c));
     },
     click: function (M, act, d) {
       if (act === 'feed') {
@@ -596,14 +623,23 @@ App.funk.einstieg = function (c) {
         if ((M.q === null && !M.fopts && M.fed.length >= 3) || (M.q === d.n && c.frage !== 'funktion')) frageStellen(M, c);
         return;
       }
-      var richtig = act === 'ans' ? d.v === M.ans
+      if (act === 'slot') { M.slot = d.i; return; }
+      if (act === 'ziffer') { M.ein[M.slot] = String(d.n); M.slot = 1; M.fb = ''; return; }
+      if (act === 'pruefen' && (M.ein[0] === '' || M.ein[1] === '')) {
+        M.fb = { de: 'Fülle beide Kästchen aus.', en: 'Fill in both boxes.', fi: 'Täytä molemmat laatikot.', tr: 'İki kutuyu da doldur.',
+                 fr: 'Remplis les deux cases.', es: 'Rellena las dos casillas.', ja: '2つの□をうめよう。', ar: 'املأ المربعين.' };
+        return;
+      }
+      var richtig = act === 'pruefen' ? Number(M.ein[0]) === M.r.m && Number(M.ein[1]) === M.r.b
+        : act === 'ans' ? d.v === M.ans
         : act === 'pkt' ? M.popts[d.i][0] === M.q && M.popts[d.i][1] === M.ans
         : act === 'fun' ? M.fopts[d.i].m === M.r.m && M.fopts[d.i].b === M.r.b : null;
       if (richtig === null) return;
       if (!richtig) { M.wrong++; M.fb = falschFB(M, c); return; }
-      if (c.frage !== 'funktion') { M.fed.push({ x: M.q, y: M.ans }); M.last = M.fed[M.fed.length - 1]; }
+      var nurFunktion = c.frage === 'funktion' || c.frage === 'schreiben';
+      if (!nurFunktion) { M.fed.push({ x: M.q, y: M.ans }); M.last = M.fed[M.fed.length - 1]; }
       // Immer von links nach rechts lesen, auch in Arabisch: rein → raus
-      M.fb = c.frage === 'funktion' ? funktionHTML(M.r, M.names)
+      M.fb = nurFunktion ? funktionHTML(M.r, M.names)
         : '<bdi dir="ltr">' + (M.names[0] ? gleich(M.names[0], 'rein', M.q) + ' → ' + gleich(M.names[1], 'raus', M.ans)
         : '<span class="rein">' + M.q + '</span> → <span class="raus">' + M.ans + '</span>') + '</bdi>';
       M.q = null;
