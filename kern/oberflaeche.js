@@ -171,8 +171,10 @@ App.start = function () {
   // ----- Sprache -----
   function sprachKnopf() {
     var cur = App.sprache();
-    document.getElementById('b-lang').textContent =
-      App.sprachen.filter(function (s) { return s.code === cur; })[0].kurz;
+    // In der Leiste steht die Sprache, zu der man wechselt
+    var L = App.sprachen, i = 0;
+    for (var k = 0; k < L.length; k++) if (L[k].code === cur) i = k;
+    document.getElementById('b-lang').textContent = L[(i + 1) % L.length].kurz;
     document.getElementById('h-lang').innerHTML = App.sprachen.map(function (s) {
       return '<span' + (s.code === cur ? ' class="on"' : '') + '>' + s.kurz + '</span>';
     }).join(' | ');

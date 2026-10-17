@@ -41,7 +41,8 @@ body {
 #bar .side, #bar .mid { display: flex; gap: 2px; }
 #bar .side.r { justify-content: flex-end; }
 #bar .ib { flex: none; width: 48px; }
-#bar .mid .ib { width: 56px; }
+#bar .mid { gap: 0; }
+#bar .mid .ib { width: 42px; }
 .ib {
   pointer-events: auto;
   flex: 1 1 0; min-width: 0; height: 52px;
