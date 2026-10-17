@@ -22,7 +22,15 @@ App.start = function () {
   };
   // Aufgabentext: erscheint bei jedem neuen Level, die Sprechblase blendet ihn aus und ein.
   // "Geschafft" wird immer gezeigt.
-  var taskOpen = true, shownFor = null;
+  var taskOpen = true, shownFor = null, platzFuer = null, platz = 0;
+  // Platz unter der Karte für die Maschinen-Seiten: wächst mit dem längsten Text dieses Levels
+  // und bleibt, wenn die Karte ausgeblendet wird. So verschiebt sich der Inhalt nicht.
+  function merkePlatz(level) {
+    var key = S.mode + ':' + level + ':' + App.sprache() + ':' + window.innerWidth;
+    if (key !== platzFuer) { platzFuer = key; platz = 0; }
+    if (hud.firstChild) platz = Math.max(platz, Math.ceil(hud.getBoundingClientRect().bottom) + 14);
+    if (platz) document.getElementById('mach').style.setProperty('--karte', platz + 'px');
+  }
   function showHud(level, done) {
     var a = App.aktiv();
     hud.classList.toggle('ok', !!done);
@@ -42,6 +50,7 @@ App.start = function () {
       hud.appendChild(b);
       hud.appendChild(document.createTextNode(App.txt(lv, 'task')));
     }
+    merkePlatz(level);
   }
   S.onLevel = function (level, done) {
     var key = S.mode + ':' + level;

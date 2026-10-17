@@ -99,16 +99,19 @@ body {
 #mach {
   position: absolute; inset: 0; z-index: 1; background: var(--parchment);
   overflow-y: auto; -webkit-overflow-scrolling: touch;
-  padding: calc(70px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(80px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  padding: var(--karte, calc(180px + env(safe-area-inset-top, 0px))) max(16px, env(safe-area-inset-right, 0px)) calc(80px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
   display: flex; flex-direction: column; align-items: center; gap: 20px;
 }
 #mach > * { width: 100%; max-width: 440px; }
-/* Inhalt senkrecht mittig, damit die Aufgaben-Karte oben möglichst wenig verdeckt */
-#mach > :first-child { margin-top: auto; }
-#mach > :last-child { margin-bottom: auto; }
+/* Inhalt beginnt fest unter der Aufgaben-Karte (--karte setzt oberflaeche.js), damit nichts darunter rutscht */
 .flow { display: flex; align-items: center; justify-content: center; gap: 8px; }
-.chip { min-width: 74px; min-height: 1.25em; text-align: center; font-size: 26px; font-weight: 400; color: var(--ink); opacity: .45; }
+.chip {
+  min-width: 74px; height: 50px; box-sizing: border-box; padding: 0 6px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.2px dashed transparent; border-radius: 12px; text-align: center; font-size: 26px; font-weight: 400; color: var(--ink); opacity: .45; }
 .chip.on { opacity: 1; }
+/* Leerer Platz für Zahl rein / Zahl raus: gestrichelter Rahmen, ohne Wörter, in jeder Sprache gleich */
+.chip:empty { border-color: currentColor; }
 .chip.out { color: var(--blue); }
 .chip.out.on { opacity: 1; animation: popin .35s .35s both; }
 .arr { width: 30px; height: 14px; fill: none; stroke: var(--ink); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; flex: none; opacity: .7; }
