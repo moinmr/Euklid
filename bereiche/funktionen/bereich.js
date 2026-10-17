@@ -57,6 +57,16 @@ function fFestLinie() {
   while (!xs) xs = rnd(9) - 4;
   return { a: [xs * U, 0], b: [0, -ys * U], gid: 0, fest: true };
 }
+// Level mit steigung: drei Geraden mit Steigung 1, 2, 3 (gemischt). Jede beginnt ihr Steigungsdreieck
+// bei x = −4, −2 bzw. 1 (nicht an der y-Achse): a ist der Anfang, b liegt 1 nach rechts und m nach oben.
+function fFestSteigung() {
+  return shuffle([1, 2, 3]).map(function (m, i) {
+    var x = [-4, -2, 1][i], y = 1 + rnd(2);   // y ab 1, damit die 1 nicht auf der x-Achse steht
+    return { a: [x * U, -y * U], b: [(x + 1) * U, -(y + m) * U], gid: 0, fest: true };
+  });
+}
+function fSteig(l) { return Math.round((l.a[1] - l.b[1]) / U); }
+var SFARBE = ['rgb(26,89,204)', '#7b3fa6', '#cf5a17'], SNAME = ['A', 'B', 'C'];
 function fSchnitt() {
   var l = F.lines.filter(function (l) { return l.fest; })[0];
   return l ? { x: Math.round(l.a[0] / U), y: -Math.round(l.b[1] / U) } : null;
@@ -108,11 +118,30 @@ function buildFunk(ctx, ws) {
   if (x0 < 0 && x1 > 0) text(ctx, 'y', 13 * k, y0 + 122 * k, INK, 13);
 
   ctx.lineCap = 'round';
-  var lvz = FLEVELS[F.level], nurFeste = !!(lvz && (lvz.verbinden || lvz.schnitt));   // nur die vorgegebenen Punkte zeigen
-  F.lines.forEach(function (l) {
-    var col = l.fest ? INK : fLinieFalsch(l) ? C.RED : BLUE;   // vorgegebene Gerade dunkel, falsche Linie rot
+  var lvz = FLEVELS[F.level], nurFeste = !!(lvz && (lvz.verbinden || lvz.schnitt || lvz.steigung));   // nur die vorgegebenen Punkte zeigen
+  F.lines.forEach(function (l, i) {
+    var col = lvz && lvz.steigung ? SFARBE[i] : l.fest ? INK : fLinieFalsch(l) ? C.RED : BLUE;   // vorgegebene Gerade dunkel, falsche Linie rot
     ctx.strokeStyle = col; extLine(ctx, l.a, l.b, 2.5 * ws * k);
     if (!nurFeste) { ctx.fillStyle = col; dotAt(ctx, l.a, false); dotAt(ctx, l.b, false); }
+  });
+  if (lvz && lvz.steigung) F.lines.forEach(function (l, i) {
+    // Steigungsdreieck gestrichelt: 1 nach rechts (beschriftet), dann nach oben (zum Zählen). Name an der Spitze,
+    // nach dem Lösen die Gleichung dazu
+    var col = SFARBE[i], ecke = [l.b[0], l.a[1]];
+    ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 2 * ws * k; ctx.setLineDash([6 * k, 5 * k]);
+    ctx.beginPath(); ctx.moveTo(l.a[0], l.a[1]); ctx.lineTo(ecke[0], ecke[1]); ctx.lineTo(l.b[0], l.b[1]); ctx.stroke(); ctx.restore();
+    text(ctx, '1', (l.a[0] + ecke[0]) / 2, ecke[1] + 12 * k, col, 13);
+    var m = fSteig(l), sx = l.a[0] / U, sy = -l.a[1] / U;
+    if (!F.fn) { text(ctx, SNAME[i], l.b[0] + 16 * k, l.b[1] - 16 * k, col, 16); return; }
+    // gelöst: Name und Gleichung links über der Spitze, auf hellem Schild
+    var et = SNAME[i] + ':  ' + eqStr({ m: m, b: sy - m * sx });
+    ctx.font = '400 ' + (13 * k) + 'px ' + C.FONT;
+    var tw = ctx.measureText(et).width + 12 * k, th = 20 * k, tx = Math.max(x0 + tw / 2 + 6 * k, l.b[0] - tw / 2 - 8 * k), ty = l.b[1] - 18 * k;
+    ctx.fillStyle = 'rgba(251,244,226,0.95)';
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(tx - tw / 2, ty - th / 2, tw, th, 7 * k); else ctx.rect(tx - tw / 2, ty - th / 2, tw, th);
+    ctx.fill();
+    text(ctx, et, tx, ty, col, 13);
   });
   F.pts.forEach(function (p) {
     var col = fPunktFalsch(p) ? C.RED : BLUE;   // falscher Punkt rot
@@ -188,14 +217,14 @@ function fTarget(pos) {
   return S.tool === 'point' ? fLattice(pos) : fSnap(pos);
 }
 function fDown(pos) {
-  if (FLEVELS[F.level].schnitt) return true;
+  if (FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung) return true;
   S.drawing = true; S.lmode = S.ls ? 'end' : 'start';
   S.end = [pos[0], pos[1]]; S.target = fTarget(pos);
   S.loupe = S.sp; render();
   return true;
 }
 function fMove(pos) {
-  if (FLEVELS[F.level].schnitt) return true;
+  if (FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung) return true;
   if (S.drawing) { S.end = [pos[0], pos[1]]; S.target = fTarget(pos); }
   S.loupe = S.sp; render();
   return true;
@@ -311,7 +340,7 @@ function fCheck() {
     var q = fRegel(), linie = !!q && F.lines.some(function (l) { return fLineOk(l, q); });
     ok = linie;
     fSchreib(false, F.lines.length && !linie ? LINIE_FALSCH : null);
-  } else if (lv.schnitt) {
+  } else if (lv.schnitt || lv.steigung) {
     ok = F.fn;
     fSchreib(!F.fn);
   } else {
@@ -366,6 +395,11 @@ function fLoadLevel(n, restore) {
     if (!F.lines.some(function (l) { return l.fest; })) F.lines = [fFestLinie()];
     // y = 0 knapp über der Eingabekarte, damit die Schnittpunkte frei bleiben
     S.oy = S.h - (S.unten || 70) - 300;
+  }
+  if (lv.steigung) {
+    if (!F.lines.some(function (l) { return l.fest; })) F.lines = fFestSteigung();
+    F.ein = ['', '', ''];
+    S.oy = S.h - (S.unten || 70) - 290;
   }
   // Nur die Knöpfe unten, die das Level braucht
   var wz = lv.werkzeuge || ['point', 'line', 'undo', 'clear', 'view'];
@@ -431,6 +465,7 @@ function fSchreib(zeigen, hinweis) {
   schreib.hidden = !zeigen && !hinweis;
   schreib.classList.toggle('hinweis', !zeigen && !!hinweis);
   if (!zeigen) { schreib.innerHTML = hinweis ? '<p class="fb">' + App.wahl(hinweis) + '</p>' : ''; return; }
+  if (FLEVELS[F.level].steigung) return steigKarte();
   // vier Kästchen: beide Schnittpunkte ganz eintippen, auch die 0; Tasten von −4 bis 4, Minuszahlen direkt
   function slot(k) { return '<button class="slot' + (F.slot === k ? ' sel' : '') + '" data-act="slot" data-i="' + k + '">' + F.ein[k] + '</button>'; }
   var keys = '', t = App.wahl(ACHSE);
@@ -442,12 +477,39 @@ function fSchreib(zeigen, hinweis) {
     '<button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button>' +
     (F.fb ? '<p class="fb">' + App.wahl(F.fb) + '</p>' : '');
 }
+function slotHTML(k) { return '<button class="slot' + (F.slot === k ? ' sel' : '') + '" data-act="slot" data-i="' + k + '">' + F.ein[k] + '</button>'; }
+var STEIG = { de: 'Steigung', en: 'Slope', fi: 'Kulmakerroin', tr: 'Eğim', fr: 'Pente', es: 'Pendiente', ja: '傾き', ar: 'الميل' };
+// drei Kästchen für die Steigungen von A, B und C, Tasten von −3 bis 3
+function steigKarte() {
+  var keys = '';
+  for (var d = -3; d <= 3; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + fmt(d) + '</button>';
+  schreib.innerHTML = '<p class="steig-titel">' + App.wahl(STEIG) + '</p><div class="schnitt">' + SNAME.map(function (n, i) {
+    return '<p><span style="color:' + SFARBE[i] + '">' + n + '</span>' + slotHTML(i) + '</p>';
+  }).join('') + '</div><div class="keys reihe sieben">' + keys + '</div>' +
+    '<button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button>' +
+    (F.fb ? '<p class="fb">' + App.wahl(F.fb) + '</p>' : '');
+}
+function steigPruefen() {
+  var falsch = F.lines.map(function (l, i) { return Number(F.ein[i].replace('−', '-')) !== fSteig(l); }).indexOf(true);
+  if (F.ein.some(function (s) { return s === ''; })) { F.fb = ALLE; return; }
+  if (falsch < 0) { F.fn = true; F.fb = ''; return; }
+  var N = '<span style="color:' + SFARBE[falsch] + '">' + SNAME[falsch] + '</span>';
+  F.fb = { de: 'Nicht ganz. Zähle bei ' + N + ': 1 Kästchen nach rechts, wie viele Kästchen nach oben?',
+           en: 'Not quite. Count at ' + N + ': 1 square to the right, how many squares up?',
+           fi: 'Ei aivan. Laske suoralla ' + N + ': 1 ruutu oikealle, montako ruutua ylös?',
+           tr: 'Tam değil. ' + N + ' doğrusunda say: sağa 1 kare, yukarı kaç kare?',
+           fr: 'Pas tout à fait. Compte pour ' + N + ' : 1 carreau vers la droite, combien vers le haut ?',
+           es: 'Casi. Cuenta en ' + N + ': 1 cuadrito a la derecha, ¿cuántos hacia arriba?',
+           ja: 'おしい。' + N + ' で数えよう：右へ1ます、上へ何ます？',
+           ar: 'ليس تمامًا. عُدّ عند ' + N + ': مربع واحد إلى اليمين، كم مربعًا إلى الأعلى؟' };
+}
 function schreibClick(e) {
   var b = e.target.closest ? e.target.closest('button') : null;
   if (!b) return;
   var act = b.getAttribute('data-act');
   if (act === 'slot') F.slot = Number(b.getAttribute('data-i'));
-  else if (act === 'ziffer') { F.ein[F.slot] = fmt(Number(b.getAttribute('data-n'))); F.slot = Math.min(3, F.slot + 1); F.fb = ''; }
+  else if (act === 'ziffer') { F.ein[F.slot] = fmt(Number(b.getAttribute('data-n'))); F.slot = Math.min(F.ein.length - 1, F.slot + 1); F.fb = ''; }
+  else if (act === 'pruefen' && FLEVELS[F.level].steigung) steigPruefen();
   else if (act === 'pruefen') {
     var z = fSchnitt(), w = F.ein.map(function (s) { return Number(s.replace('−', '-')); });
     if (F.ein.some(function (s) { return s === ''; })) F.fb = ALLE;
