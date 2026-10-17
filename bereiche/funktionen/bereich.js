@@ -397,7 +397,7 @@ function achsenHTML(M) {
 // Koordinatensystem: Eingabe nach rechts, Ausgabe nach oben. Jede Fütterung wird ein Punkt,
 // beim neuesten zeigen gestrichelte Linien den Weg: erst nach rechts, dann nach oben.
 function koordHTML(M) {
-  var W = 340, H = 180, L = 30, R = 24, T = 24, B = 24, xmax = 10, ymax = M.max, i;
+  var W = 340, H = 182, L = 30, R = 24, T = 32, B = 24, xmax = 10, ymax = M.max, i;
   function px(v) { return L + v * (W - L - R) / xmax; }
   function py(v) { return H - B - v * (H - B - T) / ymax; }
   var s = '<svg class="koord" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
@@ -406,11 +406,17 @@ function koordHTML(M) {
   s += '<line class="ax" x1="' + px(0) + '" y1="' + py(0) + '" x2="' + px(xmax) + '" y2="' + py(0) + '"/>';
   s += '<line class="ax" x1="' + px(0) + '" y1="' + py(0) + '" x2="' + px(0) + '" y2="' + py(ymax) + '"/>';
   for (i = 0; i < xmax; i++) s += '<text class="zl" x="' + px(i) + '" y="' + (py(0) + 16) + '">' + i + '</text>';
-  for (i = 5; i <= ymax; i += 5) s += '<text class="zl ry" x="' + (px(0) - 6) + '" y="' + (py(i) + 4) + '">' + i + '</text>';
-  s += '<text class="an rein" x="' + (px(xmax) + 6) + '" y="' + (py(0) + 6) + '">' + M.names[0] + '</text>';
-  s += '<text class="an raus" x="' + (px(0) + 7) + '" y="' + (py(ymax) - 2) + '">' + M.names[1] + '</text>';
+  for (i = 5; i <= ymax; i += 5) s += '<text class="zl ry" x="' + (px(0) - 9) + '" y="' + (py(i) + 4) + '">' + i + '</text>';
+  // Striche in Einerschritten auf beiden Achsen, die längeren bei 5, 10, ...
+  for (i = 1; i <= xmax; i++) s += '<line class="tk" x1="' + px(i) + '" y1="' + (py(0) - 3) + '" x2="' + px(i) + '" y2="' + (py(0) + 3) + '"/>';
+  for (i = 1; i <= ymax; i++) { var h = i % 5 === 0 ? 5 : 3; s += '<line class="tk" x1="' + (px(0) - h) + '" y1="' + py(i) + '" x2="' + (px(0) + h) + '" y2="' + py(i) + '"/>'; }
+  // Namen an den Enden der Achsen: x rechts neben der Achse, y mittig darüber
+  s += '<text class="an rein" x="' + (px(xmax) + 8) + '" y="' + (py(0) + 6) + '">' + M.names[0] + '</text>';
+  s += '<text class="an raus mitte" x="' + px(0) + '" y="' + (py(ymax) - 12) + '">' + M.names[1] + '</text>';
   M.fed.forEach(function (p) {
     // Vorgegebene Punkte (ohne Fütterung): auf beiden Achsen ein Punkt in Orange und Lila, wie bei den zwei Achsen
+    if (!M.last) s += '<line class="vb" x1="' + px(p.x) + '" y1="' + py(0) + '" x2="' + px(p.x) + '" y2="' + py(p.y) + '"/>' +
+      '<line class="vb" x1="' + px(0) + '" y1="' + py(p.y) + '" x2="' + px(p.x) + '" y2="' + py(p.y) + '"/>';
     if (!M.last) s += '<circle class="pr" cx="' + px(p.x) + '" cy="' + py(0) + '" r="4"/><circle class="pa" cx="' + px(0) + '" cy="' + py(p.y) + '" r="4"/>';
     if (M.last && p.x === M.last.x) {
       s += '<line class="weg rein" x1="' + px(p.x) + '" y1="' + py(0) + '" x2="' + px(p.x) + '" y2="' + py(p.y) + '"/>';
