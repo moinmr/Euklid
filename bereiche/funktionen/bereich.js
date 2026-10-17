@@ -244,8 +244,8 @@ function fUndo() {
   F.lines = F.lines.filter(function (l) { return l.gid !== last; });
   render(); fCheck();
 }
+// Papierkorb: Level von vorn, wieder ungelöst (auch bei den Maschinen-Leveln)
 function fClear() {
-  if (isMach(FLEVELS[F.level])) { fLoadLevel(F.level, false); return; }
   delete F.solutions[F.level]; delete F.work[F.level]; F.solved.delete(F.level);
   fLoadLevel(F.level, false); fSave();
 }
