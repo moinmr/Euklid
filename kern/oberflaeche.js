@@ -47,7 +47,6 @@ App.start = function () {
     var key = S.mode + ':' + level;
     if (key !== shownFor) { shownFor = key; taskOpen = true; }
     last = [level, done];
-    document.getElementById('lv-num').textContent = level === null ? '' : level + 1;
     showHud(level, done);
   };
 
