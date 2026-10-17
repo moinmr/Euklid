@@ -199,7 +199,18 @@ function fUp(pos) {
     var b = S.target ? vp(S.target) : S.end;
     if (S.tool === 'point') {
       var px = Math.round(b[0] / U), py = -Math.round(b[1] / U);
-      if (fHas(px, py)) {
+      // Falsche Punkte verschwinden beim nächsten Tippen von selbst. Liegt schon alles Richtige
+      // oder wurde der falsche Punkt selbst angetippt, wird nur gelöscht.
+      var weg = F.pts.filter(fPunktFalsch), lvp = FLEVELS[F.level];
+      if (weg.length) {
+        F.pts = F.pts.filter(function (p) { return !fPunktFalsch(p); });
+        var nur = weg.some(function (p) { return p.x === px && p.y === py; }) ||
+          lvp.pts.every(function (q) { return fHas(q.x, q.y); });
+        if (nur) { px = null; }
+      }
+      if (px === null) {
+        // nichts weiter
+      } else if (fHas(px, py)) {
         F.pts = F.pts.filter(function (p) { return p.fest || p.x !== px || p.y !== py; });
       } else {
         F.gid += 1; F.pts.push({ x: px, y: py, gid: F.gid });
@@ -207,6 +218,8 @@ function fUp(pos) {
         if (lv.eq && !F.lines.length && fNeed(lv).every(function (r) { return fHas(r[0], r[1]); })) App.setTool('line');
       }
     } else if (S.lmode === 'start') {
+      // rote Linie verschwindet beim nächsten Versuch
+      if (F.lines.some(fLinieFalsch)) F.lines = F.lines.filter(function (l) { return !fLinieFalsch(l); });
       S.ls = V(b);
     } else if (S.ls && Math.hypot(b[0] - S.ls.x, b[1] - S.ls.y) > 12 * S.k) {
       F.gid += 1;
@@ -248,16 +261,16 @@ function punktHinweis(p) {
   var ziel = lv.pts.filter(function (q) { return !fHas(q.x, q.y); })[0];
   function paar(x, y) { return '<bdi dir="ltr">(' + fmt(x) + '|' + fmt(y) + ')</bdi>'; }
   if (!ziel) {
-    // alle richtigen Punkte liegen schon: nur sagen, wie der falsche verschwindet
+    // alle richtigen Punkte liegen schon: nur sagen, dass der falsche beim nächsten Tippen verschwindet
     var R = paar(p.x, p.y);
-    return { de: 'Der Punkt ' + R + ' gehört nicht dazu. Tippe ihn an, dann verschwindet er.',
-             en: 'The point ' + R + ' does not belong here. Tap it to remove it.',
-             fi: 'Piste ' + R + ' ei kuulu tähän. Napauta sitä, niin se häviää.',
-             tr: R + ' noktası buraya ait değil. Ona dokun, kaybolur.',
-             fr: 'Le point ' + R + ' n’a rien à faire ici. Touche-le pour l’enlever.',
-             es: 'El punto ' + R + ' no va aquí. Tócalo para quitarlo.',
-             ja: '点 ' + R + ' はいりません。タップすると消えます。',
-             ar: 'النقطة ' + R + ' لا تنتمي إلى هنا. انقر عليها لتختفي.' };
+    return { de: 'Der Punkt ' + R + ' gehört nicht dazu. Tippe irgendwo hin, dann verschwindet er.',
+             en: 'The point ' + R + ' does not belong here. Tap anywhere to remove it.',
+             fi: 'Piste ' + R + ' ei kuulu tähän. Napauta mihin tahansa, niin se häviää.',
+             tr: R + ' noktası buraya ait değil. Herhangi bir yere dokun, kaybolur.',
+             fr: 'Le point ' + R + ' n’a rien à faire ici. Touche n’importe où pour l’enlever.',
+             es: 'El punto ' + R + ' no va aquí. Toca en cualquier sitio para quitarlo.',
+             ja: '点 ' + R + ' はいりません。どこかをタップすると消えます。',
+             ar: 'النقطة ' + R + ' لا تنتمي إلى هنا. انقر في أي مكان لتختفي.' };
   }
   var P = paar(p.x, p.y), Z = ziel.n + ' ' , Q = paar(ziel.x, ziel.y);
   function weg(l) {
