@@ -66,7 +66,8 @@ function fFestSteigung() {
   });
 }
 function fSteig(l) { return Math.round((l.a[1] - l.b[1]) / U); }
-var SFARBE = ['rgb(26,89,204)', '#7b3fa6', '#cf5a17'], SNAME = ['A', 'B', 'C'];
+// neutrale Töne: Orange und Lila bleiben für rein und raus
+var SFARBE = ['rgb(56,41,26)', 'rgb(110,96,80)', 'rgb(150,140,126)'], SNAME = ['A', 'B', 'C'];
 function fSchnitt() {
   var l = F.lines.filter(function (l) { return l.fest; })[0];
   return l ? { x: Math.round(l.a[0] / U), y: -Math.round(l.b[1] / U) } : null;
