@@ -324,7 +324,7 @@ App.funk = {
 /* ---------- Einstiegs-Level: eine Maschine mit sichtbarer oder geheimer Regel ----------
    App.funk.einstieg(c) baut start/html/click aus Bausteinen. c: id, text, regel() -> {m, b},
    namen (null = noch keine, 'wechsel' = zufällig und in Runde 2 y rein/x raus, 'zufall', oder [rein, raus]),
-   geheim (Regel versteckt), fn (Funktion als Zeile), liste, tabelle, achsen, koord,
+   geheim (Regel versteckt), einsetzen (in der Box steht nach dem Füttern die Zahl statt des Namens), fn (Funktion als Zeile), liste, tabelle, achsen, koord,
    frage ('wert' | 'punkt' | 'funktion'). Farben: Orange = rein, Lila = raus. */
 var PAARE = [['a', 'b'], ['x', 'y'], ['n', 'm'], ['t', 's']];
 
@@ -335,8 +335,8 @@ function vn(name, art, wert) {
 }
 function gleich(name, art, wert) { return '<bdi>' + (name ? vn(name, art) + ' = ' : '') + wert + '</bdi>'; }
 // Regel mit dem Namen der Eingabe, z. B. 2·a + 1 (bei m = 1 nur a + 1, bei b = 0 nur 2·a)
-function regelHTML(r, name, wert) {
-  return '<bdi>' + (r.m === 1 ? '' : r.m + '·') + vn(name, 'rein', wert) + (r.b ? ' + ' + r.b : '') + '</bdi>';
+function regelMit(r, teil) { return '<bdi>' + (r.m === 1 ? '' : r.m + '·') + teil + (r.b ? ' + ' + r.b : '') + '</bdi>'; }
+function regelHTML(r, name, wert) { return regelMit(r, vn(name, 'rein', wert));
 }
 function funktionHTML(r, names) { return '<bdi>' + vn(names[1], 'raus') + ' = ' + regelHTML(r, names[0]) + '</bdi>'; }
 function hatX(M, x) { return M.fed.some(function (p) { return p.x === x; }); }
@@ -530,7 +530,7 @@ App.funk.einstieg = function (c) {
         return i ? '<div class="vk">' + vn(art === 'rein' ? i : o, art) + el + '</div>' : el;
       }
       html += '<div class="flow' + (i ? ' vflow' : '') + '">' + chip('rein', l && l.x) + ARROW +
-        '<div class="mbox' + (zeigen ? ' regel' : '') + (run ? ' run' : '') + '">' + (zeigen ? regelHTML(M.r, i, l && l.x) : '?') + '</div>' + ARROW +
+        '<div class="mbox' + (zeigen ? ' regel' : '') + (run ? ' run' : '') + '">' + (!zeigen ? '?' : c.einsetzen && i && l ? regelMit(M.r, '<span class="rein">' + l.x + '</span>') : regelHTML(M.r, i, l && l.x)) + '</div>' + ARROW +
         chip('raus', l && l.y) + '</div>';
       if (c.fn && i) html += '<p class="fn">' + funktionHTML(M.r, M.names) + '</p>';
       var tasten = keypad('feed', -1);
