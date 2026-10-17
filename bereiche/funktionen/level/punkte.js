@@ -28,5 +28,5 @@ App.level('funktionen', {
           done: 'صحيح! القيمة الأولى هي الموضع نحو اليمين، والثانية نحو الأعلى.' }
   },
   pts: [{ n: 'A', x: 3, y: 2 }, { n: 'B', x: -2, y: 4 }],
-  tabelle: false, werkzeuge: ['point']   // nur Punkte setzen, keine Liste unten rechts; nochmal antippen entfernt einen Punkt
+  tabelle: false, werkzeug: 'point', werkzeuge: ['clear']   // nur Punkte setzen, unten nur der Papierkorb; nochmal antippen entfernt einen Punkt
 });

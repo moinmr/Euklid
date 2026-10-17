@@ -281,7 +281,7 @@ function fLoadLevel(n, restore) {
   [['b-point', 'point'], ['b-line', 'line'], ['b-undo', 'undo'], ['b-clear', 'clear'], ['b-view', 'view']].forEach(function (b) {
     document.getElementById(b[0]).hidden = wz.indexOf(b[1]) < 0;
   });
-  if (wz.indexOf('point') < 0) App.setTool(wz[0]);
+  App.setTool(lv.werkzeug || 'point');   // das Werkzeug ist aktiv, auch wenn sein Knopf fehlt
   App.applyView();
   if (S.onLevel) S.onLevel(n, false);
   fCheck();

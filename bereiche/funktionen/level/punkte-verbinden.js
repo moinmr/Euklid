@@ -27,5 +27,5 @@ App.level('funktionen', {
           task: 'صِل النقطتين بمستقيم. ثم اكتب دالته.',
           done: 'صحيح! يمر بنقطتين مستقيم واحد فقط، وقد وجدت دالته.' }
   },
-  verbinden: true, tabelle: false, werkzeuge: ['line']
+  verbinden: true, tabelle: false, werkzeug: 'line', werkzeuge: ['clear']   // nur Linien, unten nur der Papierkorb
 });
