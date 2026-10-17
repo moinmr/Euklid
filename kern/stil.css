@@ -217,9 +217,8 @@ body {
 .koord .an.rein { fill: var(--rein); } .koord .an.raus { fill: var(--raus); }
 .koord .weg { stroke-width: 1.6; stroke-dasharray: 4 3; }
 .koord .weg.rein { stroke: var(--rein); } .koord .weg.raus { stroke: var(--raus); }
-.koord .vb { stroke: var(--ink); stroke-width: 1.6; opacity: .9; }   /* wie die Linien bei den zwei Achsen */
-.koord .tk { stroke: var(--ink); stroke-width: 1; opacity: .6; }
-.koord .an.mitte { text-anchor: middle; }
+.koord .pl { font-family: var(--font-ui); font-size: 13px; fill: var(--ink); text-anchor: middle; }
+.koord .pl .rein { fill: var(--rein); } .koord .pl .raus { fill: var(--raus); }
 .koord .pt { fill: var(--ink); opacity: .55; } .koord .pt.neu { opacity: 1; }
 @keyframes popin { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 @keyframes shake { 0%, 100% { transform: none; } 25% { transform: rotate(-3deg) scale(1.05); } 75% { transform: rotate(3deg) scale(1.05); } }
