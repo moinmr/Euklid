@@ -688,7 +688,33 @@ function optButtons(vals, suffix, three) {
 function fbHTML() { return '<p class="fb' + (M.done ? ' ok' : '') + '" aria-live="polite">' + (App.wahl(M.fb) || '') + '</p>'; }
 function f(r, x) { return r.m * x + r.b; }
 
+// Falsch: rote Karte unten wie die grüne, mit ↻. Nach ein paar Sekunden (oder beim Antippen) beginnt das Level neu.
+var falschKarte = null, falschUhr = null;
+function falschWeg() {
+  clearTimeout(falschUhr); falschUhr = null;
+  if (falschKarte) falschKarte.hidden = true;
+  document.body.classList.remove('falschkarte');
+}
+function falsch(text) {
+  M.falsch = true; M.fb = '';
+  if (!falschKarte) {
+    falschKarte = document.createElement('div');
+    falschKarte.id = 'falsch'; falschKarte.setAttribute('aria-live', 'polite');
+    var hud = document.getElementById('hud');
+    hud.parentNode.insertBefore(falschKarte, hud.nextSibling);
+    falschKarte.addEventListener('click', function () { if (M && M.falsch) machStart(F.level); });
+  }
+  falschKarte.innerHTML = '<span></span><button class="weiter" aria-label="↻"><svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M18.5 12a6.5 6.5 0 1 1-2-4.7"/><path d="M17 3.5v4h-4"/></svg></button>';
+  falschKarte.firstChild.textContent = App.wahl(text);
+  falschKarte.style.bottom = ((S.unten || 70) + 8) + 'px';
+  falschKarte.hidden = false;
+  document.body.classList.add('falschkarte');
+  clearTimeout(falschUhr);
+  falschUhr = setTimeout(function () { if (M && M.falsch) machStart(F.level); }, 3500);
+}
 function machStart(n) {
+  falschWeg();
   M = { done: false, fb: '', wrong: 0, run: false };
   FLEVELS[n].start(M);
   machRender();
@@ -703,13 +729,14 @@ function machRender() { mach.innerHTML = FLEVELS[F.level].html(M) + fbHTML(); }
 function machShow(n) {
   var isM = n !== null;
   mach.hidden = !isM;
+  if (!isM) falschWeg();
   ['b-point', 'b-line', 'b-undo', 'b-view'].forEach(function (id) { document.getElementById(id).hidden = isM; });
   if (isM) document.getElementById('b-clear').hidden = false;
   if (isM) { machStart(n); mach.scrollTop = 0; }
 }
 function machClick(e) {
   var b = e.target.closest ? e.target.closest('button') : null;
-  if (!b || !M || M.done || !isMach(FLEVELS[F.level])) return;
+  if (!b || !M || M.done || M.falsch || !isMach(FLEVELS[F.level])) return;
   FLEVELS[F.level].click(M, b.getAttribute('data-act'), {
     n: Number(b.getAttribute('data-n')), v: Number(b.getAttribute('data-v')), i: Number(b.getAttribute('data-i'))
   });
@@ -718,7 +745,7 @@ function machClick(e) {
 
 App.funk = {
   ARROW: ARROW, rnd: rnd, shuffle: shuffle, options: options, keypad: keypad, optButtons: optButtons,
-  f: f, finish: finish, M: function () { return M; }
+  f: f, finish: finish, falsch: falsch, M: function () { return M; }
 };
 
 /* ---------- Einstiegs-Level: eine Maschine mit sichtbarer oder geheimer Regel ----------

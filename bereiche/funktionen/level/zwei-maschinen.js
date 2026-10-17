@@ -32,7 +32,7 @@ App.level('funktionen', {
     var ra = { m: 1 + rnd(3), b: rnd(4) }, rb;
     do { rb = { m: 1 + rnd(3), b: rnd(4) }; } while (rb.m === ra.m && rb.b === ra.b);
     M.rules = [ra, rb]; M.bad = rnd(2);
-    M.logs = [[], []]; M.lastOut = [{}, {}]; M.last = [null, null]; M.sel = 2;
+    M.logs = [[], []]; M.lastOut = [{}, {}]; M.last = [null, null]; M.sel = null;   // am Anfang keine Zahl gewählt
   },
   html: function (M) {
     var K = App.funk, names = ['A', 'B'], html = '<div class="cols">', dis = M.done ? ' disabled' : '';
@@ -66,6 +66,11 @@ App.level('funktionen', {
     if (act === 'sel') {
       M.sel = d.n;
     } else if (act === 'feedm') {
+      if (M.sel === null) {
+        M.fb = { de: 'Wähle zuerst eine Zahl.', en: 'Pick a number first.', fi: 'Valitse ensin luku.', tr: 'Önce bir sayı seç.',
+                 fr: 'Choisis d’abord un nombre.', es: 'Primero elige un número.', ja: 'まず数を選ぼう。', ar: 'اختر عددًا أولًا.' };
+        return;
+      }
       var x = M.sel, out = App.funk.f(M.rules[i], x);
       if (i === M.bad && M.lastOut[i][x] !== undefined) {
         var offs = App.funk.shuffle([-1, 1, 2]), k;
@@ -102,14 +107,14 @@ App.level('funktionen', {
                  ar: 'صحيح! الآلة ' + nm + ' تعطي عند ' + bx + ' القيمتين ' + o.join(' و') + '.' };
         App.funk.finish();
       } else {
-        M.fb = { de: 'Nein. Schau, welche Maschine bei derselben Zahl verschiedene Ergebnisse liefert.',
+        App.funk.falsch({ de: 'Nein. Schau, welche Maschine bei derselben Zahl verschiedene Ergebnisse liefert.',
                  en: 'No. Look for the machine that gives different results for the same number.',
                  fi: 'Ei. Katso, kumpi kone antaa samalla luvulla eri tuloksia.',
                  tr: 'Hayır. Aynı sayı için farklı sonuç veren makineye bak.',
                  fr: 'Non. Cherche la machine qui donne des résultats différents pour le même nombre.',
                  es: 'No. Busca la máquina que da resultados distintos con el mismo número.',
                  ja: 'ちがいます。同じ数で違う結果を出すマシンをさがそう。',
-                 ar: 'لا. ابحث عن الآلة التي تعطي نتائج مختلفة للعدد نفسه.' };
+                 ar: 'لا. ابحث عن الآلة التي تعطي نتائج مختلفة للعدد نفسه.' });
       }
     }
   }

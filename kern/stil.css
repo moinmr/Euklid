@@ -8,6 +8,7 @@
   --rein: #cf5a17;
   --raus: #7b3fa6;
   --green: #1ab333;
+  --red: #e61a1a;
   --font-ui: "Jost", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color-scheme: light;
 }
@@ -73,21 +74,24 @@ body {
 #hud:empty { display: none; }
 #hud b { display: block; font-weight: 700; }
 /* Geschafft: eigene Karte unten über der Werkzeugleiste, Text und › nebeneinander; der Aufgabentext oben bleibt */
-#fertig {
+#fertig, #falsch {
   position: absolute; z-index: 3; left: 0; right: 0;
   width: min(520px, calc(100% - 32px)); margin: 0 auto; box-sizing: border-box;
   display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 16px; border-radius: 14px;
   background: #fbf4e2; box-shadow: 0 6px 20px rgba(56,41,26,.18), 0 1px 3px rgba(56,41,26,.12);
   color: var(--green); font-size: 14.5px; line-height: 1.4; cursor: pointer;
 }
-#fertig > span { flex: 1; }
-#fertig .weiter {
+#fertig > span, #falsch > span { flex: 1; }
+#fertig .weiter, #falsch .weiter {
   flex: none; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;
   background: none; border: 1.6px solid var(--green); border-radius: 50%; color: var(--green); cursor: pointer; padding: 0;
 }
-#fertig .weiter svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+#fertig .weiter svg, #falsch .weiter svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 #fertig .weiter:active { opacity: .5; }
-.geschafft #mach { padding-bottom: calc(170px + env(safe-area-inset-bottom, 0px)); }
+/* Falsch: dieselbe Karte in Rot, mit ↻; das Level beginnt danach von selbst neu */
+#falsch { color: var(--red); }
+#falsch .weiter { border-color: var(--red); color: var(--red); }
+.geschafft #mach, .falschkarte #mach { padding-bottom: calc(170px + env(safe-area-inset-bottom, 0px)); }
 .feld:empty::before { content: '\200b'; }
 [hidden] { display: none !important; }
 #home {
@@ -298,6 +302,6 @@ body {
 #fschreib .fb.ok { color: var(--green); }
 #fschreib .schnitt p > span { font-size: 18px; font-weight: 700; }
 /* Rechts-nach-links: der Knopf › bleibt rechts wie oben in der Leiste, nur der Text läuft von rechts */
-.rtl #fertig > span { direction: rtl; }
+.rtl #fertig > span, .rtl #falsch > span { direction: rtl; }
 #fschreib .zeilen { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 17px; }
 #fschreib .zeilen p { margin: 0; }
