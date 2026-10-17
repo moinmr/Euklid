@@ -309,7 +309,7 @@ function machShow(n) {
 }
 function machClick(e) {
   var b = e.target.closest ? e.target.closest('button') : null;
-  if (!b || !M || M.done) return;
+  if (!b || !M || M.done || !isMach(FLEVELS[F.level])) return;
   FLEVELS[F.level].click(M, b.getAttribute('data-act'), {
     n: Number(b.getAttribute('data-n')), v: Number(b.getAttribute('data-v')), i: Number(b.getAttribute('data-i'))
   });
@@ -319,6 +319,262 @@ function machClick(e) {
 App.funk = {
   ARROW: ARROW, rnd: rnd, shuffle: shuffle, options: options, keypad: keypad, optButtons: optButtons,
   f: f, finish: finish, M: function () { return M; }
+};
+
+/* ---------- Einstiegs-Level: eine Maschine mit sichtbarer oder geheimer Regel ----------
+   App.funk.einstieg(c) baut start/html/click aus Bausteinen. c: id, text, regel() -> {m, b},
+   namen (null = noch keine, 'wechsel' = zufällig und in Runde 2 y rein/x raus, 'zufall', oder [rein, raus]),
+   geheim (Regel versteckt), fn (Funktion als Zeile), liste, tabelle, achsen, koord,
+   frage ('wert' | 'punkt' | 'funktion'). Farben: Orange = rein, Lila = raus. */
+var PAARE = [['a', 'b'], ['x', 'y'], ['n', 'm'], ['t', 's']];
+
+// Variablen-Name in seiner Farbe; ohne Namen ein Kästchen □ als Platzhalter für die Zahl
+function vn(name, art) {
+  return name ? '<bdi class="vn ' + art + '">' + name + '</bdi>' : '<span class="platz ' + art + '">□</span>';
+}
+function gleich(name, art, wert) { return '<bdi>' + (name ? vn(name, art) + ' = ' : '') + wert + '</bdi>'; }
+// Regel mit dem Namen der Eingabe, z. B. 2·a + 1 (bei m = 1 nur a + 1, bei b = 0 nur 2·a)
+function regelHTML(r, name) {
+  return '<bdi>' + (r.m === 1 ? '' : r.m + '·') + vn(name, 'rein') + (r.b ? ' + ' + r.b : '') + '</bdi>';
+}
+function funktionHTML(r, names) { return '<bdi>' + vn(names[1], 'raus') + ' = ' + regelHTML(r, names[0]) + '</bdi>'; }
+function hatX(M, x) { return M.fed.some(function (p) { return p.x === x; }); }
+
+// Tabelle quer: oben die Eingaben, unten die Ausgaben, nach Eingabe sortiert
+function tabelleHTML(M) {
+  var reihe = M.fed.slice().sort(function (a, b) { return a.x - b.x; });
+  var oben = '<tr><th>' + vn(M.names[0], 'rein') + '</th>', unten = '<tr><th>' + vn(M.names[1], 'raus') + '</th>';
+  reihe.forEach(function (p) {
+    var neu = M.last && p.x === M.last.x ? ' class="neu"' : '';
+    oben += '<td' + neu + '>' + p.x + '</td>';
+    unten += '<td' + neu + '>' + p.y + '</td>';
+  });
+  return '<table class="vtab">' + oben + '</tr>' + unten + '</tr></table>';
+}
+
+// Zwei parallele Zahlenachsen: oben die Eingabe, unten die Ausgabe, jede Fütterung als Verbindung
+function achsenHTML(M) {
+  var W = 340, L = 34, R = 12, y1 = 20, y2 = 72, max = M.max, i;
+  function px(v) { return L + v * (W - L - R) / max; }
+  var s = '<svg class="achsen" viewBox="0 0 ' + W + ' 98" aria-hidden="true">';
+  s += '<text class="an rein" x="8" y="' + (y1 + 6) + '">' + M.names[0] + '</text>';
+  s += '<text class="an raus" x="8" y="' + (y2 + 6) + '">' + M.names[1] + '</text>';
+  s += '<line class="ax" x1="' + L + '" y1="' + y1 + '" x2="' + (W - R) + '" y2="' + y1 + '"/>';
+  s += '<line class="ax" x1="' + L + '" y1="' + y2 + '" x2="' + (W - R) + '" y2="' + y2 + '"/>';
+  for (i = 0; i <= max; i++) {
+    var lang = i % 5 === 0, h = lang ? 5 : 3;
+    s += '<line class="tk" x1="' + px(i) + '" y1="' + (y1 - h) + '" x2="' + px(i) + '" y2="' + (y1 + h) + '"/>';
+    s += '<line class="tk" x1="' + px(i) + '" y1="' + (y2 - h) + '" x2="' + px(i) + '" y2="' + (y2 + h) + '"/>';
+    if (lang) {
+      s += '<text class="zl" x="' + px(i) + '" y="' + (y1 - 10) + '">' + i + '</text>';
+      s += '<text class="zl" x="' + px(i) + '" y="' + (y2 + 19) + '">' + i + '</text>';
+    }
+  }
+  M.fed.forEach(function (p) {
+    var neu = M.last && p.x === M.last.x;
+    s += '<line class="vb' + (neu ? ' neu' : '') + '" x1="' + px(p.x) + '" y1="' + y1 + '" x2="' + px(p.y) + '" y2="' + y2 + '"/>';
+    s += '<circle class="pr" cx="' + px(p.x) + '" cy="' + y1 + '" r="4.5"/>';
+    s += '<circle class="pa" cx="' + px(p.y) + '" cy="' + y2 + '" r="4.5"/>';
+  });
+  return s + '</svg>';
+}
+
+// Koordinatensystem: Eingabe nach rechts, Ausgabe nach oben. Jede Fütterung wird ein Punkt,
+// beim neuesten zeigen gestrichelte Linien den Weg: erst nach rechts, dann nach oben.
+function koordHTML(M) {
+  var W = 340, H = 180, L = 30, R = 24, T = 24, B = 24, xmax = 10, ymax = M.max, i;
+  function px(v) { return L + v * (W - L - R) / xmax; }
+  function py(v) { return H - B - v * (H - B - T) / ymax; }
+  var s = '<svg class="koord" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
+  for (i = 1; i <= xmax; i++) s += '<line class="gl" x1="' + px(i) + '" y1="' + py(0) + '" x2="' + px(i) + '" y2="' + py(ymax) + '"/>';
+  for (i = 5; i <= ymax; i += 5) s += '<line class="gl" x1="' + px(0) + '" y1="' + py(i) + '" x2="' + px(xmax) + '" y2="' + py(i) + '"/>';
+  s += '<line class="ax" x1="' + px(0) + '" y1="' + py(0) + '" x2="' + px(xmax) + '" y2="' + py(0) + '"/>';
+  s += '<line class="ax" x1="' + px(0) + '" y1="' + py(0) + '" x2="' + px(0) + '" y2="' + py(ymax) + '"/>';
+  for (i = 0; i < xmax; i++) s += '<text class="zl" x="' + px(i) + '" y="' + (py(0) + 16) + '">' + i + '</text>';
+  for (i = 5; i <= ymax; i += 5) s += '<text class="zl ry" x="' + (px(0) - 6) + '" y="' + (py(i) + 4) + '">' + i + '</text>';
+  s += '<text class="an rein" x="' + (px(xmax) + 6) + '" y="' + (py(0) + 6) + '">' + M.names[0] + '</text>';
+  s += '<text class="an raus" x="' + (px(0) + 7) + '" y="' + (py(ymax) - 2) + '">' + M.names[1] + '</text>';
+  M.fed.forEach(function (p) {
+    if (M.last && p.x === M.last.x) {
+      s += '<line class="weg rein" x1="' + px(p.x) + '" y1="' + py(0) + '" x2="' + px(p.x) + '" y2="' + py(p.y) + '"/>';
+      s += '<line class="weg raus" x1="' + px(0) + '" y1="' + py(p.y) + '" x2="' + px(p.x) + '" y2="' + py(p.y) + '"/>';
+      s += '<circle class="pr" cx="' + px(p.x) + '" cy="' + py(0) + '" r="4"/><circle class="pa" cx="' + px(0) + '" cy="' + py(p.y) + '" r="4"/>';
+    }
+  });
+  M.fed.forEach(function (p) {
+    s += '<circle class="pt' + (M.last && p.x === M.last.x ? ' neu' : '') + '" cx="' + px(p.x) + '" cy="' + py(p.y) + '" r="4.5"/>';
+  });
+  return s + '</svg>';
+}
+
+function frageStellen(M, c) {
+  var frei = [], x;
+  for (x = 0; x < 10; x++) if (!hatX(M, x)) frei.push(x);
+  M.q = frei[rnd(frei.length)];
+  M.ans = f(M.r, M.q);
+  var q = M.q, a = M.ans, r = M.r;
+  if (c.frage === 'punkt') {
+    var pk = [[a, q], [q, a + 1], [q + 1, a], [q, a - 1], [q - 1, a]].filter(function (p, k, all) {
+      return p[0] >= 0 && p[1] >= 0 && !(p[0] === q && p[1] === a) &&
+        all.findIndex(function (o) { return o[0] === p[0] && o[1] === p[1]; }) === k;
+    });
+    M.popts = shuffle([[q, a]].concat(shuffle(pk).slice(0, 3)));
+  } else if (c.frage === 'funktion') {
+    var fk = [{ m: r.m, b: r.b + 1 }, { m: r.m, b: r.b - 1 }, { m: r.m + 1, b: r.b }, { m: r.m - 1, b: r.b + r.m }, { m: r.b, b: r.m }]
+      .filter(function (o, k, all) {
+        return o.m >= 1 && o.b >= 0 && !(o.m === r.m && o.b === r.b) &&
+          all.findIndex(function (p) { return p.m === o.m && p.b === o.b; }) === k;
+      });
+    M.fopts = shuffle([r].concat(shuffle(fk).slice(0, 3)));
+  } else {
+    M.opts = options(a, [a + r.m, a - r.m, a + 1, a - 1, q + r.b, r.m * q]);
+  }
+}
+
+function feedHint(n) {
+  return App.wahl({
+    de: 'Füttere die Maschine noch ' + n + ' Mal.',
+    en: 'Feed the machine ' + n + ' more ' + (n === 1 ? 'time.' : 'times.'),
+    fi: 'Syötä koneeseen vielä ' + (n === 1 ? 'kerran.' : n + ' kertaa.'),
+    tr: 'Makineyi ' + n + ' kez daha besle.',
+    fr: 'Nourris la machine encore ' + n + ' fois.',
+    es: 'Alimenta la máquina ' + n + (n === 1 ? ' vez más.' : ' veces más.'),
+    ja: 'あと' + n + '回マシンに入れましょう。',
+    ar: n === 1 ? 'أدخل عددًا في الآلة مرة أخرى.' : 'أدخل عددًا في الآلة ' + n + ' مرات أخرى.'
+  });
+}
+
+function frageHTML(M, c) {
+  var i = M.names[0], o = M.names[1], I = gleich(i, 'rein', M.q), O = vn(o, 'raus'), t;
+  if (c.frage === 'punkt') {
+    t = { de: 'Welcher Punkt gehört zu ' + I + '?', en: 'Which point belongs to ' + I + '?',
+          fi: 'Mikä piste kuuluu arvoon ' + I + '?', tr: I + ' için hangi nokta?',
+          fr: 'Quel point correspond à ' + I + ' ?', es: '¿Qué punto corresponde a ' + I + '?',
+          ja: I + ' のときの点はどれ？', ar: 'أي نقطة تنتمي إلى ' + I + '؟' };
+    return '<p class="q">' + App.wahl(t) + '</p><div class="opts vier">' + M.popts.map(function (p, k) {
+      return '<button class="opt" data-act="pkt" data-i="' + k + '"><bdi>(<span class="rein">' + p[0] + '</span>|<span class="raus">' + p[1] + '</span>)</bdi></button>';
+    }).join('') + '</div>';
+  }
+  if (c.frage === 'funktion') {
+    t = { de: 'Welche Funktion steckt in der Maschine?', en: 'Which function is inside the machine?',
+          fi: 'Mikä funktio koneen sisällä on?', tr: 'Makinenin içinde hangi fonksiyon var?',
+          fr: 'Quelle fonction se cache dans la machine ?', es: '¿Qué función hay dentro de la máquina?',
+          ja: 'マシンの中の関数はどれ？', ar: 'ما الدالة الموجودة داخل الآلة؟' };
+    return '<p class="q">' + App.wahl(t) + '</p><div class="opts">' + M.fopts.map(function (r, k) {
+      return '<button class="opt" data-act="fun" data-i="' + k + '">' + funktionHTML(r, M.names) + '</button>';
+    }).join('') + '</div>';
+  }
+  var q = M.q;
+  t = i ? { de: 'Was ist ' + O + ', wenn ' + I + ' ist?', en: 'What is ' + O + ' when ' + I + '?',
+            fi: 'Mikä on ' + O + ', kun ' + I + '?', tr: I + ' ise ' + O + ' kaçtır?',
+            fr: 'Que vaut ' + O + ' quand ' + I + ' ?', es: '¿Cuánto vale ' + O + ' cuando ' + I + '?',
+            ja: I + ' のとき、' + O + ' はいくつ？', ar: 'كم تساوي ' + O + ' عندما ' + I + '؟' }
+        : { de: 'Was kommt bei ' + q + ' heraus?', en: 'What comes out for ' + q + '?',
+            fi: 'Mitä tulee ulos luvulla ' + q + '?', tr: q + ' için ne çıkar?', fr: 'Que sort-il pour ' + q + ' ?',
+            es: '¿Qué sale con ' + q + '?', ja: q + 'を入れると何が出る？', ar: 'ماذا يخرج عند ' + q + '؟' };
+  var knopf = optButtons(M.opts, '');
+  return '<p class="q">' + App.wahl(t) + '</p>' + (c.eng ? knopf.replace('class="opts"', 'class="opts vier"') : knopf);
+}
+
+function falschFB(M, c) {
+  if (c.frage === 'punkt') {
+    var X = vn(M.names[0], 'rein'), Y = vn(M.names[1], 'raus');
+    return { de: 'Nicht ganz. Im Punkt steht zuerst ' + X + ', dann ' + Y + '.',
+             en: 'Not quite. A point lists ' + X + ' first, then ' + Y + '.',
+             fi: 'Ei aivan. Pisteessä on ensin ' + X + ', sitten ' + Y + '.',
+             tr: 'Tam değil. Noktada önce ' + X + ', sonra ' + Y + ' yazılır.',
+             fr: 'Pas tout à fait. Dans un point, on écrit d’abord ' + X + ', puis ' + Y + '.',
+             es: 'Casi. En un punto va primero ' + X + ' y después ' + Y + '.',
+             ja: 'おしい。点では先に ' + X + '、次に ' + Y + ' を書きます。',
+             ar: 'ليس تمامًا. في النقطة نكتب ' + X + ' أولًا ثم ' + Y + '.' };
+  }
+  if (c.frage === 'funktion') {
+    return { de: 'Nicht ganz. Setze eine Zahl aus der Tabelle in die Funktion ein und vergleiche.',
+             en: 'Not quite. Put a number from the table into the function and compare.',
+             fi: 'Ei aivan. Sijoita funktioon luku taulukosta ja vertaa.',
+             tr: 'Tam değil. Tablodan bir sayıyı fonksiyona koy ve karşılaştır.',
+             fr: 'Pas tout à fait. Mets un nombre du tableau dans la fonction et compare.',
+             es: 'Casi. Pon un número de la tabla en la función y compara.',
+             ja: 'おしい。表の数を関数に入れてくらべてみよう。',
+             ar: 'ليس تمامًا. ضع عددًا من الجدول في الدالة وقارن.' };
+  }
+  var R = regelHTML(M.r, M.names[0]), E = vn(M.names[0], 'rein'), q = M.q;
+  return { de: 'Nicht ganz. Setze für ' + E + ' die Zahl ' + q + ' in ' + R + ' ein.',
+           en: 'Not quite. Put ' + q + ' in place of ' + E + ' in ' + R + '.',
+           fi: 'Ei aivan. Sijoita ' + E + ':n paikalle ' + q + ' lausekkeeseen ' + R + '.',
+           tr: 'Tam değil. ' + R + ' içinde ' + E + ' yerine ' + q + ' koy.',
+           fr: 'Pas tout à fait. Remplace ' + E + ' par ' + q + ' dans ' + R + '.',
+           es: 'Casi. Pon ' + q + ' en lugar de ' + E + ' en ' + R + '.',
+           ja: 'おしい。' + R + ' の ' + E + ' に ' + q + ' を入れて計算しよう。',
+           ar: 'ليس تمامًا. ضع ' + q + ' مكان ' + E + ' في ' + R + '.' };
+}
+
+App.funk.einstieg = function (c) {
+  // Viel auf dem Schirm: Tasten in einer Reihe, Antworten nebeneinander
+  c.eng = !!(c.tabelle || c.achsen || c.koord);
+  return {
+    id: c.id, text: c.text,
+    start: function (M) {
+      M.r = c.regel();
+      M.max = Math.max(5, Math.ceil(f(M.r, 9) / 5) * 5);
+      var pool = c.namen === 'zufall' ? PAARE.concat([['y', 'x']]) : PAARE;
+      M.names = !c.namen ? [null, null] : Array.isArray(c.namen) ? c.namen.slice() : pool[rnd(pool.length)].slice();
+      M.round = 1; M.fed = []; M.last = null; M.q = null;
+    },
+    html: function (M) {
+      var l = M.last, run = M.run, i = M.names[0], o = M.names[1], html = '', zeigen = !c.geheim || M.done;
+      M.run = false;
+      function chip(art, wert) {
+        var el = '<div class="chip' + (art === 'raus' ? ' out' : '') + (l ? ' on' : '') + '">' + (l ? wert : '') + '</div>';
+        return i ? '<div class="vk">' + vn(art === 'rein' ? i : o, art) + el + '</div>' : el;
+      }
+      html += '<div class="flow' + (i ? ' vflow' : '') + '">' + chip('rein', l && l.x) + ARROW +
+        '<div class="mbox' + (zeigen ? ' regel' : '') + (run ? ' run' : '') + '">' + (zeigen ? regelHTML(M.r, i) : '?') + '</div>' + ARROW +
+        chip('raus', l && l.y) + '</div>';
+      if (c.fn && i) html += '<p class="fn">' + funktionHTML(M.r, M.names) + '</p>';
+      var tasten = keypad('feed', -1);
+      html += c.eng ? tasten.replace('class="keys"', 'class="keys reihe"') : tasten;
+      if (c.liste) html += '<div class="hist">' + M.fed.map(function (p) {
+        return '<span><span class="rein">' + p.x + '</span> → <span class="raus">' + p.y + '</span></span>';
+      }).join('') + '</div>';
+      if (c.tabelle) html += tabelleHTML(M);
+      if (c.achsen) html += achsenHTML(M);
+      if (c.koord) html += koordHTML(M);
+      if (M.done) return html;
+      return html + (M.q === null ? '<p class="hint">' + feedHint(3 - M.fed.length) + '</p>' : frageHTML(M, c));
+    },
+    click: function (M, act, d) {
+      if (act === 'feed') {
+        var p = { x: d.n, y: f(M.r, d.n) };
+        if (!hatX(M, p.x)) M.fed.push(p);
+        M.last = p; M.run = true;
+        if (M.round === 1) M.fb = '';
+        if ((M.q === null && M.fed.length >= 3) || (M.q === d.n && c.frage !== 'funktion')) frageStellen(M, c);
+        return;
+      }
+      var richtig = act === 'ans' ? d.v === M.ans
+        : act === 'pkt' ? M.popts[d.i][0] === M.q && M.popts[d.i][1] === M.ans
+        : act === 'fun' ? M.fopts[d.i].m === M.r.m && M.fopts[d.i].b === M.r.b : null;
+      if (richtig === null) return;
+      if (!richtig) { M.wrong++; M.fb = falschFB(M, c); return; }
+      if (c.frage !== 'funktion') { M.fed.push({ x: M.q, y: M.ans }); M.last = M.fed[M.fed.length - 1]; }
+      if (c.namen === 'wechsel' && M.round === 1) {
+        // Runde 2: gleiche Maschine, neue Namen. Immer y für die Eingabe und x für die Ausgabe.
+        M.round = 2; M.names = ['y', 'x'];
+        M.fb = { de: 'Richtig! Neue Namen, gleiche Maschine.', en: 'Right! New names, same machine.',
+                 fi: 'Oikein! Uudet nimet, sama kone.', tr: 'Doğru! Yeni adlar, aynı makine.',
+                 fr: 'Bravo ! Nouveaux noms, même machine.', es: '¡Correcto! Nombres nuevos, la misma máquina.',
+                 ja: '正解！名前は新しく、マシンは同じです。', ar: 'صحيح! أسماء جديدة، والآلة نفسها.' };
+        frageStellen(M, c);
+        return;
+      }
+      M.fb = c.frage === 'funktion' ? funktionHTML(M.r, M.names)
+        : M.names[0] ? gleich(M.names[0], 'rein', M.q) + ' → ' + gleich(M.names[1], 'raus', M.ans)
+        : '<span class="rein">' + M.q + '</span> → <span class="raus">' + M.ans + '</span>';
+      M.q = null;
+      finish();
+    }
+  };
 };
 
 App.bereich({

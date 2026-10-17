@@ -72,17 +72,21 @@ Leitidee: Der Schüler erlebt zuerst, dann bekommt es einen Namen, dann wird es 
 
 | Level | Titel | Erkenntnis |
 |---|---|---|
-| 1 | Die Maschine | Es gibt eine Regel. Zufällige Regel m·x+b, Eingabe 0 bis 9 durch Tasten, danach "Was kommt bei 10 heraus?" mit Auswahl. Tipp nach zwei Fehlern. |
-| 2 | Zwei Maschinen | Gleiche Eingabe gibt immer gleiche Ausgabe. Eine Maschine ist zufällig kaputt. Antwort erst möglich, wenn beide mit derselben Zahl mindestens zweimal getestet wurden. |
-| 3 | Das Taxi | Alltag: Grundgebühr plus Preis pro km (zufällig). Tabelle für 1, 2, 3, 5 km, falsche Antworten sind typische Denkfehler. |
-| 4 | Punkte setzen | Koordinaten. A(3\|2), B(−2\|4). |
-| 5 | Wertetabelle | y = x + 1, Tabelle rechnen, Punkte setzen, Gerade ziehen. |
-| 6 | Steigung | y = 2x |
-| 7 | y-Achsenabschnitt | y = x + 2 |
-| 8 | Steigung und Achsenabschnitt | y = 2x − 1 |
-| 9 | Negative Steigung | y = −x + 3 |
+| 1 | Die Maschine | Zahl rein, Zahl raus. Die Regel steht sichtbar in der Box (z. B. 2·□ + 1), □ ist der Platz für die Zahl. Dreimal füttern, dann "Was kommt bei ... heraus?". |
+| 2 | Zahlen mit Namen | Variablen: Eingabe und Ausgabe bekommen Namen (zufällig, z. B. a und b), Funktion als Zeile, Tabelle. Runde 2: gleiche Maschine, neue Namen (y rein, x raus). |
+| 3 | Zwei Achsen | Jede Fütterung als Linie zwischen zwei parallelen Zahlenachsen (oben rein, unten raus). Namen zufällig. |
+| 4 | Ins Koordinatensystem | Die Achse für y steht senkrecht, jedes Paar wird ein Punkt. Frage: Welcher Punkt gehört zu x = ...? |
+| 5 | Funktion raten | Regel geheim, Tabelle mit x und y, dann "Welche Funktion steckt in der Maschine?" (Kennung `maschine`). |
+| 6 | Zwei Maschinen | Gleiche Eingabe gibt immer gleiche Ausgabe. Eine Maschine ist zufällig kaputt. Antwort erst möglich, wenn beide mit derselben Zahl mindestens zweimal getestet wurden. |
+| 7 | Das Taxi | Alltag: Grundgebühr plus Preis pro km (zufällig). Tabelle für 1, 2, 3, 5 km, falsche Antworten sind typische Denkfehler. |
+| 8 | Punkte setzen | Koordinaten. A(3\|2), B(−2\|4). |
+| 9 | Wertetabelle | y = x + 1, Tabelle rechnen, Punkte setzen, Gerade ziehen. |
+| 10 | Steigung | y = 2x |
+| 11 | y-Achsenabschnitt | y = x + 2 |
+| 12 | Steigung und Achsenabschnitt | y = 2x − 1 |
+| 13 | Negative Steigung | y = −x + 3 |
 
-- Level 1 bis 3 sind DOM-Overlays (`#mach`), Level 4 bis 9 laufen auf dem Canvas mit Koordinatensystem (1 Einheit = 40 px, y nach oben).
+- Level 1 bis 7 sind DOM-Overlays (`#mach`). Level 1 bis 5 entstehen aus Bausteinen in `App.funk.einstieg` (bereich.js). Farben: Orange = rein, Lila = raus, Grün = richtig, Menüs braun. Level 8 bis 13 laufen auf dem Canvas mit Koordinatensystem (1 Einheit = 40 px, y nach oben).
 - Punkte rasten auf Gitterpunkte, die Gerade wird über zwei Punkte unendlich verlängert. Prüfung über die Gleichung, nicht über irgendeine Gerade.
 - Nach den Punkten schaltet die App selbst auf das Linien-Werkzeug um.
 
