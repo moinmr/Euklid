@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#f5ebd1">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Euklid">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Euklid</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;700&display=swap">
+<style>
+/* Layout: Vollbild-Zeichenbrett, dünne Symbolleiste und Aufgabentext oben darüber. Ein fester Look (Pergament + Tinte). */
+:root {
+  --parchment: #f5ebd1;
+  --ink: #382919;
+  --pencil: #73737a;
+  --blue: #1a59cc;
+  --green: #1ab333;
+  --font-ui: "Jost", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--parchment);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  overflow: hidden;
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+#app { position: relative; height: 100%; height: 100dvh; width: 100%; overflow: hidden; }
+#board { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; }
+#top {
+  padding-top: env(safe-area-inset-top, 0px);
+  position: absolute; left: 0; right: 0; top: 0; z-index: 2;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  pointer-events: none;
+}
+#bar { display: flex; gap: 2px; padding: 2px 0; max-width: 560px; margin: 0 auto; }
+.ib {
+  pointer-events: auto;
+  flex: 1 1 0; min-width: 0; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: 0; padding: 0; margin: 0;
+  color: var(--ink); cursor: pointer;
+  touch-action: manipulation;
+}
+.ib svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+.ib svg .f { fill: currentColor; stroke: none; }
+.ib.on { color: var(--blue); }
+.ib:active { opacity: .45; }
+.ib:focus-visible { outline: 2px solid var(--blue); outline-offset: -4px; border-radius: 8px; }
+#hud {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+  padding: 6px max(16px, env(safe-area-inset-left, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  text-align: center; font-size: 14.5px; font-weight: 400; line-height: 1.4; letter-spacing: .01em; text-wrap: balance;
+  pointer-events: none;
+}
+#hud b { display: block; font-weight: 700; }
+#hud.ok { color: var(--green); font-weight: 400; }
+</style>
+
+<div id="app">
+  <canvas id="board"></canvas>
+  <div id="top">
+    <div id="bar" role="toolbar" aria-label="Werkzeuge">
+      <button class="ib" id="b-line" aria-label="Linie"><svg viewBox="0 0 24 24"><path d="M4.8 17.4 L19.2 6.6"/><circle class="f" cx="4.8" cy="17.4" r="1.4"/><circle class="f" cx="19.2" cy="6.6" r="1.4"/></svg></button>
+      <button class="ib" id="b-compass" aria-label="Zirkel"><svg viewBox="0 0 24 24"><path d="M6.6 20.1 L12 3.9 L17.4 20.1"/></svg></button>
+      <button class="ib" id="b-move" aria-label="Ecke schieben"><svg viewBox="0 0 24 24"><path d="M12 12H20.1M17.85 9.75L20.1 12L17.85 14.25M12 12H3.9M6.15 9.75L3.9 12L6.15 14.25M12 12V3.9M9.75 6.15L12 3.9L14.25 6.15M12 12V20.1M9.75 17.85L12 20.1L14.25 17.85"/></svg></button>
+      <button class="ib" id="b-cut" aria-label="Trennen"><svg viewBox="0 0 24 24"><path d="M7.95 18.3L16.95 3.45M16.05 18.3L7.05 3.45"/><circle cx="7.95" cy="18.3" r="1.8"/><circle cx="16.05" cy="18.3" r="1.8"/></svg></button>
+      <button class="ib" id="b-undo" aria-label="Zurück"><svg viewBox="0 0 24 24"><path d="M19.65 12H4.35M8.85 7.95L4.35 12L8.85 16.05"/></svg></button>
+      <button class="ib" id="b-clear" aria-label="Alles löschen"><svg viewBox="0 0 24 24"><path d="M4.8 6.6H19.2M6.6 6.6L7.5 20.1H16.5L17.4 6.6"/></svg></button>
+      <button class="ib" id="b-view" aria-label="Ansicht zurücksetzen"><svg viewBox="0 0 24 24"><path d="M4.35 8.4V4.35H8.4M19.65 8.4V4.35H15.6M4.35 15.6V19.65H8.4M19.65 15.6V19.65H15.6"/></svg></button>
+      <button class="ib" id="b-level" aria-label="Nächstes Level"><svg viewBox="0 0 24 24"><path d="M4.35 19.65V14.7H9.3V9.75H14.25V4.8H19.65"/></svg></button>
+    </div>
+  </div>
+  <div id="hud" aria-live="polite"></div>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+/* ===================== Konstanten ===================== */
+var PARCH = '#f5ebd1', INK = '#382919';
+var PENCIL = 'rgb(115,115,122)', PENCIL_A = 'rgba(115,115,122,0.8)';
+var BLUE = 'rgb(26,89,204)', BASEC = 'rgb(26,26,26)';
+var GREEN = 'rgb(26,179,51)', RED = 'rgb(230,26,26)';
+var GRAB = 36;            // Greif-/Einrastradius (px)
+var ZOOM = 2.5;           // Lupe
+var LOUPE_R = 46, LOUPE_OFFSET = 95;
+var LIFT_DELAY = 0.09;    // Sekunden
+var CM = 38;              // px pro cm
+var COMPASS_SNAP = true;
+var FONT = '"Jost", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+var TAU = Math.PI * 2;
+var STORE_KEY = 'euklid-fortschritt-v1';
+
+var LEVELS = [
+  { kind: 'tri', title: 'Level 1: Gleichseitiges Dreieck',
+    task: 'Konstruiere über der Strecke AB ein gleichseitiges Dreieck. Benutze Zirkel und Linie.' },
+  { kind: 'hex', title: 'Level 2: Sechseck',
+    task: 'Konstruiere über der Strecke AB ein regelmäßiges Sechseck. Benutze Zirkel und Linie.' },
+  { kind: 'perp', title: 'Level 3: Mittelsenkrechte', y: 0.45,
+    task: 'Konstruiere die Mittelsenkrechte der Strecke AB. Benutze Zirkel und Linie.' }
+];
+
+/* ===================== Zustand ===================== */
+var S = {
+  tool: 'line', edges: [], circles: [], gid: 0, cc: null, level: null, done: false, base: null,
+  solved: new Set(), solutions: {}, work: {}, start_level: 0, ls: null, cc_gid: 0, pa: 0,
+  vs: 1, ox: 0, oy: 0, k: 1, vth: 0, dsc: 1,
+  hist: [], fingers: new Map(), gesture: false, main: null, sp: [0, 0], loupe: null,
+  active_orig: null, w: 0, h: 0, dpr: 1, loadedOnce: false,
+  onLevel: null, onRender: null,
+  // Zwischenzustand (reset_temp)
+  start: null, end: null, active: null, target: null, drawing: false, lmode: null, cutting: false,
+  cmode: null, sweep: 0, lo: 0, hi: 0, pa0: 0, last: 0, rad_old: 0, rad: 0
+};
+
+function V(p) { return { x: p[0], y: p[1], locked: false, name: null }; }
+function vp(v) { return [v.x, v.y]; }
+function unit(a, b) {
+  var dx = b[0] - a[0], dy = b[1] - a[1], n = Math.hypot(dx, dy) || 1;
+  return [dx / n, dy / n];
+}
+function distCm(a, b) { return Math.hypot(b[0] - a[0], b[1] - a[1]) / CM; }
+function now() { return (typeof performance !== 'undefined' ? performance.now() : Date.now()) / 1000; }
+function render() { if (S.onRender) S.onRender(); }
+
+function resetTemp() {
+  S.start = null; S.end = null; S.active = null; S.target = null; S.drawing = false;
+  S.lmode = null; S.cutting = false; S.cmode = null; S.sweep = 0; S.lo = 0; S.hi = 0;
+  S.pa0 = 0; S.last = 0; S.rad_old = 0; S.rad = 0;
+}
+
+/* ===================== Hilfsfunktionen ===================== */
+function vertices() {
+  var seen = new Set(), out = [];
+  S.edges.forEach(function (e) {
+    [e.a, e.b].forEach(function (v) { if (!seen.has(v)) { seen.add(v); out.push(v); } });
+  });
+  return out;
+}
+function snap(pos, exclude, minDeg) {
+  minDeg = minDeg || 1;
+  var deg = new Map();
+  if (minDeg > 1) {
+    S.edges.forEach(function (e) {
+      deg.set(e.a, (deg.get(e.a) || 0) + 1);
+      deg.set(e.b, (deg.get(e.b) || 0) + 1);
+    });
+  }
+  var best = null, bd = GRAB * S.k;
+  vertices().forEach(function (v) {
+    if (v === exclude) return;
+    if ((deg.get(v) || 1) < minDeg) return;
+    var d = Math.hypot(v.x - pos[0], v.y - pos[1]);
+    if (d < bd) { best = v; bd = d; }
+  });
+  return best;
+}
+function csnap(pos, exclude) { return COMPASS_SNAP ? snap(pos, exclude) : null; }
+function radiusAt(pos) {
+  var tg = csnap(pos, S.cc);
+  var q = tg ? vp(tg) : pos;
+  var dx = q[0] - S.cc.x, dy = q[1] - S.cc.y;
+  S.pa = Math.atan2(dy, dx);
+  return Math.hypot(dx, dy);
+}
+
+/* ===================== Zeichnen ===================== */
+function dotAt(ctx, p, big, size) {
+  var r = S.k * S.dsc * (size ? size : (big ? 9 : 4));
+  ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, TAU); ctx.fill();
+}
+function mark(ctx, v) {
+  ctx.fillStyle = S.tool === 'cut' ? RED : GREEN;
+  var r = 11 * S.k * S.dsc;
+  ctx.beginPath(); ctx.arc(v.x, v.y, r, 0, TAU); ctx.fill();
+}
+function arcLine(ctx, c, r, a0, sw, width) {
+  ctx.lineWidth = width;
+  ctx.beginPath(); ctx.arc(c[0], c[1], r, a0, a0 + sw); ctx.stroke();
+}
+function text(ctx, txt, x, y, col, size) {
+  var k = S.k;
+  ctx.fillStyle = col;
+  ctx.font = '400 ' + ((size || 12) * k) + 'px ' + FONT;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.save();
+  ctx.translate(x, y);
+  if (Math.abs(S.vth) > 1e-6) ctx.rotate(-S.vth);   // Ansicht gedreht: Text bleibt aufrecht
+  ctx.fillText(txt, 0, 0);
+  ctx.restore();
+}
+
+function buildScene(ctx, ws) {
+  var k = S.k;
+  var adj = new Map(), vcol = new Map();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  S.edges.forEach(function (e) {
+    if (!adj.has(e.a)) adj.set(e.a, []);
+    if (!adj.has(e.b)) adj.set(e.b, []);
+    adj.get(e.a).push(e.b); adj.get(e.b).push(e.a);
+    if (!vcol.has(e.a)) vcol.set(e.a, e.col);
+    if (!vcol.has(e.b)) vcol.set(e.b, e.col);
+  });
+  S.edges.forEach(function (e) {
+    ctx.strokeStyle = e.col; ctx.lineWidth = 2.5 * ws * k;
+    ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y); ctx.stroke();
+  });
+  S.circles.forEach(function (c) {
+    ctx.strokeStyle = PENCIL_A;
+    arcLine(ctx, vp(c.c), c.r, c.a0, c.sw, 1.1 * ws * k);
+  });
+  adj.forEach(function (nb, v) {
+    ctx.fillStyle = vcol.get(v);
+    dotAt(ctx, vp(v), v === S.active);
+    if (nb.length === 2 && nb[0] !== nb[1]) {
+      var u = unit(vp(v), vp(nb[0])), w = unit(vp(v), vp(nb[1]));
+      var d = Math.max(-1, Math.min(1, u[0] * w[0] + u[1] * w[1]));
+      var ang = Math.acos(d) * 180 / Math.PI;
+      var bx = u[0] + w[0], by = u[1] + w[1], bn = Math.hypot(bx, by);
+      if (bn < 1e-6) { bx = -u[1]; by = u[0]; bn = 1; }
+      text(ctx, Math.round(ang) + '°', v.x + bx / bn * 32 * k, v.y + by / bn * 32 * k, vcol.get(v));
+    }
+  });
+  if (S.target) mark(ctx, S.target);
+  if (S.base) S.base.forEach(function (v) {
+    if (v.name) text(ctx, v.name, v.x, v.y + 17 * k, INK, 14);
+  });
+}
+
+function buildTemp(ctx, ws) {
+  var k = S.k;
+  ctx.lineCap = 'butt';
+  if (S.tool === 'line') {
+    ctx.strokeStyle = BLUE; ctx.fillStyle = BLUE;
+    if (S.ls) dotAt(ctx, vp(S.ls), true);
+    if (S.drawing && S.end) {
+      if (S.lmode === 'end' && S.ls) {
+        ctx.lineWidth = 2 * ws * k;
+        ctx.beginPath(); ctx.moveTo(S.ls.x, S.ls.y); ctx.lineTo(S.end[0], S.end[1]); ctx.stroke();
+      }
+      dotAt(ctx, S.end, true);
+      if (S.target) mark(ctx, S.target);
+    }
+  }
+  if (S.tool === 'compass') {
+    var m = S.cmode, c = null;
+    ctx.fillStyle = PENCIL; ctx.strokeStyle = PENCIL;
+    if (m === 'needle') c = S.target ? vp(S.target) : S.end;
+    else if (m === 'center') { if (S.end) dotAt(ctx, S.end, true); }
+    else if (S.cc) c = vp(S.cc);
+    if (c) {
+      ctx.fillStyle = PENCIL;
+      dotAt(ctx, c, true);
+      if (S.rad > 0) {
+        var r = S.rad, pa = m === 'rotate' ? S.pa0 + S.sweep : S.pa;
+        ctx.strokeStyle = '#ffffff';
+        arcLine(ctx, c, r, 0, TAU, 1.6 * ws * k);
+        if (m === 'rotate' && S.hi - S.lo > 0.01) {
+          ctx.strokeStyle = PENCIL;
+          arcLine(ctx, c, r, S.pa0 + S.lo, S.hi - S.lo, 1.1 * ws * k);
+        }
+        var pen = [c[0] + r * Math.cos(pa), c[1] + r * Math.sin(pa)];
+        if (m === 'radius') {
+          ctx.strokeStyle = PENCIL; ctx.lineWidth = 1.5 * ws * k;
+          ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.lineTo(pen[0], pen[1]); ctx.stroke();
+          ctx.fillStyle = PENCIL; dotAt(ctx, pen, true);
+        } else if (m === 'rotate') {
+          ctx.fillStyle = GREEN; dotAt(ctx, pen, true);
+        }
+      }
+    }
+    if (S.target && (m === 'center' || m === 'needle' || m === 'radius')) mark(ctx, S.target);
+  }
+}
+
+function drawLoupe(ctx) {
+  var p = S.loupe;
+  if (!p) return;
+  var x = p[0], y = p[1], r = LOUPE_R, cx = x, cy = y - LOUPE_OFFSET;
+  ctx.save();
+  ctx.fillStyle = PARCH;
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fill();
+  ctx.clip();
+  ctx.translate(cx, cy); ctx.scale(ZOOM, ZOOM); ctx.translate(-x, -y);
+  ctx.translate(S.ox, S.oy); ctx.rotate(S.vth); ctx.scale(S.vs, S.vs);
+  S.dsc = 0.45;
+  try { buildScene(ctx, 0.8 / ZOOM); buildTemp(ctx, 0.8 / ZOOM); }
+  finally { S.dsc = 1; }
+  ctx.restore();
+  ctx.strokeStyle = INK; ctx.lineWidth = 0.8; ctx.lineCap = 'butt';
+  ctx.beginPath();
+  ctx.moveTo(cx - 6, cy); ctx.lineTo(cx + 6, cy);
+  ctx.moveTo(cx, cy - 6); ctx.lineTo(cx, cy + 6);
+  ctx.stroke();
+  ctx.lineWidth = 0.9;
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.stroke();
+}
+
+function drawAll(ctx) {
+  ctx.save();
+  ctx.setTransform(S.dpr, 0, 0, S.dpr, 0, 0);
+  ctx.fillStyle = PARCH;
+  ctx.fillRect(0, 0, S.w, S.h);
+  ctx.save();
+  ctx.translate(S.ox, S.oy); ctx.rotate(S.vth); ctx.scale(S.vs, S.vs);
+  buildScene(ctx, 1);
+  buildTemp(ctx, 1);
+  ctx.restore();
+  drawLoupe(ctx);
+  ctx.restore();
+}
+
+/* ===================== Bearbeiten ===================== */
+function addEdge(a, b) { S.edges.push({ a: a, b: b, col: BLUE, gid: S.gid }); }
+
+function merge(v, tgt) {
+  S.edges.forEach(function (e) {
+    if (e.a === v) e.a = tgt;
+    if (e.b === v) e.b = tgt;
+  });
+  var out = [], seen = [];
+  S.edges.forEach(function (e) {
+    if (e.a === e.b) return;
+    for (var i = 0; i < seen.length; i++) {
+      if ((seen[i][0] === e.a && seen[i][1] === e.b) || (seen[i][0] === e.b && seen[i][1] === e.a)) return;
+    }
+    seen.push([e.a, e.b]);
+    out.push(e);
+  });
+  S.edges = out;
+}
+
+function split(v) {
+  var inc = S.edges.filter(function (e) { return e.a === v || e.b === v; });
+  inc.slice(1).forEach(function (o) {
+    var other = o.a === v ? o.b : o.a;
+    var u = unit(vp(v), vp(other));
+    var d = Math.min(24 * S.k, 0.4 * Math.hypot(other.x - v.x, other.y - v.y));
+    var nv = V([v.x + u[0] * d, v.y + u[1] * d]);
+    if (o.a === v) o.a = nv; else o.b = nv;
+  });
+}
+
+/* ===================== Ansicht & Gesten ===================== */
+function toWorld(pos) {
+  var dx = pos[0] - S.ox, dy = pos[1] - S.oy;
+  var c = Math.cos(-S.vth), s = Math.sin(-S.vth);
+  return [(dx * c - dy * s) / S.vs, (dx * s + dy * c) / S.vs];
+}
+function applyView() { S.k = 1 / S.vs; render(); }
+function resetView() { S.vs = 1; S.ox = 0; S.oy = 0; S.vth = 0; applyView(); }
+
+function cancelAction() {
+  if (S.active && S.active_orig) { S.active.x = S.active_orig[0]; S.active.y = S.active_orig[1]; }
+  if (S.cmode === 'radius') S.rad = S.rad_old;
+  S.active = null; S.drawing = false; S.lmode = null; S.cutting = false; S.cmode = null;
+  S.target = null; S.sweep = 0; S.lo = 0; S.hi = 0; S.loupe = null;
+  render();
+}
+
+var G = {};
+function twoFingers() { var a = Array.from(S.fingers.values()); return [a[0], a[1]]; }
+function startGesture() {
+  cancelAction();
+  S.gesture = true;
+  var f = twoFingers(), a = f[0], b = f[1];
+  G.c0 = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  G.d0 = Math.max(Math.hypot(b[0] - a[0], b[1] - a[1]), 10);
+  G.s0 = S.vs; G.th0 = S.vth;
+  G.ang0 = Math.atan2(b[1] - a[1], b[0] - a[0]);
+  G.w0 = toWorld(G.c0);
+}
+function updateGesture() {
+  var f = twoFingers(), a = f[0], b = f[1];
+  var c = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  var d = Math.max(Math.hypot(b[0] - a[0], b[1] - a[1]), 1);
+  S.vs = Math.max(0.25, Math.min(8, G.s0 * d / G.d0));
+  var dang = Math.atan2(b[1] - a[1], b[0] - a[0]) - G.ang0;
+  S.vth = G.th0 + ((((dang + Math.PI) % TAU) + TAU) % TAU - Math.PI);
+  var cs = Math.cos(S.vth), sn = Math.sin(S.vth);
+  var wx = G.w0[0] * S.vs, wy = G.w0[1] * S.vs;
+  S.ox = c[0] - (wx * cs - wy * sn);
+  S.oy = c[1] - (wx * sn + wy * cs);
+  applyView();
+}
+
+/* ===================== Berührung (Kern) ===================== */
+function onDown(id, p) {
+  S.fingers.set(id, p);
+  if (S.fingers.size >= 2) { startGesture(); return; }
+  S.main = id; S.sp = p;
+  var w = toWorld(p);
+  S.hist = [[now(), w]];
+  _down(w);
+}
+function onMove(id, p) {
+  if (!S.fingers.has(id)) return;
+  S.fingers.set(id, p);
+  if (S.gesture) { if (S.fingers.size >= 2) updateGesture(); return; }
+  if (id === S.main) {
+    S.sp = p;
+    var w = toWorld(p), t = now();
+    S.hist.push([t, w]);
+    while (S.hist.length > 2 && t - S.hist[1][0] > 0.6) S.hist.shift();
+    _move(w);
+  }
+}
+function onUp(id, p) {
+  if (!S.fingers.has(id)) return;
+  S.fingers.delete(id);
+  if (S.gesture) { if (S.fingers.size === 0) S.gesture = false; return; }
+  if (id === S.main) {
+    S.main = null; S.sp = p;
+    var cutoff = now() - LIFT_DELAY, settled = null;
+    for (var i = 0; i < S.hist.length; i++) {
+      if (S.hist[i][0] > cutoff) break;
+      settled = S.hist[i][1];
+    }
+    if (!settled) settled = S.hist.length ? S.hist[S.hist.length - 1][1] : toWorld(p);
+    var lastW = S.hist.length ? S.hist[S.hist.length - 1][1] : null;
+    if (lastW && (settled[0] !== lastW[0] || settled[1] !== lastW[1])) _move(settled);
+    S.hist = [];
+    _up(settled);
+    checkLevel();
+  }
+}
+function onCancel(id) {
+  if (!S.fingers.has(id)) return;
+  S.fingers.delete(id);
+  if (S.gesture) { if (S.fingers.size === 0) S.gesture = false; return; }
+  if (id === S.main) { S.main = null; S.hist = []; cancelAction(); }
+}
+
+function _down(pos) {
+  if (S.tool === 'cut') {
+    S.cutting = true;
+    S.target = snap(pos, null, 2);
+  } else if (S.tool === 'move') {
+    var v = snap(pos);
+    if (v && !v.locked) { S.active = v; S.active_orig = vp(v); }
+  } else if (S.tool === 'compass') {
+    S.end = [pos[0], pos[1]];
+    S.target = csnap(pos, S.cc);
+    if (!S.cc) {
+      S.cmode = 'center';
+    } else if (S.rad <= 0) {
+      S.cmode = 'radius'; S.rad_old = 0;
+      S.rad = radiusAt(pos);
+    } else {
+      var d_cc = Math.hypot(pos[0] - S.cc.x, pos[1] - S.cc.y);
+      var d_ring = Math.abs(d_cc - S.rad);
+      if (d_ring < GRAB * S.k && d_ring <= d_cc) {
+        S.cmode = 'rotate';
+        S.last = Math.atan2(pos[1] - S.cc.y, pos[0] - S.cc.x);
+        S.pa0 = S.last; S.sweep = 0; S.lo = 0; S.hi = 0;
+      } else if (d_cc < GRAB * S.k) {
+        S.cmode = 'needle';
+        S.target = csnap(pos);
+      } else {
+        S.cmode = null; S.target = null;
+      }
+    }
+  } else {
+    S.drawing = true;
+    S.lmode = S.ls ? 'end' : 'start';
+    S.end = [pos[0], pos[1]];
+    S.target = snap(pos, S.ls);
+  }
+  S.loupe = S.sp;
+  render();
+}
+
+function _move(pos) {
+  if (S.active) {
+    var v = S.active;
+    v.x = pos[0]; v.y = pos[1];
+    S.target = snap(vp(v), v);
+  } else if (S.drawing) {
+    S.end = [pos[0], pos[1]];
+    S.target = snap(pos, S.ls);
+  } else if (S.cutting) {
+    S.target = snap(pos, null, 2);
+  } else if (S.cmode) {
+    S.end = [pos[0], pos[1]];
+    if (S.cmode === 'rotate') {
+      var a = Math.atan2(pos[1] - S.cc.y, pos[0] - S.cc.x);
+      S.sweep += ((((a - S.last + Math.PI) % TAU) + TAU) % TAU) - Math.PI;
+      S.last = a;
+      S.lo = Math.min(S.lo, S.sweep);
+      S.hi = Math.max(S.hi, S.sweep);
+    } else if (S.cmode === 'radius') {
+      S.target = csnap(pos, S.cc);
+      S.rad = radiusAt(pos);
+    } else {
+      S.target = csnap(pos, S.cmode === 'center' ? S.cc : null);
+    }
+  } else if (S.tool === 'move') {
+    var q = snap(pos);
+    if (q && !q.locked) { S.active = q; S.active_orig = vp(q); }
+  }
+  S.loupe = S.sp;
+  render();
+}
+
+function _up(pos) {
+  if (S.active) {
+    if (S.target) merge(S.active, S.target);
+    S.active = null; S.target = null;
+  } else if (S.drawing) {
+    var b = S.target ? S.target : V(S.end);
+    if (S.lmode === 'start') {
+      S.ls = b;
+    } else if (b !== S.ls && distCm(vp(S.ls), vp(b)) > 0.2) {
+      S.gid += 1;
+      addEdge(S.ls, b);
+      S.ls = null;
+    }
+    S.drawing = false; S.lmode = null; S.target = null;
+  } else if (S.cutting) {
+    var v = S.target;
+    S.target = null; S.cutting = false;
+    if (v) split(v);
+  } else if (S.cmode) {
+    var m = S.cmode;
+    if (m === 'center' || m === 'needle') {
+      S.cc = S.target ? S.target : V(S.end);
+      S.cc_gid = S.gid;
+    } else if (m === 'radius') {
+      if (S.rad < 6 * S.k) S.rad = S.rad_old;
+    } else if (m === 'rotate' && S.hi - S.lo > 0.05) {
+      var span = S.hi - S.lo;
+      var full = span >= TAU * 0.97;
+      var sw = full ? TAU : span;
+      S.gid += 1;
+      S.circles.push({ c: V(vp(S.cc)), r: S.rad, a0: S.pa0 + S.lo, sw: sw, col: PENCIL, gid: S.gid });
+      S.cc = null; S.rad = 0;
+    }
+    S.cmode = null; S.target = null; S.sweep = 0; S.lo = 0; S.hi = 0;
+  }
+  S.loupe = null;
+  render();
+}
+
+/* ===================== Knöpfe ===================== */
+function undo() {
+  if (S.ls) { S.ls = null; render(); return; }
+  var gids = S.edges.filter(function (e) { return !e.locked; }).map(function (e) { return e.gid; })
+    .concat(S.circles.map(function (c) { return c.gid; }));
+  var mx = gids.length ? Math.max.apply(null, gids) : 0;
+  if (S.cc && (!gids.length || mx <= S.cc_gid)) { S.cc = null; S.rad = 0; render(); return; }
+  if (gids.length) {
+    S.edges = S.edges.filter(function (e) { return e.locked || e.gid !== mx; });
+    S.circles = S.circles.filter(function (c) { return c.gid !== mx; });
+    render();
+    checkLevel();
+  }
+}
+function clearAll() {
+  delete S.solutions[S.level];
+  delete S.work[S.level];
+  S.solved.delete(S.level);
+  loadLevel(S.level, false);
+  saveProgress();
+}
+function setTool(t) {
+  S.tool = t; S.cc = null; S.ls = null; resetTemp(); S.loupe = null;
+  render();
+  if (S.onTool) S.onTool(t);
+}
+
+/* ===================== Level ===================== */
+function loadLevel(n, restore) {
+  if (restore === undefined) restore = true;
+  S.level = n;
+  S.edges = []; S.circles = []; S.gid = 0; S.cc = null; S.ls = null; S.base = null; S.done = false;
+  resetTemp(); S.loupe = null;
+  S.vs = 1; S.ox = 0; S.oy = 0; S.vth = 0;
+  if (n !== null) {
+    var L = 0.38 * Math.min(S.w, S.h * 0.62);
+    var y = S.h * (1 - (LEVELS[n].y || 0.40));
+    var a = V([S.w / 2 - L / 2, y]), b = V([S.w / 2 + L / 2, y]);
+    a.locked = b.locked = true; a.name = 'A'; b.name = 'B';
+    S.base = [a, b];
+    S.edges.push({ a: a, b: b, col: BASEC, gid: 0, locked: true });
+    if (restore) {
+      var sn = S.solutions[n] || S.work[n];
+      if (sn) restoreSnap(sn);
+    }
+  }
+  applyView();
+  if (S.onLevel) S.onLevel(S.level, false);
+  checkLevel();
+}
+function nextLevel() {
+  storeCurrent();
+  loadLevel(S.level === null ? 0 : (S.level + 1) % LEVELS.length);
+  saveProgress();
+}
+
+function snapshot() {
+  if (!S.base) return null;
+  var A = S.base[0], B = S.base[1];
+  var s = Math.hypot(B.x - A.x, B.y - A.y) || 1;
+  var idx = new Map(); idx.set(A, 'A'); idx.set(B, 'B');
+  var verts = [];
+  function ref(v) {
+    if (!idx.has(v)) { idx.set(v, verts.length); verts.push([(v.x - A.x) / s, (v.y - A.y) / s]); }
+    return idx.get(v);
+  }
+  var edges = S.edges.filter(function (e) { return !e.locked; })
+    .map(function (e) { return [ref(e.a), ref(e.b), e.col, e.gid]; });
+  var circles = S.circles.map(function (c) {
+    return [(c.c.x - A.x) / s, (c.c.y - A.y) / s, c.r / s, c.a0, c.sw, c.col, c.gid];
+  });
+  return { verts: verts, edges: edges, circles: circles };
+}
+function restoreSnap(sn) {
+  var A = S.base[0], B = S.base[1];
+  var s = Math.hypot(B.x - A.x, B.y - A.y) || 1;
+  var vs = sn.verts.map(function (q) { return V([A.x + q[0] * s, A.y + q[1] * s]); });
+  function get(r) { return r === 'A' ? A : (r === 'B' ? B : vs[r]); }
+  sn.edges.forEach(function (e) { S.edges.push({ a: get(e[0]), b: get(e[1]), col: e[2], gid: e[3] }); });
+  sn.circles.forEach(function (c) {
+    S.circles.push({ c: V([A.x + c[0] * s, A.y + c[1] * s]), r: c[2] * s, a0: c[3], sw: c[4], col: c[5], gid: c[6] });
+  });
+  var g = [0];
+  S.edges.forEach(function (e) { g.push(e.gid); });
+  S.circles.forEach(function (c) { g.push(c.gid); });
+  S.gid = Math.max.apply(null, g);
+}
+function storeCurrent() {
+  if (S.level !== null && S.base && !S.solved.has(S.level)) S.work[S.level] = snapshot();
+}
+function saveProgress() {
+  try {
+    var data = { solved: Array.from(S.solved).sort(), level: S.level || 0, solutions: S.solutions, work: {} };
+    Object.keys(S.work).forEach(function (k) { if (S.work[k]) data.work[k] = S.work[k]; });
+    localStorage.setItem(STORE_KEY, JSON.stringify(data));
+  } catch (e) { /* Speichern darf nie stören */ }
+}
+function loadProgress() {
+  try {
+    var raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return;
+    var data = JSON.parse(raw);
+    S.solved = new Set((data.solved || []).map(Number).filter(function (k) { return k >= 0 && k < LEVELS.length; }));
+    S.solutions = data.solutions || {};
+    S.work = data.work || {};
+    var lv = Number(data.level || 0);
+    S.start_level = lv >= 0 && lv < LEVELS.length ? lv : 0;
+  } catch (e) { /* ignorieren */ }
+}
+
+/* ===================== Prüfen ===================== */
+function adjacency() {
+  var adj = new Map();
+  S.edges.forEach(function (e) {
+    if (!adj.has(e.a)) adj.set(e.a, new Set());
+    if (!adj.has(e.b)) adj.set(e.b, new Set());
+    adj.get(e.a).add(e.b); adj.get(e.b).add(e.a);
+  });
+  return adj;
+}
+function arcsThrough(P, s, tol, near) {
+  return S.circles.filter(function (c) {
+    var cx = c.c.x, cy = c.c.y;
+    if (Math.abs(c.r - s) > tol || Math.abs(Math.hypot(P.x - cx, P.y - cy) - c.r) > tol) return false;
+    if (near && Math.hypot(cx - near.x, cy - near.y) > tol) return false;
+    if (c.sw < TAU - 1e-6) {
+      var rel = ((Math.atan2(P.y - cy, P.x - cx) - c.a0) % TAU + TAU) % TAU;
+      var ta = tol / Math.max(c.r, 1);
+      if (rel > c.sw + ta && rel < TAU - ta) return false;
+    }
+    return true;
+  });
+}
+function arcHas(c, P, tol) {
+  var cx = c.c.x, cy = c.c.y;
+  if (Math.abs(Math.hypot(P[0] - cx, P[1] - cy) - c.r) > tol) return false;
+  if (c.sw >= TAU - 1e-6) return true;
+  var rel = ((Math.atan2(P[1] - cy, P[0] - cx) - c.a0) % TAU + TAU) % TAU;
+  var ta = tol / Math.max(c.r, 1);
+  return rel <= c.sw + ta || rel >= TAU - ta;
+}
+function verifyPerp(A, B, s, tol) {
+  var ux = (B.x - A.x) / s, uy = (B.y - A.y) / s, ups = [], downs = [];
+  S.circles.forEach(function (ca) {
+    if (Math.hypot(ca.c.x - A.x, ca.c.y - A.y) > tol) return;
+    S.circles.forEach(function (cb) {
+      if (Math.hypot(cb.c.x - B.x, cb.c.y - B.y) > tol || Math.abs(ca.r - cb.r) > tol) return;
+      var a = (ca.r * ca.r - cb.r * cb.r + s * s) / (2 * s);
+      var h2 = ca.r * ca.r - a * a;
+      if (h2 <= tol * tol) return;
+      var h = Math.sqrt(h2), mx = A.x + ux * a, my = A.y + uy * a;
+      [1, -1].forEach(function (sg) {
+        var P = [mx - uy * h * sg, my + ux * h * sg];
+        if (arcHas(ca, P, tol) && arcHas(cb, P, tol)) (sg > 0 ? ups : downs).push(P);
+      });
+    });
+  });
+  if (!ups.length || !downs.length) return false;
+  function nearSeg(P, e) {
+    var ax = e.a.x, ay = e.a.y, dx = e.b.x - ax, dy = e.b.y - ay, ln2 = dx * dx + dy * dy;
+    if (ln2 < 1e-9) return false;
+    var t = Math.max(0, Math.min(1, ((P[0] - ax) * dx + (P[1] - ay) * dy) / ln2));
+    return Math.hypot(ax + t * dx - P[0], ay + t * dy - P[1]) <= tol;
+  }
+  return S.edges.some(function (e) {
+    return !e.locked && ups.some(function (P) { return nearSeg(P, e); }) && downs.some(function (Q) { return nearSeg(Q, e); });
+  });
+}
+function verifyTri(A, B, s, tol) {
+  var adj = adjacency(), nA = adj.get(A);
+  if (!nA) return false;
+  var res = false;
+  nA.forEach(function (C) {
+    if (res || C === B || !(adj.get(B) && adj.get(B).has(C))) return;
+    if (Math.abs(Math.hypot(C.x - A.x, C.y - A.y) - s) > tol || Math.abs(Math.hypot(C.x - B.x, C.y - B.y) - s) > tol) return;
+    if (arcsThrough(C, s, tol, A).length && arcsThrough(C, s, tol, B).length) res = true;
+  });
+  return res;
+}
+function verifyHex(A, B, s, tol) {
+  var adj = adjacency(), cycles = [];
+  function dfs(path) {
+    var last = path[path.length - 1];
+    if (path.length === 6) { if (adj.get(last) && adj.get(last).has(A)) cycles.push(path.slice()); return; }
+    (adj.get(last) || new Set()).forEach(function (n) {
+      if (path.indexOf(n) < 0) { path.push(n); dfs(path); path.pop(); }
+    });
+  }
+  dfs([A, B]);
+  return cycles.some(function (cyc) {
+    var signs = new Set();
+    for (var i = 0; i < 6; i++) {
+      var p = cyc[(i + 5) % 6], q = cyc[i], r = cyc[(i + 1) % 6];
+      if (Math.abs(Math.hypot(r.x - q.x, r.y - q.y) - s) > tol) return false;
+      var u = unit(vp(q), vp(p)), w = unit(vp(q), vp(r));
+      var ang = Math.acos(Math.max(-1, Math.min(1, u[0] * w[0] + u[1] * w[1]))) * 180 / Math.PI;
+      if (Math.abs(ang - 120) > 8) return false;
+      signs.add(u[0] * w[1] - u[1] * w[0] > 0);
+    }
+    return signs.size === 1 && cyc.slice(2).every(function (v) { return arcsThrough(v, s, tol).length > 0; });
+  });
+}
+function checkLevel() {
+  if (S.level === null || !S.base) return;
+  var A = S.base[0], B = S.base[1];
+  var s = Math.hypot(B.x - A.x, B.y - A.y);
+  var tol = Math.max(10, 0.045 * s);
+  var fn = { tri: verifyTri, hex: verifyHex, perp: verifyPerp }[LEVELS[S.level].kind];
+  var ok = fn(A, B, s, tol);
+  if (ok !== S.done) {
+    S.done = ok;
+    if (ok) {
+      S.solved.add(S.level);
+      S.solutions[S.level] = snapshot();
+      delete S.work[S.level];
+      saveProgress();
+    }
+    if (S.onLevel) S.onLevel(S.level, ok);
+  }
+}
+
+/* ===================== Oberfläche ===================== */
+function init() {
+  var canvas = document.getElementById('board'), ctx = canvas.getContext('2d');
+  var hud = document.getElementById('hud');
+  var tools = { line: 'b-line', compass: 'b-compass', move: 'b-move', cut: 'b-cut' };
+  var raf = 0;
+
+  S.onRender = function () {
+    if (raf) return;
+    raf = requestAnimationFrame(function () { raf = 0; drawAll(ctx); });
+  };
+  S.onTool = function (t) {
+    Object.keys(tools).forEach(function (k) {
+      document.getElementById(tools[k]).classList.toggle('on', k === t);
+    });
+  };
+  S.onLevel = function (level, done) {
+    hud.classList.toggle('ok', !!done);
+    hud.textContent = '';
+    if (level === null) return;
+    if (done) {
+      hud.textContent = S.solved.size === LEVELS.length ? 'Alle Level geschafft, sehr gut!'
+        : 'Level ' + (level + 1) + ' geschafft! Tippe auf die Treppe für das nächste Level.';
+    } else {
+      var b = document.createElement('b');
+      b.textContent = LEVELS[level].title + (S.solved.has(level) ? ' (schon gelöst)' : '');
+      hud.appendChild(b);
+      hud.appendChild(document.createTextNode(LEVELS[level].task));
+    }
+  };
+
+  function resize() {
+    var r = canvas.getBoundingClientRect();
+    S.w = r.width; S.h = r.height;
+    S.dpr = Math.min(window.devicePixelRatio || 1, 3);
+    canvas.width = Math.round(S.w * S.dpr);
+    canvas.height = Math.round(S.h * S.dpr);
+    if (S.level === null && !S.loadedOnce && S.w > 150) {
+      S.loadedOnce = true;
+      loadLevel(S.start_level);
+    }
+    render();
+  }
+  function pos(e) {
+    var r = canvas.getBoundingClientRect();
+    return [e.clientX - r.left, e.clientY - r.top];
+  }
+
+  canvas.addEventListener('pointerdown', function (e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+    e.preventDefault();
+    onDown(e.pointerId, pos(e));
+  });
+  canvas.addEventListener('pointermove', function (e) {
+    e.preventDefault();
+    onMove(e.pointerId, pos(e));
+  });
+  canvas.addEventListener('pointerup', function (e) { e.preventDefault(); onUp(e.pointerId, pos(e)); });
+  canvas.addEventListener('pointercancel', function (e) { onCancel(e.pointerId); });
+  canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  canvas.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var p = pos(e), w = toWorld(p);
+    if (e.altKey || e.shiftKey) S.vth += e.deltaY * 0.002;
+    else S.vs = Math.max(0.25, Math.min(8, S.vs * Math.exp(-e.deltaY * 0.0015)));
+    var cs = Math.cos(S.vth), sn = Math.sin(S.vth);
+    S.ox = p[0] - (w[0] * S.vs * cs - w[1] * S.vs * sn);
+    S.oy = p[1] - (w[0] * S.vs * sn + w[1] * S.vs * cs);
+    applyView();
+  }, { passive: false });
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (n) {
+    document.addEventListener(n, function (e) { e.preventDefault(); });
+  });
+
+  function bind(id, fn) { document.getElementById(id).addEventListener('click', fn); }
+  bind('b-line', function () { setTool('line'); });
+  bind('b-compass', function () { setTool('compass'); });
+  bind('b-move', function () { setTool('move'); });
+  bind('b-cut', function () { setTool('cut'); });
+  bind('b-undo', undo);
+  bind('b-clear', clearAll);
+  bind('b-view', resetView);
+  bind('b-level', nextLevel);
+
+  function persist() { storeCurrent(); saveProgress(); }
+  document.addEventListener('visibilitychange', function () { if (document.hidden) persist(); });
+  window.addEventListener('pagehide', persist);
+
+  loadProgress();
+  setTool('line');
+  new ResizeObserver(resize).observe(canvas);
+  resize();
+  if (document.fonts) {
+    document.fonts.load('400 12px Jost').then(render, function () {});
+    if (document.fonts.ready) document.fonts.ready.then(render);
+  }
+}
+
+if (typeof document === 'undefined') {
+  module.exports = { S: S, LEVELS: LEVELS, onDown: onDown, onMove: onMove, onUp: onUp, setTool: setTool,
+    loadLevel: loadLevel, undo: undo, snapshot: snapshot, restoreSnap: restoreSnap, checkLevel: checkLevel,
+    storeCurrent: storeCurrent, V: V, vertices: vertices, resetView: resetView };
+} else {
+  init();
+}
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
