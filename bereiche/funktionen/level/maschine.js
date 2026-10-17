@@ -37,9 +37,10 @@ App.level('funktionen', {
   html: function (M) {
     var K = App.funk, l = M.last, run = M.run, html = '';
     M.run = false;
-    html += '<div class="flow"><div class="chip' + (l ? ' on' : '') + '">' + (l ? 'x = ' + l.x : 'x') + '</div>' + K.ARROW +
+    // Noch ohne x und y: nur Zahl rein, Zahl raus. Die Namen kommen in späteren Leveln.
+    html += '<div class="flow"><div class="chip' + (l ? ' on' : '') + '">' + (l ? l.x : '') + '</div>' + K.ARROW +
       '<div class="mbox' + (run ? ' run' : '') + '">?</div>' + K.ARROW +
-      '<div class="chip out' + (l ? ' on' : '') + '">' + (l ? l.y : 'y') + '</div></div>';
+      '<div class="chip out' + (l ? ' on' : '') + '">' + (l ? l.y : '') + '</div></div>';
     html += K.keypad('feed', l ? l.x : -1);
     html += '<div class="hist">' + M.fed.map(function (p) { return '<span>' + p.x + ' → ' + p.y + '</span>'; }).join('') + '</div>';
     if (M.fed.length < 3) {

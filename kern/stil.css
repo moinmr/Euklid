@@ -107,7 +107,7 @@ body {
 #mach > :first-child { margin-top: auto; }
 #mach > :last-child { margin-bottom: auto; }
 .flow { display: flex; align-items: center; justify-content: center; gap: 8px; }
-.chip { min-width: 74px; text-align: center; font-size: 26px; font-weight: 400; color: var(--ink); opacity: .45; }
+.chip { min-width: 74px; min-height: 1.25em; text-align: center; font-size: 26px; font-weight: 400; color: var(--ink); opacity: .45; }
 .chip.on { opacity: 1; }
 .chip.out { color: var(--blue); }
 .chip.out.on { opacity: 1; animation: popin .35s .35s both; }
