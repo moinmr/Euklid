@@ -42,7 +42,7 @@ body {
 #bar .side.r { justify-content: flex-end; }
 #bar .ib { flex: none; width: 48px; }
 #bar .mid { gap: 0; }
-#bar .mid .ib { width: 42px; }
+#bar .mid .ib { width: 34px; }
 .ib {
   pointer-events: auto;
   flex: 1 1 0; min-width: 0; height: 52px;
