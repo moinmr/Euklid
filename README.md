@@ -1,28 +1,49 @@
 # Mathe-App (Euklid und Funktionen)
 
-Lern-App für Kinder, gebaut als Web-App (eine einzige Datei `index.html`), läuft als installierte App auf einem Samsung-Android-Handy. Der Entwickler arbeitet nur am Handy, ohne PC.
+Lern-App für Kinder, gebaut als Web-App aus mehreren kleinen Dateien (ohne Build-Schritt), läuft als installierte App auf einem Samsung-Android-Handy. Der Entwickler arbeitet nur am Handy, ohne PC.
 
 ## Regeln für die Zusammenarbeit
 
 - Marcus arbeitet nur am Handy, ohne PC, und programmiert selbst nicht. Claude macht alle Änderungen am Code, auch das Umsortieren von Leveln.
-- Erklärungen in einfachen Worten, ohne Code-Details: was sich in der App ändert und wie man es hochlädt.
-- Immer eine fertige, getestete `index.html` als Datei liefern. Claude lädt nichts selbst hoch (kein Push), das macht Marcus.
-- Immer von der neuesten `index.html` ausgehen (zuletzt die Projektdatei `mathe-app/index.html`).
+- Erklärungen in einfachen Worten, ohne Code-Details: was sich in der App ändert.
+- Claude lädt fertige, getestete Änderungen selbst direkt in den Hauptzweig (`main`) hoch. Danach ist die App in ein bis zwei Minuten aktuell.
+- Immer vom neuesten Stand im Repository ausgehen.
+- Parallel arbeiten: Mehrere Threads dürfen gleichzeitig an verschiedenen Leveln arbeiten (je Thread eigene Level-Dateien). Änderungen am Kern (`kern/`, `index.html`, `sw.js`) oder an einem `bereich.js` macht immer nur ein Thread zur Zeit. Vor dem Hochladen den neuesten Stand holen und zusammenführen.
 - Level dürfen frei umsortiert werden, der Fortschritt bleibt erhalten (siehe "Fortschritt und Level-Kennungen").
 
 ## So läuft die App
 
 - Hosting: GitHub Pages, Repository `moinmr/euklid` (öffentlich), Adresse `https://moinmr.github.io/euklid/`.
-- Dateien im Repository: `index.html` (die ganze App), `manifest.webmanifest` (Anzeige `standalone`, Hochformat), `sw.js` (Service Worker, holt Updates direkt vom Server), `icon-192.png`, `icon-512.png`.
+- Dateien im Repository: siehe "Aufbau" unten, dazu `manifest.webmanifest` (Anzeige `standalone`, Hochformat), `sw.js` (Service Worker), `icon-192.png`, `icon-512.png`.
 - Installation: In Chrome die Adresse öffnen, dann "App installieren". Änderungen am Manifest greifen nur nach Deinstallieren und Neuinstallieren.
-- Fortschritt liegt im Browser (localStorage), nur auf diesem Gerät. Schlüssel: `euklid-fortschritt` (Euklid), `euklid-funk` (Funktionen). Die alten Stände aus `euklid-fortschritt-v1` und `euklid-funk-v3` werden beim ersten Start einmal übernommen.
+- Fortschritt liegt im Browser (localStorage), nur auf diesem Gerät. Schlüssel: `euklid-fortschritt` (Euklid), `euklid-funk` (Funktionen), `mathe-sprache` (gewählte Sprache). Die alten Stände aus `euklid-fortschritt-v1` und `euklid-funk-v3` werden beim ersten Start einmal übernommen.
 
-## Update-Ablauf (am Handy)
+## Aufbau
 
-1. Neue `index.html` im Chat herunterladen.
-2. In GitHub: Repository öffnen, "Add file", "Upload files", Datei wählen, "Commit changes". Die alte Datei nicht vorher löschen (sonst kurz 404).
-3. Ein bis zwei Minuten warten. App ganz schließen und neu öffnen.
-4. Hängt eine alte Version: in Chrome `.../index.html?v=N` öffnen (N hochzählen).
+```
+index.html                      Rahmen: Startseite, Symbolleiste, Zeichenfläche
+sw.js                           Service Worker: holt frisch vom Server, speichert alles für offline
+kern/dateien.js                 Liste aller Dateien; lädt sie der Reihe nach (auch vom Service Worker gelesen)
+kern/sprache.js                 die zwei Sprachen (Deutsch, Englisch) und die Texte des Kerns
+kern/kern.js                    Farben, Zustand S, Ansicht und Gesten, Zeichnen, Lupe, Berührung
+kern/speicher.js                Fortschritt nach Level-Kennung speichern und laden
+kern/oberflaeche.js             Startseite, Knöpfe, Aufgabentext, Sprach-Umschalter
+kern/stil.css                   Aussehen
+bereiche/liste.js               welche Bereiche es gibt (Karten auf der Startseite), in dieser Reihenfolge
+bereiche/<bereich>/bereich.js   Werkzeuge und Logik des Bereichs
+bereiche/<bereich>/reihenfolge.js  Reihenfolge der Level (nur Kennungen)
+bereiche/<bereich>/level/<id>.js   ein Level pro Datei, mit Texten in beiden Sprachen
+```
+
+- Neues Level: Datei `level/<id>.js` anlegen (`App.level('<bereich>', { id, text: { de: {...}, en: {...} }, ... })`) und die Kennung in `reihenfolge.js` eintragen. Sonst nichts.
+- Umsortieren: nur `reihenfolge.js` ändern.
+- Neuer Bereich: Ordner `bereiche/<id>/` mit `bereich.js` (`App.bereich({ id, name, icon, werkzeuge, init, levels, solved, open, draw, down, move, up, check, undo, clear, next, persist })`), `reihenfolge.js` und `level/`, dann die Kennung in `bereiche/liste.js` eintragen. Eigener Speicher-Schlüssel, z. B. `mathe-<id>`.
+- Sprachen: in `kern/sprache.js` (`App.sprachen`). Texte stehen als `{ de: ..., en: ... }`; fehlt eine Sprache, springt Deutsch ein. Umschalter oben rechts auf der Startseite und rechts in der Symbolleiste, die Wahl wird gemerkt.
+- Offline: Der Service Worker liest die Dateiliste aus `kern/dateien.js`, `bereiche/liste.js` und den `reihenfolge.js`. Ändert sich eine dieser Dateien, installiert er sich neu und speichert alles. Eine neue Kern-Datei muss in `kern/dateien.js` eingetragen werden.
+
+## Hängt eine alte Version
+
+App ganz schließen und neu öffnen. Hilft das nicht: in Chrome `.../index.html?v=N` öffnen (N hochzählen).
 
 ## Look und Bedienung
 
@@ -75,9 +96,10 @@ Leitidee: Der Schüler erlebt zuerst, dann bekommt es einen Namen, dann wird es 
 
 ## Technik-Hinweise für neue Chats
 
-- Alles in `index.html`: CSS, Markup, JavaScript (`S` = Zustand Euklid und Ansicht, `F` = Zustand Funktionen, `M` = aktuelles Maschinen-Level, `LEVELS` und `FLEVELS` = Level-Listen).
-- Tests am Rechner: Logik mit Node (Skript ohne `document` exportiert die Funktionen), Oberfläche mit Playwright und Touch-Eingabe (Chromium vorhanden).
-- Fortschritt und Level-Kennungen: Jedes Level in `LEVELS` und `FLEVELS` hat eine feste Kennung (`id`, z. B. `dreieck`, `taxi`, `negative-steigung`). Gelöste Level, Lösungsbilder und angefangene Zeichnungen werden nach dieser Kennung gespeichert, nicht nach der Position. Darum dürfen Level frei umsortiert werden, und die Nummer im Titel ergibt sich aus der Position.
+- Kein Build-Schritt: einfache Skripte, alles hängt an `window.App`. `S` = Zustand Euklid und Ansicht (`App.S`), Funktionen-Zustand `F` und Maschinen-Zustand `M` liegen in `bereiche/funktionen/bereich.js`.
+- Euklid-Level bringen `pruefen(A, B, s, tol)` mit (Hilfen in `App.euklid`). Funktionen-Level sind entweder Maschinen-Level (`start`, `html`, `click`, Hilfen in `App.funk`) oder Gitter-Level (nur Daten `pts` bzw. `eq` und `xs`).
+- Tests am Rechner: Oberfläche mit Playwright und Touch- bzw. Maus-Eingabe (Chromium vorhanden). Beim Umbau in Dateien wurde die alte Einzeldatei Bild für Bild gegen die neue Fassung verglichen.
+- Fortschritt und Level-Kennungen: Jedes Level hat eine feste Kennung (`id`, z. B. `dreieck`, `taxi`, `negative-steigung`), gleich dem Dateinamen. Gelöste Level, Lösungsbilder und angefangene Zeichnungen werden nach dieser Kennung gespeichert, nicht nach der Position. Darum dürfen Level frei umsortiert werden, und die Nummer im Titel ergibt sich aus der Position.
 - Eine Kennung nie ändern, sonst ist der Stand dieses Levels weg. Neue Level bekommen eine neue, eindeutige Kennung.
 - Die Speicher-Schlüssel nicht mehr hochzählen.
 - Google Fonts (Jost) braucht Netz, offline fällt die Schrift auf die Systemschrift zurück.

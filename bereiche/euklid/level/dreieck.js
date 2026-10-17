@@ -1,0 +1,21 @@
+// Level: Gleichseitiges Dreieck über AB, Ecke C mit Zirkelbögen um A und B gefunden.
+App.level('euklid', {
+  id: 'dreieck',
+  text: {
+    de: { title: 'Gleichseitiges Dreieck',
+          task: 'Konstruiere über der Strecke AB ein gleichseitiges Dreieck. Benutze Zirkel und Linie.' },
+    en: { title: 'Equilateral triangle',
+          task: 'Construct an equilateral triangle on the segment AB. Use the compass and the line.' }
+  },
+  pruefen: function (A, B, s, tol) {
+    var E = App.euklid, adj = E.adjacency(), nA = adj.get(A);
+    if (!nA) return false;
+    var res = false;
+    nA.forEach(function (C) {
+      if (res || C === B || !(adj.get(B) && adj.get(B).has(C))) return;
+      if (Math.abs(Math.hypot(C.x - A.x, C.y - A.y) - s) > tol || Math.abs(Math.hypot(C.x - B.x, C.y - B.y) - s) > tol) return;
+      if (E.arcsThrough(C, s, tol, A).length && E.arcsThrough(C, s, tol, B).length) res = true;
+    });
+    return res;
+  }
+});
