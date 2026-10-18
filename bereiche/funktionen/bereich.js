@@ -187,7 +187,14 @@ function buildFunk(ctx, ws) {
     if (lvz && (lvz.steigung || lvz.herleitung || lvz.zweipunkt) && i !== F.runde) return;   // immer nur die aktuelle Gerade
     if (lvz && lvz.handschrift && !F.runde && !F.fn) return;   // Taxi: die Gerade erst, wenn die Gleichung stimmt
     var col = l.fest ? INK : fLinieFalsch(l) ? C.RED : BLUE;   // vorgegebene Gerade dunkel, falsche Linie rot
-    ctx.strokeStyle = col; extLine(ctx, l.a, l.b, 2.5 * ws * k);
+    ctx.strokeStyle = col;
+    if (lvz && lvz.handschrift) {
+      // Taxi: es gibt keine negativen Kilometer, die Gerade beginnt bei 0 km mit der Grundgebühr
+      var n = Math.hypot(l.b[0] - l.a[0], l.b[1] - l.a[1]);
+      ctx.lineWidth = 2.5 * ws * k; ctx.beginPath(); ctx.moveTo(l.a[0], l.a[1]);
+      ctx.lineTo(l.a[0] + (l.b[0] - l.a[0]) / n * 8000, l.a[1] + (l.b[1] - l.a[1]) / n * 8000); ctx.stroke();
+      ctx.fillStyle = col; dotAt(ctx, l.a, false, 6);
+    } else extLine(ctx, l.a, l.b, 2.5 * ws * k);
     if (!nurFeste) { ctx.fillStyle = col; dotAt(ctx, l.a, false); dotAt(ctx, l.b, false); }
   });
   if (lvz && lvz.steigung && F.lines[F.runde]) {
@@ -506,6 +513,7 @@ function fLoadLevel(n, restore) {
   if (lv.handschrift) {
     if (!F.lines.some(function (l) { return l.fest; })) { var g = 2 + rnd(3), p = 1 + rnd(3); F.lines = [{ a: [0, -g * U], b: [U, -(g + p) * U], gid: 0, fest: true }]; F.runde = 0; }
     F.taxiOpts = null;
+    S.ox = 48; S.oy = S.h * 0.55;   // fast nur positive Kilometer und Preise im Bild
   }
   if (lv.zweipunkt) {
     if (!F.lines.some(function (l) { return l.fest; })) { F.lines = zpFest(lv.zweipunkt); F.runde = 0; }
