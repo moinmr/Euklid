@@ -35,7 +35,7 @@ function abst(p, q) { return Math.hypot(q[0] - p[0], q[1] - p[1]); }
 // Mitte der Geraden und Länge der Strecken
 function mass() {
   var P = App.winkel.platz(2), r = Math.max(50, Math.min(S.w * 0.36, P.h * 0.55));
-  return { m: [S.w / 2, P.my + r * 0.3], r: r };
+  return { m: [S.w / 2, P.my + r * 0.15], r: r, g: r * 0.7 };   // g: Abstand des Griffs unten
 }
 function punkt(M, grad, l) { var d = grad * Math.PI / 180; return [M.m[0] + Math.cos(d) * l, M.m[1] - Math.sin(d) * l]; }
 
@@ -77,7 +77,7 @@ function drehen(Z, w) {
   if (abst(M.m, w) < 20 * S.k) return;
   var d = Math.atan2(M.m[1] - w[1], w[0] - M.m[0]) * 180 / Math.PI - NEIGUNG;   // Richtung gegen die Gerade
   d = ((d % 360) + 360) % 360;
-  if (d > 180) d = d > 270 ? MIN : 180 - MIN;   // Finger unter der Geraden: am Rand bleiben
+  if (d > 180) d -= 180;   // Finger unter der Geraden (dort ist der Griff): zählt wie die Gegenrichtung
   d = Math.max(MIN, Math.min(180 - MIN, d));
   Z.dreh += Math.abs(d - Z.a);
   Z.a = d;
@@ -127,7 +127,7 @@ App.level('winkel', {
       return;
     }
     var M = mass();
-    Z.zieht = abst(w, punkt(M, NEIGUNG + Z.a, M.r)) <= C.GRAB * 1.3 * S.k;   // nur am Griff
+    Z.zieht = abst(w, punkt(M, NEIGUNG + Z.a + 180, M.g)) <= C.GRAB * 1.3 * S.k;   // nur am Griff
     if (Z.zieht) drehen(Z, w);
   },
   move: function (Z, w) { if (Z.zieht) drehen(Z, w); },
@@ -155,9 +155,11 @@ App.level('winkel', {
         if (i < w.length - 1) enden.push(an);
       });
       enden.forEach(function (d) { H.strecke(ctx, m, punkt(M, d, r), ink, ws); });
-      if (Z.auf < 0) {   // Griff beim Drehen
-        var p = punkt(M, enden[0], r);
-        ctx.strokeStyle = ink; ctx.lineWidth = 2 * ws * k;
+      if (Z.auf < 0) {   // Griff beim Drehen: unter der Geraden, auf der Verlängerung der Strecke, damit der Finger die Winkel nicht verdeckt
+        var p = punkt(M, enden[0] + 180, M.g);
+        ctx.strokeStyle = ink; ctx.lineWidth = 1.6 * ws * k; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(m[0], m[1]); ctx.lineTo(p[0], p[1]); ctx.stroke();
+        ctx.lineWidth = 2 * ws * k;
         ctx.beginPath(); ctx.arc(p[0], p[1], 15 * k, 0, H.TAU); ctx.stroke();
         ctx.fillStyle = 'rgba(56,41,25,0.12)'; ctx.fill();
       }
