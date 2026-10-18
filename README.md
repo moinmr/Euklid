@@ -68,7 +68,7 @@ Konstruieren mit Linie und Zirkel auf einer vorgegebenen Strecke AB (Canvas, Poi
 
 ## Bereich Winkel
 
-Jedes Winkel-Level bringt sein Verhalten selbst mit (`neu`, `down`, `move`, `up`, `draw`, `overlay`, `bild`, `ausBild`), `bereich.js` macht Fortschritt, grüne und rote Karte, Knöpfe und Hilfen (`App.winkel`: Winkelfelder, gerundete Gradzahlen mit fester Summe, Farben Tinte/Braun/Grau). Unten nur der Papierkorb, kein Drehen der Ansicht.
+Jedes Winkel-Level bringt sein Verhalten selbst mit (`neu`, `down`, `move`, `up`, `draw`, `overlay`, `bild`, `ausBild`), `bereich.js` macht Fortschritt, grüne und rote Karte, Knöpfe und Hilfen (`App.winkel`: Winkelfelder, gerundete Gradzahlen mit fester Summe, Farben Tinte/Braun/Grau, Schreibfeld für Zahlen mit Ziffern-Erkennung). Optional `start(Z)` nach dem Laden, z. B. um das Schreibfeld einzublenden. Unten nur der Papierkorb, kein Drehen der Ansicht.
 
 | Level | Titel | Erkenntnis |
 |---|---|---|
@@ -76,6 +76,7 @@ Jedes Winkel-Level bringt sein Verhalten selbst mit (`neu`, `down`, `move`, `up`
 | 2 | Winkel im Z | Zwei parallele Geraden (grau). Antippen zeigt eine schräge Strecke durch die Mitte dazwischen, das Z kräftig in Tinte, die zwei Wechselwinkel in Braun mit Zahl. Am Griff oben dreht man die Strecke um ihre Mitte (25° bis 155°), beide Winkel bleiben gleich, unten „a° = a°, Die Winkel im Z sind gleich groß“. Gelöst nach insgesamt 60° Drehung (Kennung `z-winkel`). Grüner Text nennt das Wort Wechselwinkel. |
 | 3 | Winkel im Dreieck | Zwei Parallelen, unten die Strecke AB. Antippen zeigt nacheinander zwei Z-Formen: links von A nach oben (α = 60°, unten und oben braun), rechts von B nach oben (β = 65°, Tinte). Die rechte obere Ecke schiebt man am Griff nach links, sie rastet an der linken ein: ein Dreieck, oben liegen α, γ (grau) und β nebeneinander auf der Geraden, unten „α + γ + β = 180°“. Danach lässt sich die Spitze weiter schieben, die Summe bleibt 180°. Gelöst beim Einrasten (Kennung `dreieck-180`). |
 | 4 | Einmal rundherum | Ein Pfeil läuft um eine Form, jedes Antippen ist ein Schritt: eine Seite gehen oder an der Ecke drehen. Die Drehung ist der Außenwinkel (gestrichelte Verlängerung, braunes Feld mit Gradzahl). Unten „120° + 120° = 240°“ und „2 × 1/3 Drehung“, zurück am Start „= eine volle Umdrehung“, dann „Tippe für die nächste Form“: Dreieck, Quadrat, Fünfeck, Sechseck. Gelöst nach dem Sechseck (Kennung `rundherum`). |
+| 5 | Innenwinkel | Dieselben Formen (Dreieck bis Sechseck). An der Ecke unten rechts: gestrichelte Verlängerung, Drehung grau mit Zahl, Innenwinkel braun hervorgehoben mit „?“, darüber „? + 120° = 180°“. Den Innenwinkel mit dem Finger ins Schreibfeld schreiben (Ziffern-Erkennung 0 bis 9 in `App.winkel.ziffern`, gleiche Art wie die Handschrift in Funktionen), Prüfen. Falsch: rote Karte über dem Feld. Richtig: alle Innenwinkel mit Zahl, Antippen bringt die nächste Form. Gelöst nach dem Sechseck (Kennung `innenwinkel`). |
 
 ## Bereich Funktionen
 

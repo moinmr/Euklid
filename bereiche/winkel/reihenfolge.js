@@ -4,5 +4,6 @@ App.ordnung.winkel = [
   'volle-umdrehung',
   'z-winkel',
   'dreieck-180',
-  'rundherum'
+  'rundherum',
+  'innenwinkel'
 ];
