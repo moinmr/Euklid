@@ -8,6 +8,10 @@ var DREH_NOETIG = 60;              // Grad
 var MIN = 25 * Math.PI / 180;      // flachste Neigung, damit die Ecken auf dem Bildschirm bleiben
 
 var TEXT = {
+  griff: { de: 'Dreh jetzt die schräge Strecke am Griff', en: 'Now turn the slanted segment by its handle',
+           fi: 'Käännä nyt vinoa janaa kahvasta', tr: 'Şimdi eğik doğru parçasını tutamağından döndür',
+           fr: 'Fais maintenant tourner le segment oblique par sa poignée', es: 'Ahora gira el segmento inclinado por su asa',
+           ja: 'こんどは、ななめの線分を持ち手で回そう', ar: 'الآن أدِر القطعة المائلة من مقبضها' },
   gleich: { de: 'Die Winkel im Z sind gleich groß', en: 'The angles in the Z are equal', fi: 'Z:n kulmat ovat yhtä suuret',
             tr: 'Z’deki açılar eşittir', fr: 'Les angles du Z sont égaux', es: 'Los ángulos de la Z son iguales',
             ja: 'Zの中の2つの角は等しい', ar: 'الزاويتان في شكل Z متساويتان' },
@@ -144,7 +148,7 @@ App.level('winkel', {
   // Unten über der Leiste: 60° = 60°, darunter "Die Winkel im Z sind gleich groß"
   overlay: function (ctx, Z) {
     if (Z.schritt < 1) return;
-    var H = App.winkel, z = zWinkel(Z), y = H.textY(Z.ok ? 2 : 1);
+    var H = App.winkel, z = zWinkel(Z), y = H.textY(Z.ok ? (Z.dreh ? 2 : 3) : 1);
     ctx.save();
     ctx.font = '400 20px ' + C.FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
     ctx.fillStyle = H.farben[1].linie;
@@ -152,6 +156,7 @@ App.level('winkel', {
     if (Z.ok) {   // der Satz verrät die Antwort, darum erst danach
       ctx.font = '400 14.5px ' + C.FONT; ctx.fillStyle = C.PENCIL;
       ctx.fillText(App.wahl(TEXT.gleich), S.w / 2, y + 22);
+      if (!Z.dreh) { ctx.fillStyle = C.INK; ctx.fillText(App.wahl(TEXT.griff), S.w / 2, y + 44); }   // bis zum ersten Drehen
     }
     ctx.restore();
   },

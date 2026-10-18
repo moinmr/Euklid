@@ -8,6 +8,10 @@ var App = window.App, S = App.S, C = App.C;
 var DREH_NOETIG = 120;   // Grad
 
 var TEXT = {
+  griff: { de: 'Dreh jetzt die senkrechte Strecke am Griff', en: 'Now turn the upright segment by its handle',
+           fi: 'Käännä nyt pystysuoraa janaa kahvasta', tr: 'Şimdi dik doğru parçasını tutamağından döndür',
+           fr: 'Fais maintenant tourner le segment vertical par sa poignée', es: 'Ahora gira el segmento vertical por su asa',
+           ja: 'こんどは、たての線分を持ち手で回そう', ar: 'الآن أدِر القطعة العمودية من مقبضها' },
   umdrehung: { de: 'eine volle Umdrehung', en: 'one full turn', fi: 'yksi täysi kierros', tr: 'tam bir tur',
                fr: 'un tour complet', es: 'una vuelta completa', ja: 'ちょうど1回転', ar: 'دورة كاملة' },
   falsch: { de: 'Noch nicht. Die zwei Winkel sind gleich groß und ergeben zusammen 180°.',
@@ -157,8 +161,10 @@ App.level('winkel', {
     if (wl.length > 1) teile.push({ t: ' = 360°', c: C.INK });
     H.zeile(ctx, teile, y);
     ctx.save();
-    ctx.font = '400 14.5px ' + C.FONT; ctx.textAlign = 'center'; ctx.fillStyle = C.PENCIL;
-    ctx.fillText(App.wahl(TEXT.umdrehung), S.w / 2, y + 22);
+    // nach der richtigen Antwort, bis zum ersten Drehen: sagen, was jetzt zu tun ist
+    var jetzt = Z.schritt === 2 && Z.ok && !Z.dreh;
+    ctx.font = '400 14.5px ' + C.FONT; ctx.textAlign = 'center'; ctx.fillStyle = jetzt ? C.INK : C.PENCIL;
+    ctx.fillText(App.wahl(jetzt ? TEXT.griff : TEXT.umdrehung), S.w / 2, y + 22);
     ctx.restore();
   },
 
