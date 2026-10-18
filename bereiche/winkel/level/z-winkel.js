@@ -1,10 +1,10 @@
 // Level: Zwei parallele Geraden. Antippen zeigt eine schräge Strecke dazwischen, zusammen eine Z-Form.
 // Die beiden Winkel im Z (Wechselwinkel) sind immer gleich groß. Am Griff oben dreht man die schräge Strecke um ihre Mitte,
-// beide Winkel ändern sich mit und bleiben gleich. Nach insgesamt 60° Drehung, beim Loslassen, eine neue Z-Form mit Frage:
+// beide Winkel ändern sich mit und bleiben gleich. Nach insgesamt 120° Drehung, erst beim Loslassen, eine neue Z-Form mit Frage:
 // oben steht die Gradzahl, unten ein Fragezeichen, die Zahl schreibt man ins Schreibfeld. Gelöst bei der richtigen Antwort.
 (function () {
 var App = window.App, S = App.S, C = App.C;
-var DREH_NOETIG = 60;              // Grad
+var DREH_NOETIG = 120;             // Grad, so viel hin und her drehen
 var MIN = 25 * Math.PI / 180;      // flachste Neigung, damit die Ecken auf dem Bildschirm bleiben
 
 var TEXT = {
@@ -27,8 +27,8 @@ function mass() {
   var P = App.winkel.platz(2), r = Math.max(50, Math.min(S.w * 0.3, P.h / 3.2));
   return { m: [S.w / 2, P.my], d: r * 0.75 };
 }
-// Frage offen: genug gedreht, aber noch nicht beantwortet
-function offen(Z) { return Z.dreh >= DREH_NOETIG && !Z.ok; }
+// Frage offen: nach dem Loslassen gestellt, aber noch nicht beantwortet
+function offen(Z) { return Z.frage && !Z.ok; }
 function start(Z) {
   if (offen(Z)) App.winkel.frage(zWinkel(Z).grad, TEXT.falsch, function () { Z.ok = true; App.winkel.geschafft(); });
 }
@@ -98,7 +98,7 @@ App.level('winkel', {
 
   // Startwinkel zufällig 45° bis 70° in Fünferschritten
   neu: function (Z) {
-    Z.schritt = 0; Z.ok = false; Z.dreh = 0; Z.zieht = false;
+    Z.schritt = 0; Z.ok = false; Z.frage = false; Z.dreh = 0; Z.zieht = false;
     Z.th = (45 + 5 * Math.floor(Math.random() * 6)) * Math.PI / 180;
   },
   start: start,
@@ -114,7 +114,8 @@ App.level('winkel', {
   up: function (Z) {
     if (!Z.zieht) return;
     Z.zieht = false;
-    if (offen(Z)) {
+    if (Z.dreh >= DREH_NOETIG && !Z.frage) {
+      Z.frage = true;
       // neue Z-Form für die Frage: anderer Winkel (35° bis 70°), nach links oder rechts geneigt
       var alt = Math.round(Math.min(Z.th, Math.PI - Z.th) * 180 / Math.PI), g;
       do { g = 35 + 5 * Math.floor(Math.random() * 8); } while (Math.abs(g - alt) < 10);
@@ -172,10 +173,11 @@ App.level('winkel', {
     ctx.restore();
   },
 
-  bild: function (Z) { return Z.schritt ? { v: 2, th: Z.th, ok: Z.ok, dreh: Z.dreh } : null; },
+  bild: function (Z) { return Z.schritt ? { v: 3, th: Z.th, ok: Z.ok, dreh: Z.dreh, frage: Z.frage } : null; },
   ausBild: function (Z, b) {
-    if (b.v === 2) { Z.th = b.th; Z.schritt = 1; Z.ok = b.ok; Z.dreh = b.dreh; }
-    else if (b.v === 1) { Z.th = b.th; Z.schritt = 1; Z.ok = true; Z.dreh = DREH_NOETIG; }   // frühere Fassung
+    if (b.v === 3) { Z.th = b.th; Z.schritt = 1; Z.ok = b.ok; Z.dreh = b.dreh; Z.frage = b.frage; }
+    else if (b.v === 2) { Z.th = b.th; Z.schritt = 1; Z.ok = b.ok; Z.dreh = b.dreh; Z.frage = b.dreh >= 60; }
+    else if (b.v === 1) { Z.th = b.th; Z.schritt = 1; Z.ok = true; Z.frage = true; Z.dreh = DREH_NOETIG; }   // frühere Fassung
   }
 });
 })();
