@@ -1,39 +1,56 @@
-// Level: Eine Strecke zeichnen, aus ihrer Mitte eine zweite Strecke. Die zweite Strecke lässt sich drehen,
-// die drei Winkel um die Mitte ändern sich mit, ihre Summe bleibt 360° (eine volle Umdrehung).
-// Gelöst, wenn die zweite Strecke insgesamt um mindestens 120° gedreht wurde.
+// Level: Ein Kreis ist eine volle Umdrehung (360°). Eine Strecke durch den Mittelpunkt teilt ihn in 2 × 180°.
+// Eine zweite Strecke aus dem Mittelpunkt steht erst senkrecht (90° + 90° + 180°) und lässt sich dann am Griff drehen;
+// die Winkel ändern sich mit, die Summe bleibt 360°. Gelöst nach insgesamt 120° Drehung.
 (function () {
 var App = window.App, S = App.S, C = App.C;
 var DREH_NOETIG = 120;   // Grad
 var MIN_LAENGE = 40;     // px, kürzere Striche zählen nicht als Strecke
 
 var TEXT = {
-  falsch: { de: 'Die zweite Strecke muss in der Mitte der ersten beginnen.',
-            en: 'The second segment has to start at the midpoint of the first one.',
-            fi: 'Toisen janan täytyy alkaa ensimmäisen janan keskipisteestä.',
-            tr: 'İkinci doğru parçası, birincinin orta noktasından başlamalı.',
-            fr: 'Le deuxième segment doit partir du milieu du premier.',
-            es: 'El segundo segmento tiene que empezar en el punto medio del primero.',
-            ja: '2本目の線分は、1本目の線分の真ん中から始めよう。',
-            ar: 'يجب أن تبدأ القطعة الثانية من منتصف القطعة الأولى.' },
+  durch: { de: 'Die Strecke muss durch den Mittelpunkt des Kreises gehen.',
+           en: 'The segment has to go through the centre of the circle.',
+           fi: 'Janan täytyy kulkea ympyrän keskipisteen kautta.',
+           tr: 'Doğru parçası çemberin merkezinden geçmeli.',
+           fr: 'Le segment doit passer par le centre du cercle.',
+           es: 'El segmento tiene que pasar por el centro del círculo.',
+           ja: '線分は円の中心を通るようにかこう。',
+           ar: 'يجب أن تمر القطعة بمركز الدائرة.' },
+  mitte: { de: 'Die zweite Strecke muss im Mittelpunkt beginnen.',
+           en: 'The second segment has to start at the centre.',
+           fi: 'Toisen janan täytyy alkaa keskipisteestä.',
+           tr: 'İkinci doğru parçası merkezden başlamalı.',
+           fr: 'Le deuxième segment doit partir du centre.',
+           es: 'El segundo segmento tiene que empezar en el centro.',
+           ja: '2本目の線分は中心から始めよう。',
+           ar: 'يجب أن تبدأ القطعة الثانية من المركز.' },
   umdrehung: { de: 'eine volle Umdrehung', en: 'one full turn', fi: 'yksi täysi kierros', tr: 'tam bir tur',
                fr: 'un tour complet', es: 'una vuelta completa', ja: 'ちょうど1回転', ar: 'دورة كاملة' }
 };
 
-function mitte(Z) { return [(Z.a[0] + Z.b[0]) / 2, (Z.a[1] + Z.b[1]) / 2]; }
 function abst(p, q) { return Math.hypot(q[0] - p[0], q[1] - p[1]); }
-function anMitte(Z, w) { return Z.phase === 1 && abst(w, mitte(Z)) <= C.GRAB * S.k; }
+// Kreis in der Bildmitte
+function kreis() { return { m: [S.w / 2, S.h * 0.52], r: Math.max(70, Math.min(S.w * 0.3, S.h * 0.2)) }; }
+function amMittelpunkt(w) { return abst(w, kreis().m) <= C.GRAB * S.k; }
+// Abstand des Mittelpunkts von der Geraden durch s und e
+function geradeAbst(s, e, m) {
+  var dx = e[0] - s[0], dy = e[1] - s[1], n = Math.hypot(dx, dy) || 1;
+  return Math.abs((m[0] - s[0]) * dy - (m[1] - s[1]) * dx) / n;
+}
 
-// Die drei Winkel um die Mitte: Strahlen zur Ecke A, zur Ecke B und zum Ende P der zweiten Strecke
+// Die Winkel um den Mittelpunkt, zwischen den Strahlen zu A, B (erste Strecke) und P (zweite Strecke)
 function winkel(Z) {
-  var H = App.winkel, m = mitte(Z);
-  var st = [{ n: 'a', d: H.richtung(m, Z.a) }, { n: 'b', d: H.richtung(m, Z.b) }, { n: 'p', d: H.richtung(m, Z.p) }];
+  var H = App.winkel, m = kreis().m;
+  if (Z.phase === 0) return [{ a0: 0, sw: H.TAU, f: 2, grad: 360, zahl: 360 }];
+  var st = [{ n: 'a', d: H.richtung(m, Z.a) }, { n: 'b', d: H.richtung(m, Z.b) }];
+  if (Z.phase === 2) st.push({ n: 'p', d: H.richtung(m, Z.p) });
   st.sort(function (x, y) { return x.d - y.d; });
   var out = st.map(function (s, i) {
-    var t = st[(i + 1) % 3], sw = t.d - s.d;
+    var t = st[(i + 1) % st.length], sw = t.d - s.d;
     if (sw <= 0) sw += H.TAU;
-    var paar = s.n + t.n;
-    // Farbe bleibt beim Drehen an ihrem Winkel: zwischen A und B grau, an A Tinte, an B Braun
-    var f = (paar === 'ab' || paar === 'ba') ? 2 : (paar.indexOf('a') >= 0 ? 0 : 1);
+    var paar = s.n + t.n, f;
+    // Farbe bleibt beim Drehen am Winkel: zwischen A und B grau, an A Tinte, an B Braun (zwei Hälften: Tinte und Grau)
+    if (Z.phase === 1) f = paar === 'ab' ? 0 : 2;
+    else f = (paar === 'ab' || paar === 'ba') ? 2 : (paar.indexOf('a') >= 0 ? 0 : 1);
     return { a0: s.d, sw: sw, f: f, grad: sw * 180 / Math.PI };
   });
   var r = H.runden(out.map(function (w) { return w.grad; }), 360);
@@ -42,62 +59,83 @@ function winkel(Z) {
 }
 
 function drehen(Z, w) {
-  var m = mitte(Z);
+  var m = kreis().m;
   if (abst(m, w) < 20 * S.k) return;
-  var d = Math.atan2(w[1] - m[1], w[0] - m[0]);
+  var d = Math.atan2(w[1] - m[1], w[0] - m[0]), len = abst(m, Z.p);
   if (Z.letzte !== null) {
-    var dd = d - Z.letzte;
-    dd = ((dd + Math.PI) % App.winkel.TAU + App.winkel.TAU) % App.winkel.TAU - Math.PI;
+    var T = App.winkel.TAU, dd = d - Z.letzte;
+    dd = ((dd + Math.PI) % T + T) % T - Math.PI;
     Z.dreh += Math.abs(dd) * 180 / Math.PI;
   }
   Z.letzte = d;
-  Z.p = [w[0], w[1]];
+  Z.p = [m[0] + Math.cos(d) * len, m[1] + Math.sin(d) * len];
   if (Z.dreh >= DREH_NOETIG) App.winkel.geschafft();
 }
 
 // Neue Strecke von s nach e
 function streckeFertig(Z, s, e) {
   if (abst(s, e) < MIN_LAENGE * S.k) return;
-  if (Z.phase === 0) { Z.a = s; Z.b = e; Z.phase = 1; }
-  else if (Z.phase === 1) { Z.p = e; Z.phase = 2; Z.letzte = null; Z.dreh = 0; drehen(Z, e); }
+  var K = kreis(), m = K.m;
+  if (Z.phase === 0) {
+    if (geradeAbst(s, e, m) > C.GRAB * S.k) { App.winkel.falsch(TEXT.durch); return; }
+    // genau durch den Mittelpunkt, gleich lang zu beiden Seiten, etwas länger als der Kreis
+    var dx = e[0] - s[0], dy = e[1] - s[1], n = Math.hypot(dx, dy);
+    var h = Math.max(abst(m, s), abst(m, e), K.r * 1.2);
+    Z.a = [m[0] - dx / n * h, m[1] - dy / n * h];
+    Z.b = [m[0] + dx / n * h, m[1] + dy / n * h];
+    Z.phase = 1;
+  } else if (Z.phase === 1) {
+    // rastet senkrecht ein, auf der Seite, zu der der Finger zeigt: 90° + 90° + 180°
+    var ux = Z.b[0] - Z.a[0], uy = Z.b[1] - Z.a[1], un = Math.hypot(ux, uy);
+    var px = -uy / un, py = ux / un;
+    if ((e[0] - m[0]) * px + (e[1] - m[1]) * py < 0) { px = -px; py = -py; }
+    var len = Math.max(abst(m, e), K.r * 1.2);
+    Z.p = [m[0] + px * len, m[1] + py * len];
+    Z.phase = 2; Z.letzte = Math.atan2(py, px); Z.dreh = 0;
+  }
 }
 
 App.level('winkel', {
   id: 'volle-umdrehung',
   text: {
     de: { title: 'Eine volle Umdrehung',
-          task: 'Zeichne eine Strecke. Zeichne dann aus ihrer Mitte eine zweite Strecke. Bewege die zweite Strecke und schau auf die drei Winkel.',
-          done: 'Richtig! Die drei Winkel ergeben zusammen immer 360°. Das ist eine volle Umdrehung.' },
+          task: 'Ein Kreis ist eine volle Umdrehung: 360°. Zeichne eine Strecke durch den Mittelpunkt. Zeichne dann aus dem Mittelpunkt eine zweite Strecke und dreh sie am Griff.',
+          done: 'Richtig! Die Winkel um einen Punkt ergeben zusammen immer 360°. Das ist eine volle Umdrehung.' },
     en: { title: 'One full turn',
-          task: 'Draw a segment. Then draw a second segment from its midpoint. Move the second segment and watch the three angles.',
-          done: 'Right! The three angles always add up to 360°. That is one full turn.' },
+          task: 'A circle is one full turn: 360°. Draw a segment through the centre. Then draw a second segment from the centre and turn it by its handle.',
+          done: 'Right! The angles around a point always add up to 360°. That is one full turn.' },
     fi: { title: 'Yksi täysi kierros',
-          task: 'Piirrä jana. Piirrä sitten sen keskipisteestä toinen jana. Liikuta toista janaa ja katso kolmea kulmaa.',
-          done: 'Oikein! Kolme kulmaa ovat yhteensä aina 360°. Se on yksi täysi kierros.' },
+          task: 'Ympyrä on yksi täysi kierros: 360°. Piirrä jana keskipisteen kautta. Piirrä sitten keskipisteestä toinen jana ja käännä sitä kahvasta.',
+          done: 'Oikein! Pisteen ympärillä olevat kulmat ovat yhteensä aina 360°. Se on yksi täysi kierros.' },
     tr: { title: 'Tam bir tur',
-          task: 'Bir doğru parçası çiz. Sonra orta noktasından ikinci bir doğru parçası çiz. İkinci doğru parçasını hareket ettir ve üç açıya bak.',
-          done: 'Doğru! Üç açının toplamı her zaman 360°. Bu tam bir turdur.' },
+          task: 'Bir çember tam bir turdur: 360°. Merkezden geçen bir doğru parçası çiz. Sonra merkezden ikinci bir doğru parçası çiz ve onu tutamağından döndür.',
+          done: 'Doğru! Bir noktanın etrafındaki açıların toplamı her zaman 360°. Bu tam bir turdur.' },
     fr: { title: 'Un tour complet',
-          task: 'Trace un segment. Puis trace un deuxième segment à partir de son milieu. Bouge le deuxième segment et regarde les trois angles.',
-          done: 'Bravo ! Les trois angles font toujours 360° ensemble. C’est un tour complet.' },
+          task: 'Un cercle, c’est un tour complet : 360°. Trace un segment qui passe par le centre. Puis trace un deuxième segment à partir du centre et fais-le tourner par sa poignée.',
+          done: 'Bravo ! Les angles autour d’un point font toujours 360° ensemble. C’est un tour complet.' },
     es: { title: 'Una vuelta completa',
-          task: 'Dibuja un segmento. Después dibuja un segundo segmento desde su punto medio. Mueve el segundo segmento y mira los tres ángulos.',
-          done: '¡Correcto! Los tres ángulos suman siempre 360°. Eso es una vuelta completa.' },
+          task: 'Un círculo es una vuelta completa: 360°. Dibuja un segmento que pase por el centro. Después dibuja un segundo segmento desde el centro y gíralo por su asa.',
+          done: '¡Correcto! Los ángulos alrededor de un punto suman siempre 360°. Eso es una vuelta completa.' },
     ja: { title: 'ちょうど1回転',
-          task: '線分を1本かこう。次に、その真ん中から2本目の線分をかこう。2本目を動かして、3つの角を見てみよう。',
-          done: '正解！3つの角を合わせると、いつも360°。これがちょうど1回転です。' },
+          task: '円はちょうど1回転、360°です。中心を通る線分をかこう。次に、中心から2本目の線分をかいて、持ち手で回してみよう。',
+          done: '正解！1つの点のまわりの角を合わせると、いつも360°。これがちょうど1回転です。' },
     ar: { title: 'دورة كاملة',
-          task: 'ارسم قطعة مستقيمة. ثم ارسم من منتصفها قطعة ثانية. حرّك القطعة الثانية وانظر إلى الزوايا الثلاث.',
-          done: 'صحيح! مجموع الزوايا الثلاث دائمًا 360°. هذه دورة كاملة.' }
+          task: 'الدائرة دورة كاملة: 360°. ارسم قطعة تمر بالمركز. ثم ارسم من المركز قطعة ثانية وأدِرها من مقبضها.',
+          done: 'صحيح! مجموع الزوايا حول نقطة دائمًا 360°. هذه دورة كاملة.' }
   },
   werkzeuge: ['clear'],
 
-  neu: function (Z) { Z.phase = 0; Z.a = Z.b = Z.p = null; Z.ls = null; Z.zug = null; Z.dreh = 0; Z.letzte = null; },
+  neu: function (Z) { Z.phase = 0; Z.a = Z.b = Z.p = null; Z.ls = null; Z.zug = null; Z.dreh = 0; Z.letzte = null; Z.zieht = false; },
 
   down: function (Z, w) {
     if (Z.falsch) App.winkel.falschWeg();
-    if (Z.phase === 2) { Z.zieht = true; drehen(Z, w); S.loupe = null; return; }
-    var s = Z.ls || (anMitte(Z, w) ? mitte(Z) : [w[0], w[1]]);
+    if (Z.phase === 2) {
+      // nur am Griff (Ende der zweiten Strecke)
+      Z.zieht = abst(w, Z.p) <= C.GRAB * 1.3 * S.k;
+      if (Z.zieht) drehen(Z, w);
+      return;
+    }
+    var s = Z.ls || (Z.phase === 1 && amMittelpunkt(w) ? kreis().m : [w[0], w[1]]);
     Z.zug = { s: s, unten: [w[0], w[1]], e: [w[0], w[1]] };
     S.loupe = S.sp;
   },
@@ -111,54 +149,59 @@ App.level('winkel', {
     var g = Z.zug; Z.zug = null;
     if (!g) return;
     var gezogen = abst(g.unten, w) > MIN_LAENGE * S.k;
-    // Start der zweiten Strecke: nur in der Mitte der ersten
-    if (Z.phase === 1 && !Z.ls) {
-      var start = gezogen ? g.unten : w;
-      if (!anMitte(Z, start)) { App.winkel.falsch(TEXT.falsch); return; }
-    }
-    if (Z.ls) { streckeFertig(Z, Z.ls, w); Z.ls = null; }        // zweites Tippen: Ende
-    else if (gezogen) streckeFertig(Z, g.s, w);                   // in einem Zug gezogen
-    else Z.ls = Z.phase === 1 ? mitte(Z) : [w[0], w[1]];          // erstes Tippen: Anfang
+    // Start der zweiten Strecke: nur im Mittelpunkt
+    if (Z.phase === 1 && !Z.ls && !amMittelpunkt(gezogen ? g.unten : w)) { App.winkel.falsch(TEXT.mitte); return; }
+    if (Z.ls) { var s = Z.ls; Z.ls = null; streckeFertig(Z, s, w); }   // zweites Tippen: Ende
+    else if (gezogen) streckeFertig(Z, g.s, w);                       // in einem Zug gezogen
+    else Z.ls = Z.phase === 1 ? kreis().m : [w[0], w[1]];             // erstes Tippen: Anfang
   },
 
   draw: function (ctx, Z, ws) {
-    var H = App.winkel, k = S.k, ink = C.INK, ws3 = Z.phase === 2 ? winkel(Z) : [];
-    var m = Z.a ? mitte(Z) : null, r = 46 * k;
-    ws3.forEach(function (w) { var f = H.farben[w.f]; H.feld(ctx, m, r, w.a0, w.sw, f.fuell, f.linie, ws); });
+    var H = App.winkel, k = S.k, ink = C.INK, K = kreis(), m = K.m, r = K.r;
+    var wl = winkel(Z);
+    wl.forEach(function (w) { var f = H.farben[w.f]; H.feld(ctx, m, r, w.a0, w.sw, f.fuell, f.linie, ws); });
     if (Z.phase === 2) H.strecke(ctx, m, Z.p, ink, ws);
     if (Z.a) H.strecke(ctx, Z.a, Z.b, ink, ws);
-    ws3.forEach(function (w) {
-      // kleine Winkel: Zahl weiter außen und mit Pergament hinterlegt, damit sie nicht auf den Strecken liegt
-      var mid = w.a0 + w.sw / 2, ra = r + (22 + Math.max(0, 30 - w.grad) * 1.6) * k;
-      var lx = m[0] + Math.cos(mid) * ra, ly = m[1] - Math.sin(mid) * ra;
-      if (w.grad < 30) { ctx.fillStyle = C.PARCH; App.dotAt(ctx, [lx, ly], false, 11); }
-      App.text(ctx, w.zahl + '°', lx, ly, H.farben[w.f].linie, 15);
+    ctx.fillStyle = ink; App.dotAt(ctx, m, false, 5);
+    // Griff am Ende der zweiten Strecke
+    if (Z.phase === 2) {
+      ctx.strokeStyle = ink; ctx.lineWidth = 2 * ws * k;
+      ctx.beginPath(); ctx.arc(Z.p[0], Z.p[1], 15 * k, 0, H.TAU); ctx.stroke();
+      ctx.fillStyle = 'rgba(56,41,25,0.12)'; ctx.fill();
+    }
+    wl.forEach(function (w) {
+      var col = H.farben[w.f].linie, lx, ly;
+      if (Z.phase === 0) { lx = m[0]; ly = m[1] - r * 0.45; }
+      else {
+        // Zahl im Winkelfeld; kleine Winkel außerhalb des Kreises, mit Pergament hinterlegt
+        var mid = w.a0 + w.sw / 2, ra = w.grad >= 40 ? r * 0.6 : r + (22 + Math.max(0, 30 - w.grad) * 1.6) * k;
+        lx = m[0] + Math.cos(mid) * ra; ly = m[1] - Math.sin(mid) * ra;
+        if (w.grad < 40) { ctx.fillStyle = C.PARCH; App.dotAt(ctx, [lx, ly], false, 11); }
+      }
+      App.text(ctx, w.zahl + '°', lx, ly, col, 17);
     });
-    if (Z.phase >= 1) { ctx.fillStyle = ink; App.dotAt(ctx, mitte(Z), false, 5); }
     // Strecke, die gerade entsteht
     var s = Z.zug ? Z.zug.s : Z.ls;
     if (s) {
-      var naheMitte = Z.phase === 1 && abst(s, mitte(Z)) < 1;
-      if (naheMitte) { ctx.fillStyle = C.GREEN; App.dotAt(ctx, s, false, 11); }
+      var amM = Z.phase === 1 && abst(s, m) < 1;
       if (Z.zug && abst(s, Z.zug.e) > 4 * k) {
         ctx.strokeStyle = C.PENCIL; ctx.lineWidth = 2 * ws * k; ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(s[0], s[1]); ctx.lineTo(Z.zug.e[0], Z.zug.e[1]); ctx.stroke();
         ctx.fillStyle = C.PENCIL; App.dotAt(ctx, Z.zug.e, true);
       }
-      ctx.fillStyle = naheMitte ? C.GREEN : C.PENCIL; App.dotAt(ctx, s, true);
+      ctx.fillStyle = amM ? C.GREEN : C.PENCIL; App.dotAt(ctx, s, true);
     }
   },
 
-  // Unten über der Leiste: 52° + 128° + 180° = 360°, darunter "eine volle Umdrehung"
+  // Unten über der Leiste: 360° bzw. 180° + 180° = 360° bzw. a° + b° + c° = 360°, darunter "eine volle Umdrehung"
   overlay: function (ctx, Z) {
-    if (Z.phase !== 2) return;
-    var H = App.winkel, ws = winkel(Z), y = S.h - (S.unten || 70) - (document.body.classList.contains('geschafft') ? 120 : 46);
+    var H = App.winkel, wl = winkel(Z), y = S.h - (S.unten || 70) - (document.body.classList.contains('geschafft') ? 120 : 46);
     var teile = [];
-    ws.forEach(function (w, i) {
+    wl.forEach(function (w, i) {
       if (i) teile.push({ t: ' + ', c: C.INK });
-      teile.push({ t: w.zahl + '°', c: H.farben[w.f].linie });
+      teile.push({ t: w.zahl + '°', c: wl.length > 1 ? H.farben[w.f].linie : C.INK });
     });
-    teile.push({ t: ' = 360°', c: C.INK });
+    if (wl.length > 1) teile.push({ t: ' = 360°', c: C.INK });
     ctx.save();
     ctx.font = '400 20px ' + C.FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
     var breite = teile.reduce(function (s, t) { return s + ctx.measureText(t.t).width; }, 0), x = (S.w - breite) / 2;
@@ -168,14 +211,17 @@ App.level('winkel', {
     ctx.restore();
   },
 
-  // Zeichnung merken, relativ zur Bildschirmgröße
+  // Zeichnung merken, relativ zum Kreis
   bild: function (Z) {
     if (!Z.phase) return null;
-    function n(p) { return p ? [p[0] / S.w, p[1] / S.h] : null; }
-    return { phase: Z.phase, a: n(Z.a), b: n(Z.b), p: n(Z.p) };
+    var K = kreis();
+    function n(p) { return p ? [(p[0] - K.m[0]) / K.r, (p[1] - K.m[1]) / K.r] : null; }
+    return { v: 2, phase: Z.phase, a: n(Z.a), b: n(Z.b), p: n(Z.p) };
   },
   ausBild: function (Z, b) {
-    function n(p) { return p ? [p[0] * S.w, p[1] * S.h] : null; }
+    if (b.v !== 2) return;   // Zeichnung aus der ersten Fassung des Levels: neu anfangen
+    var K = kreis();
+    function n(p) { return p ? [K.m[0] + p[0] * K.r, K.m[1] + p[1] * K.r] : null; }
     Z.phase = b.phase; Z.a = n(b.a); Z.b = n(b.b); Z.p = n(b.p);
   }
 });

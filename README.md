@@ -72,7 +72,7 @@ Jedes Winkel-Level bringt sein Verhalten selbst mit (`neu`, `down`, `move`, `up`
 
 | Level | Titel | Erkenntnis |
 |---|---|---|
-| 1 | Eine volle Umdrehung | Eine Strecke zeichnen (ziehen oder zweimal tippen), dann aus ihrer Mitte eine zweite Strecke (Mitte rastet ein, sonst rote Karte). Die zweite Strecke dreht man mit dem Finger, die drei Winkel um die Mitte (Felder in Tinte, Braun, Grau) ändern sich live, unten „a° + b° + c° = 360°, eine volle Umdrehung“. Gelöst nach insgesamt 120° Drehung (Kennung `volle-umdrehung`). |
+| 1 | Eine volle Umdrehung | Ein Kreis in der Mitte zeigt 360°. Eine Strecke durch den Mittelpunkt zeichnen (ziehen oder zweimal tippen; verfehlt sie den Mittelpunkt: rote Karte), sie wird gleichmäßig durch den Mittelpunkt gelegt: 180° + 180°. Dann aus dem Mittelpunkt eine zweite Strecke, sie rastet senkrecht ein: 90° + 90° + 180°. Am Griff (Ring am Ende) dreht man sie, die Winkelfelder im Kreis (Tinte, Braun, Grau) und die Zahlen ändern sich live, unten „a° + b° + c° = 360°, eine volle Umdrehung“. Gelöst nach insgesamt 120° Drehung (Kennung `volle-umdrehung`). |
 
 ## Bereich Funktionen
 
