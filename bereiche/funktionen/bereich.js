@@ -504,7 +504,7 @@ function fLoadLevel(n, restore) {
   }
   if (lv.zweipunkt) {
     if (!F.lines.some(function (l) { return l.fest; })) { F.lines = zpFest(lv.zweipunkt); F.runde = 0; }
-    F.ein = lv.zweipunkt === 'abstand' ? ['', ''] : lv.zweipunkt === 'gleichung' ? ['', '', ''] : [''];
+    F.ein = lv.zweipunkt === 'gleichung' ? ['', '', ''] : [''];
     if (lv.zweipunkt === 'wandern') { F.gx = zpGx(zpP(F.lines[0]).x1 + 2); F.gesehen = {}; F.gesehen[F.gx] = true; }
   }
   if (lv.herleitung) {
@@ -755,7 +755,6 @@ function herlKarte() {
 }
 // Weiter in der Erklärung; nach Schritt 3 kommt die zweite Gerade zum Selbermachen
 /* ---------- Level mit zweipunkt: von zwei Punkten zur Geradengleichung, in kleinen Schritten ----------
-   'abstand':    nach rechts und nach oben vom linken zum rechten Punkt eintippen (drei Geraden)
    'ohnegitter': kein Gitter, nur die zwei Koordinaten; die Steigung eintippen (drei Geraden)
    'wandern':    ein Punkt (x|y) wird auf der Geraden gezogen; was kommt bei (y − y₁) : (x − x₁) immer heraus?
    'gleichung':  y = □ · (x − □) + □ aus zwei Punkten ausfüllen (zwei Geraden)
@@ -765,19 +764,6 @@ function zpP(l) { return { x1: Math.round(l.a[0] / U), y1: -Math.round(l.a[1] / 
 function zpLinie(x1, y1, x2, y2) { return { a: [x1 * U, -y1 * U], b: [x2 * U, -y2 * U], gid: 0, fest: true }; }
 function zpFest(art) {
   var r = [], i, d, e, m, x1, y1;
-  if (art === 'abstand') {
-    // drei verschiedene: mindestens eine fallende und eine, die mehr als 1 nach rechts geht
-    for (;;) {
-      r = [];
-      for (i = 0; i < 3; i++) {
-        d = 1 + rnd(4); e = (1 + rnd(4)) * (rnd(2) ? 1 : -1); x1 = 1 + rnd(2); y1 = (e > 0 ? 1 : 1 - e) + rnd(2);
-        r.push(zpLinie(x1, y1, x1 + d, y1 + e));
-      }
-      var pp = r.map(zpP);
-      if (pp.some(function (p) { return p.y2 < p.y1; }) && pp.some(function (p) { return p.y2 > p.y1; }) &&
-          pp.some(function (p) { return p.x2 - p.x1 > 1; })) return r;
-    }
-  }
   if (art === 'ohnegitter') {
     // ganzzahlige Steigung von −3 bis 3, das Dreieck höchstens 6 hoch; Koordinaten größer, damit man rechnet
     var paare = [];
@@ -870,18 +856,6 @@ function zpLinks(ctx, txt, x, y, col, size) {
 }
 var RICHTIG = { de: 'Richtig!', en: 'Right!', fi: 'Oikein!', tr: 'Doğru!', fr: 'Bravo !', es: '¡Correcto!', ja: '正解！', ar: 'صحيح!' };
 var ZP = {
-  rechts: { de: 'Nach rechts stimmt nicht. Rechne: x rechts − x links.', en: 'To the right is not correct. Work out: right x − left x.',
-            fi: 'Oikealle ei täsmää. Laske: oikean x − vasemman x.', tr: 'Sağa doğru olan yanlış. Hesapla: sağdaki x − soldaki x.',
-            fr: 'Vers la droite, ce n’est pas juste. Calcule : x de droite − x de gauche.', es: 'Hacia la derecha no está bien. Calcula: x de la derecha − x de la izquierda.',
-            ja: '右へが合っていません。右の x − 左の x を計算しよう。', ar: 'إلى اليمين غير صحيح. احسب: x اليمنى − x اليسرى.' },
-  hoch: { de: 'Nach oben stimmt nicht. Rechne: y rechts − y links. Geht es nach unten, ist die Zahl negativ.',
-          en: 'Up is not correct. Work out: right y − left y. If it goes down, the number is negative.',
-          fi: 'Ylös ei täsmää. Laske: oikean y − vasemman y. Jos mennään alas, luku on negatiivinen.',
-          tr: 'Yukarı doğru olan yanlış. Hesapla: sağdaki y − soldaki y. Aşağı iniyorsa sayı negatiftir.',
-          fr: 'Vers le haut, ce n’est pas juste. Calcule : y de droite − y de gauche. Si ça descend, le nombre est négatif.',
-          es: 'Hacia arriba no está bien. Calcula: y de la derecha − y de la izquierda. Si baja, el número es negativo.',
-          ja: '上へが合っていません。右の y − 左の y を計算しよう。下がるときはマイナスです。',
-          ar: 'إلى الأعلى غير صحيح. احسب: y اليمنى − y اليسرى. إذا نزل المستقيم يكون العدد سالبًا.' },
   steig: { de: 'Nicht ganz. Steigung = nach oben : nach rechts. Rechne beides aus den Koordinaten.',
            en: 'Not quite. Slope = up : right. Work out both from the coordinates.',
            fi: 'Ei aivan. Kulmakerroin = ylös : oikealle. Laske molemmat koordinaateista.',
@@ -923,8 +897,7 @@ function zpKarte() {
   for (var d = -4; d <= 4; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + fmt(d) + '</button>';
   function sl(i, cls) { return '<span class="' + cls + '">' + slotHTML(i) + '</span>'; }
   var zeile;
-  if (art === 'abstand') zeile = '<span class="rein">→</span>' + sl(0, 'rein') + '<span class="raus">↑</span>' + sl(1, 'raus');
-  else if (art === 'ohnegitter') zeile = '<span>' + App.wahl(STEIG) + '</span>' + slotHTML(0);
+  if (art === 'ohnegitter') zeile = '<span>' + App.wahl(STEIG) + '</span>' + slotHTML(0);
   else if (art === 'wandern') {
     var q = zpZiel();
     zeile = '<bdi dir="ltr"><span class="raus">' + fmtD(q.y2 - q.y1) + '</span> : <span class="rein">' + fmtD(q.x2 - q.x1) + '</span> = </bdi>' + slotHTML(0);
@@ -939,8 +912,7 @@ function zpPruefen() {
   var w = F.ein.map(function (s) { return Number(s.replace('−', '-')); });
   if (F.ein.some(function (s) { return s === ''; })) return;   // noch nicht alles gewählt
   var falsch = null;
-  if (art === 'abstand') falsch = w[0] !== p.x2 - p.x1 ? ZP.rechts : w[1] !== p.y2 - p.y1 ? ZP.hoch : null;
-  else if (art === 'ohnegitter') falsch = w[0] !== m ? ZP.steig : null;
+  if (art === 'ohnegitter') falsch = w[0] !== m ? ZP.steig : null;
   else if (art === 'wandern') falsch = w[0] !== m ? ZP.teil : Object.keys(F.gesehen).length < 2 ? ZP.zieh : null;
   else falsch = w[0] !== m ? ZP.steig : w[2] !== p.y1 + m * (w[1] - p.x1) ? ZP.punkt : null;
   if (falsch) { F.fb = falsch; F.fbOk = false; F.fbRot = art !== 'wandern' || w[0] !== m; return; }
