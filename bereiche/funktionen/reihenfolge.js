@@ -7,12 +7,12 @@ App.ordnung.funktionen = [
   'parallele-achsen',
   'koordinaten-maschine',
   'maschine',
-  'taxi',
   'punkte',
   'punkte-verbinden',
   'null-einwerfen',
   'steigung-ablesen',
   'punkt-wandert',
   'steigung-ohne-gitter',
-  'gleichung-zwei-punkte'
+  'gleichung-zwei-punkte',
+  'taxi'
 ];
