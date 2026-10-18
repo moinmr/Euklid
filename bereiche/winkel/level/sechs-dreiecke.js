@@ -14,6 +14,10 @@ var TEXT = {
   drehung: { de: 'Drehung', en: 'turn', fi: 'kierros', tr: 'tur', fr: 'tour', es: 'vuelta', ja: '回転', ar: 'دورة' },
   weiter: { de: 'Tippe weiter', en: 'Tap to go on', fi: 'Napauta jatkaaksesi', tr: 'Devam etmek için dokun',
             fr: 'Touche l’écran pour continuer', es: 'Toca para seguir', ja: 'タップして先へ', ar: 'انقر للمتابعة' },
+  winkel: { de: 'Wie groß ist der Winkel des Dreiecks am Punkt?', en: 'How big is the triangle’s angle at the point?',
+            fi: 'Kuinka suuri on kolmion kulma pisteessä?', tr: 'Üçgenin noktadaki açısı kaç derece?',
+            fr: 'Combien mesure l’angle du triangle au point ?', es: '¿Cuánto mide el ángulo del triángulo en el punto?',
+            ja: '点のところの三角形の角は何度かな？', ar: 'كم قياس زاوية المثلث عند النقطة؟' },
   anzahl: { de: 'Wie viele gleichseitige Dreiecke passen um den Punkt?', en: 'How many equilateral triangles fit around the point?',
             fi: 'Montako tasasivuista kolmiota mahtuu pisteen ympärille?', tr: 'Noktanın etrafına kaç eşkenar üçgen sığar?',
             fr: 'Combien de triangles équilatéraux tiennent autour du point ?', es: '¿Cuántos triángulos equiláteros caben alrededor del punto?',
@@ -81,8 +85,8 @@ function offen1(Z) { return Z.t === 1 && !Z.ok1; }
 function offen2(Z) { return Z.t === 1 && Z.ok1 && !Z.ok2; }
 // nach der 60 gleich die zweite Frage: wie viele passen herum?
 function start(Z) {
-  if (offen1(Z)) App.winkel.frage(60, TEXT.falsch1, function () { Z.ok1 = true; start(Z); });
-  else if (offen2(Z)) App.winkel.frage(6, TEXT.falsch2, function () { Z.ok2 = true; });
+  if (offen1(Z)) App.winkel.frage(60, TEXT.falsch1, function () { Z.ok1 = true; start(Z); }, { text: TEXT.winkel });
+  else if (offen2(Z)) App.winkel.frage(6, TEXT.falsch2, function () { Z.ok2 = true; }, { text: TEXT.anzahl, einheit: '' });
 }
 
 App.level('winkel', {
@@ -114,7 +118,6 @@ App.level('winkel', {
           done: 'ستة مثلثات متساوية الأضلاع تتسع حول نقطة: 6 × 60° = 360°، دورة كاملة. ومعًا تصنع سداسيًا.' }
   },
   werkzeuge: ['clear'],
-  overlayBeiFrage: true,   // bei der zweiten Frage steht sie unten
 
   // t: gelegte Dreiecke (0 bis 6), ok1: 60 geschrieben, ok2: 6 geschrieben
   neu: function (Z) { Z.t = 0; Z.ok1 = false; Z.ok2 = false; },
@@ -159,8 +162,8 @@ App.level('winkel', {
   overlay: function (ctx, Z) {
     var H = App.winkel, y = H.textY(zeilen()), br = H.farben[1].linie, gr = H.farben[2].linie, teile = [], z2 = null, z2ink = false, wt = false;
     if (offen1(Z)) return;   // offene Frage: keine Rechnung
-    if (offen2(Z)) { z2 = App.wahl(TEXT.anzahl); z2ink = true; }   // nur die Frage, keine Rechnung
-    else {
+    if (offen2(Z)) return;   // die Frage steht im Schreibfeld
+    {
       if (!Z.t) return;
       if (Z.t === 6) {
         teile = [{ t: '6 × 60° = 360°', c: C.INK }];

@@ -8,6 +8,7 @@ var App = window.App, S = App.S, C = App.C;
 var FORMEN = [3, 4, 5, 6];
 
 var TEXT = {
+  frageFeld: { de: 'Wie groß ist der Innenwinkel?', en: 'How big is the inside angle?', fi: 'Kuinka suuri sisäkulma on?', tr: 'İç açı kaç derece?', fr: 'Combien mesure l’angle intérieur ?', es: '¿Cuánto mide el ángulo interior?', ja: '内角は何度かな？', ar: 'كم قياس الزاوية الداخلية؟' },
   falsch: { de: 'Noch nicht. Die Drehung an der Ecke und der Innenwinkel ergeben zusammen 180°.',
             en: 'Not yet. The turn at the corner and the inside angle add up to 180°.',
             fi: 'Ei vielä. Kulman kääntö ja sisäkulma ovat yhteensä 180°.',
@@ -40,7 +41,7 @@ function start(Z) {
   App.winkel.frage(innen(FORMEN[Z.form]), TEXT.falsch, function () {
     Z.ok = true;
     if (Z.form === FORMEN.length - 1) App.winkel.geschafft();
-  });
+  }, { text: TEXT.frageFeld });
 }
 
 App.level('winkel', {

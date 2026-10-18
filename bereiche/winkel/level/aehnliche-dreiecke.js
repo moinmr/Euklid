@@ -12,6 +12,7 @@ var AENDERUNG_NOETIG = 30;   // Grad, so weit muss sich α insgesamt ändern
 var AL_MIN = 20, AL_MAX = 70;
 
 var TEXT = {
+  frageFeld: { de: 'Wie groß ist der Winkel mit dem Fragezeichen?', en: 'How big is the angle with the question mark?', fi: 'Kuinka suuri on kysymysmerkillä merkitty kulma?', tr: 'Soru işaretli açı kaç derece?', fr: 'Combien mesure l’angle avec le point d’interrogation ?', es: '¿Cuánto mide el ángulo con el signo de interrogación?', ja: '「?」の角は何度かな？', ar: 'كم قياس الزاوية التي عليها علامة الاستفهام؟' },
   teilen: { de: 'Tippe, um das Dreieck zu teilen', en: 'Tap to split the triangle', fi: 'Napauta, niin kolmio jakautuu',
             tr: 'Üçgeni bölmek için dokun', fr: 'Touche pour couper le triangle', es: 'Toca para dividir el triángulo',
             ja: 'タップすると三角形が分かれます', ar: 'انقر لتقسيم المثلث' },
@@ -68,7 +69,7 @@ function ecken(Z) {
 function zahlen(Z) { var a = Math.round(Z.al); return { a: a, b: 90 - a }; }
 
 function start(Z) {
-  if (Z.schritt === 1 && !Z.ok) App.winkel.frage(zahlen(Z).b, TEXT.falsch, function () { Z.ok = true; });
+  if (Z.schritt === 1 && !Z.ok) App.winkel.frage(zahlen(Z).b, TEXT.falsch, function () { Z.ok = true; }, { text: TEXT.frageFeld });
 }
 
 // Zeichen für den rechten Winkel an der Ecke p zwischen den Richtungen u und v (Einheitsvektoren auf dem Bildschirm)

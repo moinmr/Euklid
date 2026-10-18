@@ -68,7 +68,7 @@ function beschrift(ctx, txt, p, col, size) {
 function farbe(j) { return App.winkel.farben[[1, 2, 0][j]]; }
 
 function offen(Z) { return Z.e === 2 && !Z.ok; }
-function start(Z) { if (offen(Z)) App.winkel.frage(3, TEXT.falsch, function () { Z.ok = true; }); }
+function start(Z) { if (offen(Z)) App.winkel.frage(3, TEXT.falsch, function () { Z.ok = true; }, { text: TEXT.sechseck, einheit: '' }); }
 
 App.level('winkel', {
   id: 'sechsecke-ecke',
@@ -99,7 +99,6 @@ App.level('winkel', {
           done: 'كل زاوية في السداسي 60° + 60° = 120°. ثلاثة سداسيات تتسع حول زاوية: 3 × 120° = 360°.' }
   },
   werkzeuge: ['clear'],
-  overlayBeiFrage: true,   // bei der Frage steht sie unten
 
   // e: Schritte (1 Winkel an der Ecke gezeigt, 2 Frage), ok: 3 geschrieben; h: weitere Sechsecke an der Ecke (0 bis 2)
   neu: function (Z) { Z.e = 0; Z.ok = false; Z.h = 0; },
@@ -154,7 +153,7 @@ App.level('winkel', {
     else if (Z.e === 1) {
       teile = [{ t: '60°', c: br }, { t: ' + ', c: C.INK }, { t: '60°', c: gr }, { t: ' = 120°', c: C.INK }];
       wt = true;
-    } else if (!Z.ok) z2 = App.wahl(TEXT.sechseck);   // nur die Frage, keine Rechnung
+    } else if (!Z.ok) return;   // die Frage steht im Schreibfeld
     else {
       for (var j = 0; j <= Z.h; j++) {
         if (j) teile.push({ t: ' + ', c: C.INK });

@@ -32,28 +32,6 @@ var TEXT = {
              ar: 'ليس بعد. في الأعلى تقع الزوايا الثلاث على مستقيم، أي نصف دورة.' }
 };
 
-// Frage unten über dem Schreibfeld, auf schmalen Bildschirmen auf zwei Zeilen
-function frageZeilen(ctx, t) {
-  ctx.save();
-  ctx.font = '500 16px ' + C.FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.fillStyle = C.INK;
-  var zeilen = [t], max = S.w - 32;
-  if (ctx.measureText(t).width > max) {
-    var wo = t.split(' '), best = null;
-    for (var i = 1; i < wo.length; i++) {
-      var a = wo.slice(0, i).join(' '), b = wo.slice(i).join(' '), m = Math.max(ctx.measureText(a).width, ctx.measureText(b).width);
-      if (!best || m < best[0]) best = [m, a, b];
-    }
-    if (best) zeilen = [best[1], best[2]];
-  }
-  var y = App.winkel.textY(zeilen.length), breit = 0;
-  zeilen.forEach(function (z) { breit = Math.max(breit, ctx.measureText(z).width); });
-  // Papiergrund dahinter: auf kleinen Bildschirmen reicht das Bild bis hierher
-  ctx.fillStyle = C.PARCH; ctx.globalAlpha = 0.9;
-  ctx.fillRect(S.w / 2 - breit / 2 - 8, y - 14, breit + 16, 22 * zeilen.length + 6);
-  ctx.globalAlpha = 1; ctx.fillStyle = C.INK;
-  zeilen.forEach(function (z, i) { ctx.fillText(z, S.w / 2, y + 22 * i); });
-  ctx.restore();
-}
 function abst(p, q) { return Math.hypot(q[0] - p[0], q[1] - p[1]); }
 // Mitte, halber Abstand d der Parallelen und die Ecken A, B unten
 function mass(Z) {
@@ -66,7 +44,7 @@ function mass(Z) {
 // x relativ zur Mitte in Einheiten von d, auf den Bildschirm begrenzt
 function px(M, u) { return Math.max(16, Math.min(S.w - 16, M.m[0] + u * M.d)); }
 function start(Z) {
-  if (Z.zu && !Z.ok) App.winkel.frage(180, TEXT.falsch2, function () { Z.ok = true; App.winkel.geschafft(); });
+  if (Z.zu && !Z.ok) App.winkel.frage(180, TEXT.falsch2, function () { Z.ok = true; App.winkel.geschafft(); }, { text: TEXT.frage });
 }
 function grad(rad) { return rad * 180 / Math.PI; }
 // Kleinerer Winkel zwischen zwei Richtungen: Anfang und Weite (mathematisch, gegen den Uhrzeigersinn)
@@ -180,11 +158,10 @@ App.level('winkel', {
   },
 
   // Unten über der Leiste: erst die gleichen Z-Winkel, im Dreieck α + γ + β = 180°
-  overlayBeiFrage: true,   // bei der Frage steht sie unten
   overlay: function (ctx, Z) {
     if (Z.schritt < 1) return;
     var H = App.winkel, F = H.farben;
-    if (Z.zu && !Z.ok) { frageZeilen(ctx, App.wahl(TEXT.frage)); return; }   // Frage offen: keine Rechnung
+    if (Z.zu && !Z.ok) return;   // Frage offen (sie steht im Schreibfeld): keine Rechnung
     var w = winkel(Z), frage = false, y = H.textY(2);
     var teile;
     if (Z.zu) teile = [{ t: w.za + '°', c: F[1].linie }, { t: ' + ', c: C.INK }, { t: frage ? '?' : w.zc + '°', c: F[2].linie },

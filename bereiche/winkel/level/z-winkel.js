@@ -8,6 +8,7 @@ var DREH_NOETIG = 120;             // Grad, so viel hin und her drehen
 var MIN = 25 * Math.PI / 180;      // flachste Neigung, damit die Ecken auf dem Bildschirm bleiben
 
 var TEXT = {
+  frageFeld: { de: 'Wie groß ist der Winkel unten?', en: 'How big is the angle at the bottom?', fi: 'Kuinka suuri alempi kulma on?', tr: 'Alttaki açı kaç derece?', fr: 'Combien mesure l’angle du bas ?', es: '¿Cuánto mide el ángulo de abajo?', ja: '下の角は何度かな？', ar: 'كم قياس الزاوية في الأسفل؟' },
   griff: { de: 'Dreh jetzt die schräge Strecke am Griff', en: 'Now turn the slanted segment by its handle',
            fi: 'Käännä nyt vinoa janaa kahvasta', tr: 'Şimdi eğik doğru parçasını tutamağından döndür',
            fr: 'Fais maintenant tourner le segment oblique par sa poignée', es: 'Ahora gira el segmento inclinado por su asa',
@@ -30,7 +31,7 @@ function mass() {
 // Frage offen: nach dem Loslassen gestellt, aber noch nicht beantwortet
 function offen(Z) { return Z.frage && !Z.ok; }
 function start(Z) {
-  if (offen(Z)) App.winkel.frage(zWinkel(Z).grad, TEXT.falsch, function () { Z.ok = true; App.winkel.geschafft(); });
+  if (offen(Z)) App.winkel.frage(zWinkel(Z).grad, TEXT.falsch, function () { Z.ok = true; App.winkel.geschafft(); }, { text: TEXT.frageFeld });
 }
 // Ecken des Z: oben T, unten B, für die Neigung th (Bogenmaß, gegen die Waagrechte, 0 bis π)
 function ecken(th) {

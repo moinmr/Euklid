@@ -11,6 +11,7 @@ var MIN = 30, MAX = 150;   // Grenzen für den Winkel bei A, damit die Kiste auf
 var EINRASTEN = 4;         // Grad um 90°: rastet als Rechteck ein
 
 var TEXT = {
+  frageFeld: { de: 'Wie groß ist der Winkel bei C?', en: 'How big is the angle at C?', fi: 'Kuinka suuri kulma C on?', tr: 'C’deki açı kaç derece?', fr: 'Combien mesure l’angle en C ?', es: '¿Cuánto mide el ángulo en C?', ja: 'Cの角は何度かな？', ar: 'كم قياس الزاوية عند C؟' },
   gleich: { de: 'Gegenüberliegende Winkel sind gleich groß', en: 'Opposite angles are equal',
             fi: 'Vastakkaiset kulmat ovat yhtä suuret', tr: 'Karşılıklı açılar eşittir',
             fr: 'Les angles opposés sont égaux', es: 'Los ángulos opuestos son iguales',
@@ -51,7 +52,7 @@ function textY(zeilen) {
   return y;
 }
 function start(Z) {
-  if (Z.schritt === 1 && !Z.ok) App.winkel.frage(Math.round(Z.wa), TEXT.falsch, function () { Z.ok = true; App.winkel.geschafft(); });
+  if (Z.schritt === 1 && !Z.ok) App.winkel.frage(Math.round(Z.wa), TEXT.falsch, function () { Z.ok = true; App.winkel.geschafft(); }, { text: TEXT.frageFeld });
 }
 // Griff an D: die Ecke folgt dem Finger, die untere Seite rückt dabei so, dass alles mittig bleibt
 function schieben(Z, w) {

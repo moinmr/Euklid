@@ -12,6 +12,7 @@ var App = window.App, S = App.S, C = App.C;
 var STERNE = [{ n: 5, m: 2, spitze: 36, innen: 108, rg: 0.47 }, { n: 8, m: 3, spitze: 45, innen: 135, rg: 0.6 }];
 
 var TEXT = {
+  frageFeld: { de: 'Wie groß ist der Winkel in einer Spitze?', en: 'How big is the angle in one point of the star?', fi: 'Kuinka suuri on kulma yhdessä kärjessä?', tr: 'Bir uçtaki açı kaç derece?', fr: 'Combien mesure l’angle d’une pointe ?', es: '¿Cuánto mide el ángulo de una punta?', ja: '1つの先の角は何度かな？', ar: 'كم قياس الزاوية في رأس واحد؟' },
   linie: { de: 'Tippe für die nächste Linie', en: 'Tap for the next line', fi: 'Napauta, niin tulee seuraava viiva',
            tr: 'Sonraki çizgi için dokun', fr: 'Touche l’écran pour la ligne suivante', es: 'Toca para la siguiente línea',
            ja: 'タップすると次の線', ar: 'انقر للخط التالي' },
@@ -72,7 +73,7 @@ function start(Z) {
   App.winkel.frage(STERNE[Z.s].spitze, TEXT.falsch[Z.s], function () {
     Z.ok = true;
     if (Z.s === STERNE.length - 1) App.winkel.geschafft();
-  });
+  }, { text: TEXT.frageFeld });
 }
 
 App.level('winkel', {

@@ -9,6 +9,7 @@ var App = window.App, S = App.S, C = App.C;
 var FORMEN = [3, 4, 5, 6];
 
 var TEXT = {
+  frageFeld: { de: 'Wie weit drehst du dich an der Ecke mit dem Fragezeichen?', en: 'How far do you turn at the corner with the question mark?', fi: 'Kuinka paljon käännyt kysymysmerkin kohdalla?', tr: 'Soru işaretli köşede ne kadar dönersin?', fr: 'De combien tournes-tu au coin avec le point d’interrogation ?', es: '¿Cuánto giras en la esquina con el signo de interrogación?', ja: '「?」の角でどれだけ回るかな？', ar: 'كم تدور عند الزاوية التي عليها علامة الاستفهام؟' },
   umdrehung: { de: 'eine volle Umdrehung', en: 'one full turn', fi: 'yksi täysi kierros', tr: 'tam bir tur',
                fr: 'un tour complet', es: 'una vuelta completa', ja: 'ちょうど1回転', ar: 'دورة كاملة' },
   drehung: { de: 'Drehung', en: 'turn', fi: 'kierros', tr: 'tur', fr: 'tour', es: 'vuelta', ja: '回転', ar: 'دورة' },
@@ -43,7 +44,7 @@ function bruch(k) { return '1/' + k; }
 // Ab dem Quadrat: nach der ersten Drehung erst die Frage nach ihrer Gradzahl
 function offen(Z) { return Z.form > 0 && Z.j === 2 && !Z.ok; }
 function start(Z) {
-  if (offen(Z)) App.winkel.frage(Math.round(360 / FORMEN[Z.form]), TEXT.falsch, function () { Z.ok = true; });
+  if (offen(Z)) App.winkel.frage(Math.round(360 / FORMEN[Z.form]), TEXT.falsch, function () { Z.ok = true; }, { text: TEXT.frageFeld });
 }
 
 App.level('winkel', {

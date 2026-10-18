@@ -9,6 +9,7 @@ var App = window.App, S = App.S, C = App.C;
 var FORMEN = [4, 5, 6];
 
 var TEXT = {
+  frageFeld: { de: 'Wie groß sind alle Winkel des Vielecks zusammen?', en: 'How big are all the angles of the polygon together?', fi: 'Kuinka suuria ovat monikulmion kaikki kulmat yhteensä?', tr: 'Çokgenin tüm açılarının toplamı kaç derece?', fr: 'Combien font tous les angles du polygone ensemble ?', es: '¿Cuánto suman todos los ángulos del polígono?', ja: '多角形の角をぜんぶ合わせると何度かな？', ar: 'كم مجموع كل زوايا المضلع؟' },
   falsch: { de: 'Noch nicht. Jedes Dreieck hat zusammen 180°. Alle Dreiecke zusammen sind alle Winkel des Vielecks.',
             en: 'Not yet. Each triangle has 180° in total. All the triangles together are all the angles of the shape.',
             fi: 'Ei vielä. Jokaisen kolmion kulmat ovat yhteensä 180°. Kaikki kolmiot yhdessä ovat kaikki monikulmion kulmat.',
@@ -74,7 +75,7 @@ function start(Z) {
     Z.ok = true;
     if (Z.form === FORMEN.length - 1) H.geschafft();
     App.render();
-  });
+  }, { text: TEXT.frageFeld });
 }
 // Kleinerer Winkel zwischen zwei Richtungen: Anfang und Weite (mathematisch, gegen den Uhrzeigersinn)
 function zwischen(d1, d2) {

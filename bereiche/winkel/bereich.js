@@ -190,8 +190,9 @@ var ZIFFERN = (function () {
 
 // Schreibfeld unten über der Leiste: Feld zum Schreiben, darunter das Gelesene, ↶ (letzten Strich weg) und Prüfen.
 // pruefen(text) bekommt das Gelesene. Die Karte verschwindet beim Levelwechsel und beim Gang zur Startseite.
+// opt.text: die Frage, oben in der Karte direkt über dem Feld; opt.einheit: hinter der gelesenen Zahl (sonst °).
 var PRUEFEN = { de: 'Prüfen', en: 'Check', fi: 'Tarkista', tr: 'Kontrol et', fr: 'Vérifier', es: 'Comprobar', ja: 'たしかめる', ar: 'تحقق' };
-var feldKarte = null, feldStriche = [], feldPruefen = null;
+var feldKarte = null, feldStriche = [], feldPruefen = null, feldOpt = {};
 function feldZeichnen() {
   var pad = feldKarte.querySelector('canvas'), ctx = pad.getContext('2d'), r = window.devicePixelRatio || 1;
   var w = pad.clientWidth, h = pad.clientHeight;
@@ -207,18 +208,21 @@ function feldZeichnen() {
     ctx.stroke();
   });
   var t = ZIFFERN.lesen(feldStriche);
-  feldKarte.querySelector('.gelesen').textContent = t ? t + '°' : '';
+  var einheit = feldOpt.einheit !== undefined ? feldOpt.einheit : '°', frage = feldKarte.querySelector('.frage');
+  feldKarte.querySelector('.gelesen').textContent = t ? t + einheit : '';
+  frage.textContent = feldOpt.text ? App.wahl(feldOpt.text) : ''; frage.hidden = !feldOpt.text;
   feldKarte.querySelector('.pruefen').textContent = App.wahl(PRUEFEN);
 }
-function schreibfeld(pruefen) {
-  feldPruefen = pruefen; feldStriche = [];
+function schreibfeld(pruefen, opt) {
+  feldPruefen = pruefen; feldStriche = []; feldOpt = opt || {};
   if (!feldKarte) {
     feldKarte = document.createElement('div');
     feldKarte.id = 'wschreib';
     feldKarte.style.cssText = 'position:absolute;z-index:3;left:0;right:0;bottom:calc(var(--unten,70px) + 8px);' +
       'width:min(520px,calc(100% - 32px));margin:0 auto;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;' +
       'padding:12px;border-radius:14px;background:#fbf4e2;box-shadow:0 6px 20px rgba(56,41,26,.18),0 1px 3px rgba(56,41,26,.12);';
-    feldKarte.innerHTML = '<canvas style="width:100%;height:104px;display:block;touch-action:none;background:#fffaf0;' +
+    feldKarte.innerHTML = '<p class="frage" style="margin:0 2px;line-height:1.3;text-align:center;font-size:17px;font-weight:500;color:' + C.INK + '"></p>' +
+      '<canvas style="width:100%;height:104px;display:block;touch-action:none;background:#fffaf0;' +
       'border:1.2px dashed rgba(56,41,26,.45);border-radius:10px"></canvas>' +
       '<p class="gelesen" style="margin:0;min-height:1.2em;line-height:1.2;text-align:center;font-size:20px" dir="ltr"></p>' +
       '<div style="display:flex;gap:8px"><button class="opt" data-w="weg" style="flex:0 0 56px;font-size:22px" aria-label="↶">↶</button>' +
@@ -257,13 +261,14 @@ var LESEN = { de: 'Ich kann die Zahl nicht lesen. Schreib die Ziffern etwas grö
               es: 'No puedo leer el número. Escribe las cifras un poco más grandes y separadas.',
               ja: '数が読めません。数字を少し大きく、間をあけて書こう。',
               ar: 'لا أستطيع قراءة العدد. اكتب الأرقام أكبر قليلًا وبمسافات بينها.' };
-// Frage mit Schreibfeld: richtig ist die gesuchte Zahl, hinweis der Text der roten Karte, fertig() läuft bei richtiger Antwort
-function frage(richtig, hinweis, fertig) {
+// Frage mit Schreibfeld: richtig ist die gesuchte Zahl, hinweis der Text der roten Karte, fertig() läuft bei richtiger Antwort,
+// opt wie bei schreibfeld (Fragetext in der Karte, Einheit hinter der Zahl)
+function frage(richtig, hinweis, fertig, opt) {
   schreibfeld(function (t) {
     if (!t || t.indexOf('?') >= 0) { falsch(LESEN); App.render(); return; }
     if (Number(t) !== richtig) { falsch(hinweis); feldLeeren(); App.render(); return; }
     falschWeg(); feldWeg(); fertig(); App.render();
-  });
+  }, opt);
 }
 function feldOffen() { return !!(feldKarte && !feldKarte.hidden); }
 // Höhe der ersten von zeilen Textzeilen unten (über dem Schreibfeld, sonst über der Leiste bzw. der grünen Karte)
@@ -352,7 +357,9 @@ App.bereich({
   draw: function (ctx, ws) { if (Z) lv().draw(ctx, Z, ws); },
   // Solange eine Frage offen ist (Schreibfeld da), keine Rechnung unter dem Bild; sie kommt erst nach der richtigen Antwort.
   // Ein Level, das dort die Frage selbst stellt, setzt overlayBeiFrage und zeichnet dann nur die Frage.
-  overlay: function (ctx) { if (Z && lv().overlay && (!feldOffen() || lv().overlayBeiFrage)) lv().overlay(ctx, Z); },
+  overlay: function (ctx) {
+    if (feldOffen()) feldZeichnen();   // Fragetext und Knopf in der gewählten Sprache
+    if (Z && lv().overlay && (!feldOffen() || lv().overlayBeiFrage)) lv().overlay(ctx, Z); },
   down: function (w) { if (Z) { lv().down(Z, w); App.render(); } },
   move: function (w) { if (Z) { lv().move(Z, w); App.render(); } },
   up: function (w) { if (Z) { lv().up(Z, w); App.render(); } },

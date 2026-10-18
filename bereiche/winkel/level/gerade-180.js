@@ -11,6 +11,7 @@ var MIN = 12;            // Grad, kleinster Winkel zwischen Strecke und Gerade
 var ANZAHL = [2, 3, 4];  // Winkel in den drei Aufgaben
 
 var TEXT = {
+  frageFeld: { de: 'Wie groß ist der Winkel mit dem Fragezeichen?', en: 'How big is the angle with the question mark?', fi: 'Kuinka suuri on kysymysmerkillä merkitty kulma?', tr: 'Soru işaretli açı kaç derece?', fr: 'Combien mesure l’angle avec le point d’interrogation ?', es: '¿Cuánto mide el ángulo con el signo de interrogación?', ja: '「?」の角は何度かな？', ar: 'كم قياس الزاوية التي عليها علامة الاستفهام؟' },
   halb: { de: 'eine halbe Drehung', en: 'a half turn', fi: 'puoli kierrosta', tr: 'yarım tur',
           fr: 'un demi-tour', es: 'media vuelta', ja: '半回転', ar: 'نصف دورة' },
   griff: { de: 'Dreh jetzt die Strecke am Griff hin und her', en: 'Now turn the segment back and forth by its handle',
@@ -65,7 +66,7 @@ function start(Z) {
   App.winkel.frage(Z.fig.teile[Z.fig.frage], TEXT.falsch, function () {
     Z.ok = true;
     if (Z.auf === ANZAHL.length - 1) App.winkel.geschafft();
-  });
+  }, { text: TEXT.frageFeld });
 }
 function naechste(Z) {
   Z.auf++; Z.ok = false; Z.fig = aufgabe(ANZAHL[Z.auf]);
