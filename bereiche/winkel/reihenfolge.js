@@ -9,6 +9,7 @@ App.ordnung.winkel = [
   'rundherum',
   'innenwinkel',
   'sechs-dreiecke',
+  'sechsecke-ecke',
   'mosaik',
   'vieleck-dreiecke',
   'stern',
