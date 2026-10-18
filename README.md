@@ -68,7 +68,11 @@ Konstruieren mit Linie und Zirkel auf einer vorgegebenen Strecke AB (Canvas, Poi
 
 ## Bereich Winkel
 
-Neu angelegt (Ordner `bereiche/winkel/`), noch ohne Level. Werkzeuge und Logik kommen mit dem ersten Level dazu.
+Jedes Winkel-Level bringt sein Verhalten selbst mit (`neu`, `down`, `move`, `up`, `draw`, `overlay`, `bild`, `ausBild`), `bereich.js` macht Fortschritt, grüne und rote Karte, Knöpfe und Hilfen (`App.winkel`: Winkelfelder, gerundete Gradzahlen mit fester Summe, Farben Tinte/Braun/Grau). Im Level nur der Papierkorb, kein Drehen der Ansicht.
+
+| Level | Titel | Erkenntnis |
+|---|---|---|
+| 1 | Eine volle Umdrehung | Eine Strecke zeichnen (ziehen oder zweimal tippen), dann aus ihrer Mitte eine zweite Strecke (Mitte rastet ein, sonst rote Karte). Die zweite Strecke dreht man mit dem Finger, die drei Winkel um die Mitte (Felder in Tinte, Braun, Grau) ändern sich live, unten „a° + b° + c° = 360°, eine volle Umdrehung“. Gelöst nach insgesamt 120° Drehung (Kennung `volle-umdrehung`). |
 
 ## Bereich Funktionen
 

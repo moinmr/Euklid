@@ -44,7 +44,7 @@ App.start = function () {
     if (fertig.hidden) return;
     fertig.style.bottom = ((S.unten || 70) + 8) + 'px';
     var L = a.levels(), sv = a.solved(), t = document.createElement('span'), w = document.createElement('button');
-    t.textContent = sv.size === L.length ? T('alle') : App.txt(L[level], 'done') || T('geschafft', level + 1);
+    t.textContent = sv.size === L.length && L.length > 1 ? T('alle') : App.txt(L[level], 'done') || T('geschafft', level + 1);
     w.className = 'weiter'; w.setAttribute('aria-label', T('naechstes'));
     w.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5L16 12L9.5 18.5"/></svg>';
     fertig.appendChild(t); fertig.appendChild(w);
