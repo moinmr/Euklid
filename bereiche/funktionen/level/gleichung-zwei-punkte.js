@@ -1,32 +1,32 @@
-// Level im Gitter: zwei Punkte einer Geraden. Unten y = □ · (x − □) + □ ausfüllen: Steigung und einer der zwei Punkte.
-// Zwei Geraden, eine steigende und eine fallende.
+// Level im Gitter: Herleitung an einer Beispielgeraden durch (1|1) und (3|5), in vier Schritten mit Weiter:
+// Steigung m = Δy : Δx mit Zahlen, dann allgemein, dann bis zu einem beliebigen Punkt (x|y), dann y = m · (x − x₁) + y₁.
 App.level('funktionen', {
   id: 'gleichung-zwei-punkte',
   text: {
     de: { title: 'Die Gleichung aus zwei Punkten',
-          task: 'Fülle aus: y = Steigung · (x − x₁) + y₁. Für (x₁|y₁) nimm einen der zwei Punkte.',
-          done: 'Richtig! So bekommst du aus zwei Punkten immer die Gleichung: y = (y₂ − y₁) : (x₂ − x₁) · (x − x₁) + y₁.' },
+          task: 'Wie kommt man von zwei Punkten zur Gleichung der Geraden? Tippe unten auf Weiter.',
+          done: 'Geschafft! Mit m = Δy : Δx und einem Punkt (x₁|y₁) gilt: y = m · (x − x₁) + y₁.' },
     en: { title: 'The equation from two points',
-          task: 'Fill in: y = slope · (x − x₁) + y₁. For (x₁|y₁), take one of the two points.',
-          done: 'Right! This way two points always give you the equation: y = (y₂ − y₁) : (x₂ − x₁) · (x − x₁) + y₁.' },
+          task: 'How do you get from two points to the equation of the line? Tap Next below.',
+          done: 'Done! With m = Δy : Δx and a point (x₁|y₁): y = m · (x − x₁) + y₁.' },
     fi: { title: 'Yhtälö kahdesta pisteestä',
-          task: 'Täydennä: y = kulmakerroin · (x − x₁) + y₁. Pisteeksi (x₁|y₁) ota toinen kahdesta pisteestä.',
-          done: 'Oikein! Näin saat kahdesta pisteestä aina yhtälön: y = (y₂ − y₁) : (x₂ − x₁) · (x − x₁) + y₁.' },
+          task: 'Miten kahdesta pisteestä saadaan suoran yhtälö? Napauta alla Seuraava.',
+          done: 'Valmis! Kun m = Δy : Δx ja piste on (x₁|y₁), pätee: y = m · (x − x₁) + y₁.' },
     tr: { title: 'İki noktadan denklem',
-          task: 'Doldur: y = eğim · (x − x₁) + y₁. (x₁|y₁) için iki noktadan birini al.',
-          done: 'Doğru! İki noktadan denklemi hep böyle bulursun: y = (y₂ − y₁) : (x₂ − x₁) · (x − x₁) + y₁.' },
+          task: 'İki noktadan doğrunun denklemine nasıl gidilir? Aşağıda Devam’a dokun.',
+          done: 'Başardın! m = Δy : Δx ve bir (x₁|y₁) noktası ile: y = m · (x − x₁) + y₁.' },
     fr: { title: 'L’équation à partir de deux points',
-          task: 'Complète : y = pente · (x − x₁) + y₁. Pour (x₁|y₁), prends un des deux points.',
-          done: 'Bravo ! Avec deux points, on obtient toujours l’équation ainsi : y = (y₂ − y₁) : (x₂ − x₁) · (x − x₁) + y₁.' },
+          task: 'Comment passer de deux points à l’équation de la droite ? Touche Suivant en bas.',
+          done: 'Réussi ! Avec m = Δy : Δx et un point (x₁|y₁) : y = m · (x − x₁) + y₁.' },
     es: { title: 'La ecuación con dos puntos',
-          task: 'Completa: y = pendiente · (x − x₁) + y₁. Para (x₁|y₁), usa uno de los dos puntos.',
-          done: '¡Correcto! Así sacas siempre la ecuación con dos puntos: y = (y₂ − y₁) : (x₂ − x₁) · (x − x₁) + y₁.' },
+          task: '¿Cómo se pasa de dos puntos a la ecuación de la recta? Toca Siguiente abajo.',
+          done: '¡Hecho! Con m = Δy : Δx y un punto (x₁|y₁): y = m · (x − x₁) + y₁.' },
     ja: { title: '2つの点から式へ',
-          task: 'うめよう：y＝傾き·(x − x₁)＋y₁。(x₁|y₁) には2つの点のどちらかを使おう。',
-          done: '正解！2つの点があれば、いつもこうして式が作れます：y＝(y₂ − y₁)÷(x₂ − x₁)·(x − x₁)＋y₁。' },
+          task: '2つの点から直線の式はどうやって作る？下の「つぎへ」をタップしよう。',
+          done: 'できた！m＝Δy÷Δx と点 (x₁|y₁) があれば：y＝m·(x − x₁)＋y₁。' },
     ar: { title: 'المعادلة من نقطتين',
-          task: 'أكمل: \u2066y = الميل · (x − x₁) + y₁\u2069. خذ لـ \u2066(x₁|y₁)\u2069 إحدى النقطتين.',
-          done: 'صحيح! هكذا تحصل دائمًا على المعادلة من نقطتين: \u2066y = (y₂ − y₁) : (x₂ − x₁) · (x − x₁) + y₁\u2069.' }
+          task: 'كيف نصل من نقطتين إلى معادلة المستقيم؟ اضغط «التالي» في الأسفل.',
+          done: 'أحسنت! مع ⁦m = Δy : Δx⁩ ونقطة ⁦(x₁|y₁)⁩: ⁦y = m · (x − x₁) + y₁⁩.' }
   },
-  zweipunkt: 'gleichung', tabelle: false, werkzeuge: ['clear']   // nichts zeichnen, unten nur der Papierkorb
+  zweipunkt: 'herleiten', tabelle: false, werkzeuge: ['clear']   // nur Weiter, unten nur der Papierkorb
 });

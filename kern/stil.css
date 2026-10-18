@@ -318,3 +318,6 @@ body {
 #fschreib .nullm .pf { opacity: .7; }
 #fschreib .zp { gap: 6px; font-weight: 400; font-size: 20px; }
 #fschreib .zp .rein .slot { color: var(--rein); } #fschreib .zp .raus .slot { color: var(--raus); }
+#fschreib .formel { font-size: 20px; }
+#fschreib .bruch { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 3px; line-height: 1.25; }
+#fschreib .bruch > span + span { border-top: 1.5px solid currentColor; padding-top: 1px; }
