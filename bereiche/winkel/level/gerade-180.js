@@ -1,7 +1,7 @@
 // Level: Winkel an einer Geraden. Eine schräge Gerade, darüber der Winkel an der Geraden (180°, so viel wie eine halbe Drehung).
-// Antippen zeigt eine Strecke aus der Mitte der Geraden: ein Winkel hat seine Zahl, der andere ein Fragezeichen,
-// die Zahl schreibt man ins Schreibfeld. Danach dreht man die Strecke am Griff hin und her: die zwei Winkel ändern sich,
-// zusammen bleiben sie 180°. Gelöst nach insgesamt 120° Drehung.
+// Antippen zeigt eine Strecke aus der Mitte der Geraden mit Griff. Man dreht sie hin und her: die zwei Winkel ändern sich,
+// zusammen bleiben sie 180°. Nach insgesamt 120° Drehung, beim Loslassen, die Frage: ein Winkel hat seine Zahl, der andere
+// ein Fragezeichen, die Zahl schreibt man ins Schreibfeld. Gelöst bei der richtigen Antwort.
 (function () {
 var App = window.App, S = App.S, C = App.C;
 var DREH_NOETIG = 120;              // Grad
@@ -38,8 +38,10 @@ function winkel(Z) {
   var a = Math.round(Z.a * 180 / Math.PI);
   return { a: a, b: 180 - a };
 }
+// Frage offen: genug gedreht, aber noch nicht beantwortet
+function offen(Z) { return Z.dreh >= DREH_NOETIG && !Z.ok; }
 function start(Z) {
-  if (Z.schritt === 1 && !Z.ok) App.winkel.frage(winkel(Z).b, TEXT.falsch, function () { Z.ok = true; });
+  if (offen(Z)) App.winkel.frage(winkel(Z).b, TEXT.falsch, function () { Z.ok = true; App.winkel.geschafft(); });
 }
 
 function drehen(Z, w) {
@@ -51,40 +53,39 @@ function drehen(Z, w) {
   d = Math.max(MIN, Math.min(Math.PI - MIN, d));
   Z.dreh += Math.abs(d - Z.a) * 180 / Math.PI;
   Z.a = d;
-  if (Z.dreh >= DREH_NOETIG) App.winkel.geschafft();
 }
 
 App.level('winkel', {
   id: 'gerade-180',
   text: {
     de: { title: 'Winkel an der Geraden',
-          task: 'Der Winkel an einer Geraden ist 180°, so viel wie eine halbe Drehung. Tippe für den nächsten Schritt. Wie groß ist der Winkel mit dem Fragezeichen? Schreib die Zahl ins Feld.',
+          task: 'Der Winkel an einer Geraden ist 180°, so viel wie eine halbe Drehung. Tippe für den nächsten Schritt und dreh die Strecke am Griff hin und her. Danach: Wie groß ist der Winkel mit dem Fragezeichen?',
           done: 'Zwei Winkel an einer Geraden ergeben zusammen immer 180°. Das ist eine halbe Drehung.' },
     en: { title: 'Angles on a line',
-          task: 'The angle along a straight line is 180°, as much as a half turn. Tap for the next step. How big is the angle with the question mark? Write the number in the box.',
+          task: 'The angle along a straight line is 180°, as much as a half turn. Tap for the next step and turn the segment back and forth by its handle. Then: how big is the angle with the question mark?',
           done: 'Two angles on a straight line always add up to 180°. That is a half turn.' },
     fi: { title: 'Kulmat suoralla',
-          task: 'Suoran kulma on 180°, yhtä paljon kuin puoli kierrosta. Napauta, niin näet seuraavan vaiheen. Kuinka suuri kysymysmerkin kulma on? Kirjoita luku kenttään.',
+          task: 'Suoran kulma on 180°, yhtä paljon kuin puoli kierrosta. Napauta, niin näet seuraavan vaiheen, ja käännä janaa kahvasta edestakaisin. Sitten: kuinka suuri kysymysmerkin kulma on?',
           done: 'Kaksi kulmaa suoralla ovat yhteensä aina 180°. Se on puoli kierrosta.' },
     tr: { title: 'Doğru üzerindeki açılar',
-          task: 'Bir doğru boyunca açı 180°, yarım tur kadar. Sonraki adım için dokun. Soru işaretli açı kaç derece? Sayıyı kutuya yaz.',
+          task: 'Bir doğru boyunca açı 180°, yarım tur kadar. Sonraki adım için dokun ve doğru parçasını tutamağından ileri geri döndür. Sonra: soru işaretli açı kaç derece?',
           done: 'Bir doğru üzerindeki iki açının toplamı her zaman 180°. Bu yarım turdur.' },
     fr: { title: 'Angles sur une droite',
-          task: 'L’angle le long d’une droite mesure 180°, autant qu’un demi-tour. Touche l’écran pour l’étape suivante. Combien mesure l’angle avec le point d’interrogation ? Écris le nombre dans la case.',
+          task: 'L’angle le long d’une droite mesure 180°, autant qu’un demi-tour. Touche l’écran pour l’étape suivante et fais tourner le segment par sa poignée, dans un sens puis dans l’autre. Ensuite : combien mesure l’angle avec le point d’interrogation ?',
           done: 'Deux angles sur une droite font toujours 180° ensemble. C’est un demi-tour.' },
     es: { title: 'Ángulos en una recta',
-          task: 'El ángulo a lo largo de una recta mide 180°, lo mismo que media vuelta. Toca para ver el siguiente paso. ¿Cuánto mide el ángulo con el signo de interrogación? Escribe el número en la casilla.',
+          task: 'El ángulo a lo largo de una recta mide 180°, lo mismo que media vuelta. Toca para ver el siguiente paso y gira el segmento por su asa de un lado a otro. Después: ¿cuánto mide el ángulo con el signo de interrogación?',
           done: 'Dos ángulos sobre una recta suman siempre 180°. Eso es media vuelta.' },
     ja: { title: '直線の上の角',
-          task: '直線の角は180°、半回転と同じです。タップすると次に進みます。「?」の角は何度かな？数を書いてね。',
+          task: '直線の角は180°、半回転と同じです。タップすると次に進みます。線分を持ち手で行ったり来たり回そう。そのあと、「?」の角は何度かな？',
           done: '直線の上の2つの角を合わせると、いつも180°。これが半回転です。' },
     ar: { title: 'الزوايا على مستقيم',
-          task: 'الزاوية على امتداد مستقيم 180°، أي ما يساوي نصف دورة. انقر للخطوة التالية. كم قياس الزاوية التي عليها علامة استفهام؟ اكتب العدد في المربع.',
+          task: 'الزاوية على امتداد مستقيم 180°، أي ما يساوي نصف دورة. انقر للخطوة التالية وأدِر القطعة من مقبضها ذهابًا وإيابًا. بعد ذلك: كم قياس الزاوية التي عليها علامة استفهام؟',
           done: 'مجموع زاويتين على مستقيم دائمًا 180°. هذه نصف دورة.' }
   },
   werkzeuge: ['clear'],
 
-  // Startwinkel zufällig 50° bis 80° in Fünferschritten, damit man die Zahl nicht auswendig weiß
+  // Startwinkel zufällig 50° bis 80° in Fünferschritten
   neu: function (Z) {
     Z.schritt = 0; Z.ok = false; Z.dreh = 0; Z.zieht = false;
     Z.a = (50 + 5 * Math.floor(Math.random() * 7)) * Math.PI / 180;
@@ -92,14 +93,23 @@ App.level('winkel', {
   start: start,
 
   down: function (Z, w) {
-    if (Z.schritt < 1) { Z.schritt++; start(Z); return; }   // Antippen: nächster Schritt
-    if (!Z.ok) return;   // erst die Frage beantworten
+    if (Z.schritt < 1) { Z.schritt++; return; }   // Antippen: nächster Schritt
+    if (offen(Z)) return;   // erst die Frage beantworten
     var M = mass();
     Z.zieht = abst(w, punkt(M, NEIGUNG + Z.a, M.r)) <= C.GRAB * 1.3 * S.k;   // nur am Griff
     if (Z.zieht) drehen(Z, w);
   },
   move: function (Z, w) { if (Z.zieht) drehen(Z, w); },
-  up: function (Z) { Z.zieht = false; },
+  // Genug gedreht: beim Loslassen auf ganze Fünfer runden und fragen
+  up: function (Z) {
+    if (!Z.zieht) return;
+    Z.zieht = false;
+    if (offen(Z)) {
+      var g = Math.max(20, Math.min(160, Math.round(Z.a * 180 / Math.PI / 5) * 5));
+      Z.a = g * Math.PI / 180;
+      start(Z);
+    }
+  },
 
   draw: function (ctx, Z, ws) {
     var H = App.winkel, k = S.k, ink = C.INK, M = mass(), m = M.m, r = M.r, F = H.farben;
@@ -114,13 +124,13 @@ App.level('winkel', {
       H.feld(ctx, m, r * 0.8, NEIGUNG, Z.a, F[1].fuell, F[1].linie, ws);                       // a: braun
       H.feld(ctx, m, r * 0.8, NEIGUNG + Z.a, Math.PI - Z.a, F[0].fuell, F[0].linie, ws);      // b: Tinte
       H.strecke(ctx, m, p, ink, ws);
-      if (Z.ok) {   // Griff erst nach der richtigen Antwort
+      if (!offen(Z)) {   // kein Griff, solange die Frage offen ist
         ctx.strokeStyle = ink; ctx.lineWidth = 2 * ws * k;
         ctx.beginPath(); ctx.arc(p[0], p[1], 15 * k, 0, H.TAU); ctx.stroke();
         ctx.fillStyle = 'rgba(56,41,25,0.12)'; ctx.fill();
       }
       // Zahlen im Feld; kleine Winkel weiter außen, mit Pergament hinterlegt
-      [[NEIGUNG, Z.a, w.a, F[1].linie, false], [NEIGUNG + Z.a, Math.PI - Z.a, w.b, F[0].linie, !Z.ok]].forEach(function (q) {
+      [[NEIGUNG, Z.a, w.a, F[1].linie, false], [NEIGUNG + Z.a, Math.PI - Z.a, w.b, F[0].linie, offen(Z)]].forEach(function (q) {
         var g = q[1] * 180 / Math.PI, mi = q[0] + q[1] / 2, ra = g >= 40 ? r * 0.5 : r * 0.8 + (22 + Math.max(0, 30 - g)) * k;
         var lx = m[0] + Math.cos(mi) * ra, ly = m[1] - Math.sin(mi) * ra;
         if (g < 40) { ctx.fillStyle = C.PARCH; App.dotAt(ctx, [lx, ly], false, 11); }
@@ -140,11 +150,11 @@ App.level('winkel', {
     if (Z.schritt < 1) teile = [{ t: '180°', c: F[2].linie }];
     else {
       var w = winkel(Z);
-      teile = [{ t: w.a + '°', c: F[1].linie }, { t: ' + ', c: C.INK }, { t: Z.ok ? w.b + '°' : '?', c: F[0].linie },
+      teile = [{ t: w.a + '°', c: F[1].linie }, { t: ' + ', c: C.INK }, { t: offen(Z) ? '?' : w.b + '°', c: F[0].linie },
                { t: ' = 180°', c: C.INK }];
     }
     H.zeile(ctx, teile, y);
-    var jetzt = Z.schritt === 1 && Z.ok && !Z.dreh;
+    var jetzt = Z.schritt === 1 && !Z.dreh;   // bis zum ersten Drehen sagen, was zu tun ist
     ctx.save();
     ctx.font = '400 14.5px ' + C.FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
     ctx.fillStyle = jetzt ? C.INK : C.PENCIL;
