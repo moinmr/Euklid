@@ -72,8 +72,8 @@ Leitidee: Der Schüler erlebt zuerst, dann bekommt es einen Namen, dann wird es 
 
 | Level | Titel | Erkenntnis |
 |---|---|---|
-| 1 | Zuverlässige Maschinen | Gleiche Eingabe gibt immer gleiche Ausgabe. Eine Maschine ist zufällig kaputt. Antwort erst möglich, wenn beide mit derselben Zahl mindestens zweimal getestet wurden. |
-| 2 | Was ist eine Funktion? | Zahl rein, Zahl raus. Die Regel steht sichtbar in der Box (z. B. 2·□ + 1), □ ist der Platz für die Zahl. Dreimal füttern, dann "Was kommt bei ... heraus?". |
+| 1 | Was ist eine Funktion? | Zahl rein, Zahl raus. Die Regel steht sichtbar in der Box (z. B. 2·□ + 1), □ ist der Platz für die Zahl. Dreimal füttern, dann "Was kommt bei ... heraus?". |
+| 2 | Zuverlässige Maschinen | Gleiche Eingabe gibt immer gleiche Ausgabe. Eine Maschine ist zufällig kaputt. Antwort erst möglich, wenn beide mit derselben Zahl mindestens zweimal getestet wurden. |
 | 3 | Variablen | Variablen: Eingabe und Ausgabe haben Namen (zufällig, auch y rein und x raus). Drei zufällige Paare stehen in der vollen Tabelle, Box zeigt ?, Frage: Welche Funktion? (vier Antworten) |
 | 4 | Zwei Zahlenachsen | Wie Level 3, nur stehen die drei Paare als Linien zwischen zwei parallelen Zahlenachsen (oben rein, unten raus). |
 | 5 | Koordinatensystem | Wie Level 3 und 4, nur sind die drei Paare Punkte im Koordinatensystem (x nach rechts, y nach oben). Namen stehen in den Kästchen rein und raus. |
@@ -88,7 +88,7 @@ Leitidee: Der Schüler erlebt zuerst, dann bekommt es einen Namen, dann wird es 
 | 14 | Gleichung schreiben | Fünf Geraden im Gitter nacheinander (Kennung `gerade-schreiben`, zweipunkt `'hand'`): steigend, m = ±1 mit b < 0, fallend, b = 0, beides negativ; m und b von −3 bis 3. Die Gleichung mit dem Finger ins Feld schreiben (dieselbe Handschrift-Erkennung wie beim Taxi), y = mx + b oder y = b + mx, auch x, −x und ohne b. Falsch: Hinweis zu m (1 nach rechts, wie weit hoch oder runter) oder zu b (wo kreuzt die y-Achse). |
 | 15 | Taxipreis | Grundgebühr 2 bis 4 € und Preis pro km 1 bis 3 € (zufällig, Kennung `taxi-gleichung`). Erst die Geradengleichung y = px + g mit dem Finger ins Feld schreiben; eine kleine Handschrift-Erkennung ($P-Punktwolken mit Vorlagen für y = m x + b, Ziffern 0 bis 5 und Ablenker c, a, n, −) liest mit, darunter steht, was gelesen wurde. ↶ nimmt den letzten Strich zurück. Danach drei Fahrten (2, 5, 10 km) mit vier Antworten (typische Denkfehler). Statt Gitter eine eigene Grafik: nur positive Achsen, x = Strecke, y = Preis, bis 10 km und passend skaliert; die Gerade erscheint nach richtiger Gleichung, beantwortete Fahrten als lila Punkte mit Preis. Währung und Einheit je nach Sprache: Englisch $ und Meilen, Japanisch Yen (Preise mal 100), Türkisch ₺, Arabisch Riyal, sonst € und km. |
 
-- Level 1 bis 6 sind DOM-Overlays (`#mach`). Level 2 bis 6 entstehen aus Bausteinen in `App.funk.einstieg` (bereich.js). Farben: Orange = rein, Lila = raus, Grün = richtig, Menüs braun. Level 7 bis 14 laufen auf dem Canvas mit Koordinatensystem (1 Einheit = 40 px, y nach oben).
+- Level 1 bis 6 sind DOM-Overlays (`#mach`). Level 1 und 3 bis 6 entstehen aus Bausteinen in `App.funk.einstieg` (bereich.js). Farben: Orange = rein, Lila = raus, Grün = richtig, Menüs braun. Level 7 bis 14 laufen auf dem Canvas mit Koordinatensystem (1 Einheit = 40 px, y nach oben).
 - Punkte rasten auf Gitterpunkte, die Gerade wird über zwei Punkte unendlich verlängert. Prüfung über die Gleichung, nicht über irgendeine Gerade.
 - Nach den Punkten schaltet die App selbst auf das Linien-Werkzeug um.
 
