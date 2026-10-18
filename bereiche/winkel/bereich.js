@@ -260,8 +260,8 @@ var LESEN = { de: 'Ich kann die Zahl nicht lesen. Schreib die Ziffern etwas grö
 // Frage mit Schreibfeld: richtig ist die gesuchte Zahl, hinweis der Text der roten Karte, fertig() läuft bei richtiger Antwort
 function frage(richtig, hinweis, fertig) {
   schreibfeld(function (t) {
-    if (!t || t.indexOf('?') >= 0) { falsch(LESEN); return; }
-    if (Number(t) !== richtig) { falsch(hinweis); feldLeeren(); return; }
+    if (!t || t.indexOf('?') >= 0) { falsch(LESEN); App.render(); return; }
+    if (Number(t) !== richtig) { falsch(hinweis); feldLeeren(); App.render(); return; }
     falschWeg(); feldWeg(); fertig(); App.render();
   });
 }
