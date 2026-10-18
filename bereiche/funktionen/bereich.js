@@ -182,9 +182,10 @@ function buildFunk(ctx, ws) {
   }
 
   ctx.lineCap = 'round';
-  var lvz = FLEVELS[F.level], nurFeste = !!(lvz && (lvz.verbinden || lvz.schnitt || lvz.steigung || lvz.herleitung || lvz.nullfrage || lvz.zweipunkt));   // nur die vorgegebenen Punkte zeigen
+  var lvz = FLEVELS[F.level], nurFeste = !!(lvz && (lvz.verbinden || lvz.schnitt || lvz.steigung || lvz.herleitung || lvz.nullfrage || lvz.zweipunkt || lvz.handschrift));   // nur die vorgegebenen Punkte zeigen
   F.lines.forEach(function (l, i) {
     if (lvz && (lvz.steigung || lvz.herleitung || lvz.zweipunkt) && i !== F.runde) return;   // immer nur die aktuelle Gerade
+    if (lvz && lvz.handschrift && !F.runde && !F.fn) return;   // Taxi: die Gerade erst, wenn die Gleichung stimmt
     var col = l.fest ? INK : fLinieFalsch(l) ? C.RED : BLUE;   // vorgegebene Gerade dunkel, falsche Linie rot
     ctx.strokeStyle = col; extLine(ctx, l.a, l.b, 2.5 * ws * k);
     if (!nurFeste) { ctx.fillStyle = col; dotAt(ctx, l.a, false); dotAt(ctx, l.b, false); }
@@ -501,6 +502,10 @@ function fLoadLevel(n, restore) {
   if (lv.nullfrage) {
     if (!F.lines.some(function (l) { return l.fest; })) F.lines = [fFestNull()];
     F.ein = [''];
+  }
+  if (lv.handschrift) {
+    if (!F.lines.some(function (l) { return l.fest; })) { var g = 2 + rnd(3), p = 1 + rnd(3); F.lines = [{ a: [0, -g * U], b: [U, -(g + p) * U], gid: 0, fest: true }]; F.runde = 0; }
+    F.taxiOpts = null;
   }
   if (lv.zweipunkt) {
     if (!F.lines.some(function (l) { return l.fest; })) { F.lines = zpFest(lv.zweipunkt); F.runde = 0; }
@@ -930,7 +935,7 @@ function zpWeiter() {
 }
 // Handschrift: Zeichen aus Fingerstrichen erkennen ($P-Punktwolken-Erkenner, Vatavu u. a. 2012).
 // Striche werden nach ihrer Breite zu Zeichen gruppiert (was sich waagerecht überlappt, gehört zusammen),
-// jedes Zeichen wird mit Vorlagen verglichen. Vorlagen: y = m x + b und ein paar Ablenker (c, a, n, 0, 1, 2, −).
+// jedes Zeichen wird mit Vorlagen verglichen. Vorlagen: y = m x + b, die Ziffern 0 bis 5 und ein paar Ablenker (c, a, n, −).
 var HS = (function () {
   var N = 32;
   function pfad(st) { // Striche → Punkte mit Strichnummer
@@ -993,6 +998,10 @@ var HS = (function () {
     '0': [[[[25, 0], [6, 12], [0, 50], [6, 88], [25, 100], [44, 88], [50, 50], [44, 12], [25, 0]]]],
     '1': [[[[8, 22], [30, 0], [30, 100]]]],
     '2': [[[[0, 22], [14, 3], [34, 0], [48, 14], [44, 40], [0, 100], [52, 100]]]],
+    '3': [[[[0, 12], [16, 0], [36, 2], [46, 16], [40, 36], [20, 48], [42, 58], [50, 78], [40, 95], [20, 100], [0, 92]]]],
+    '4': [[[[32, 0], [0, 66], [54, 66]], [[38, 28], [38, 100]]]],
+    '5': [[[[46, 0], [8, 0], [4, 42], [25, 36], [45, 48], [50, 72], [38, 95], [15, 100], [0, 90]]],
+          [[[8, 0], [4, 42], [25, 36], [45, 48], [50, 72], [38, 95], [15, 100], [0, 90]], [[8, 0], [48, 0]]]],
     '−': [[[[0, 70], [60, 70]]]]
   };
   var VORLAGEN = [];
@@ -1036,16 +1045,52 @@ var HS = (function () {
     gruppen: gruppen
   };
 })();
-// Level mit handschrift: die allgemeine Geradengleichung mit dem Finger ins Feld schreiben, die App liest mit
+// Level mit handschrift (Taxi): oben Grundgebühr g und Preis pro km p. Erst die Geradengleichung y = px + g mit dem
+// Finger ins Feld schreiben (die App liest mit), dann drei Fahrten ausrechnen. g und p stecken in F.lines[0]:
+// a = (0|g), b = (1|g + p); F.runde 0 ist die Gleichung, 1 bis 3 die Fahrten.
+var TAXI_KM = [2, 5, 10];
+function taxiGP() { var l = F.lines[0]; return l ? { g: -Math.round(l.a[1] / U), p: -Math.round(l.b[1] / U) + Math.round(l.a[1] / U) } : { g: 3, p: 2 }; }
+function taxiGl() { var t = taxiGP(); return eqStr({ m: t.p, b: t.g }); }
+var TAXI_TEXT = {
+  frage: function (km) {
+    var K = '<span class="rein">' + km + ' km</span>';
+    return { de: 'Was kostet eine Fahrt über ' + K + '?', en: 'What does a ' + K + ' ride cost?', fi: 'Paljonko maksaa ' + K + ':n matka?',
+             tr: K + '’lik yolculuk ne kadar?', fr: 'Combien coûte un trajet de ' + K + ' ?', es: '¿Cuánto cuesta un viaje de ' + K + '?',
+             ja: K + ' の料金はいくら？', ar: 'كم تكلف رحلة طولها <bdi dir="ltr">' + K + '</bdi>؟' };
+  },
+  einsetzen: function (km) {
+    var X = '<bdi dir="ltr"><span class="rein">x</span> = <span class="rein">' + km + '</span></bdi>';
+    return { de: 'Nicht ganz. Setze ' + X + ' in die Gleichung ein.', en: 'Not quite. Put ' + X + ' into the equation.',
+             fi: 'Ei aivan. Sijoita ' + X + ' yhtälöön.', tr: 'Tam değil. Denklemde ' + X + ' koy.',
+             fr: 'Pas tout à fait. Remplace ' + X + ' dans l’équation.', es: 'Casi. Pon ' + X + ' en la ecuación.',
+             ja: 'おしい。式に ' + X + ' を入れよう。', ar: 'ليس تمامًا. ضع ' + X + ' في المعادلة.' };
+  }
+};
+function taxiKarte() {
+  var t = taxiGP(), km = TAXI_KM[F.runde - 1], a = t.g + t.p * km;
+  if (!F.taxiOpts) F.taxiOpts = options(a, [a + t.p, a - t.p, t.p * km, t.g + km, t.g * km, (t.g + t.p) * km]);
+  var gl = taxiGl().replace(/^y/, '<span class="raus">y</span>').replace('x', '<span class="rein">x</span>');
+  schreib.innerHTML = '<div class="steig zp"><bdi dir="ltr" class="mbgl">' + gl + '</bdi><span class="stand">' + F.runde + ' / ' + TAXI_KM.length + '</span></div>' +
+    '<p class="fb">' + App.wahl(TAXI_TEXT.frage(km)) + '</p>' +
+    '<div class="opts">' + F.taxiOpts.map(function (v) { return '<button class="opt" data-act="taxi" data-v="' + v + '">' + v + ' €</button>'; }).join('') + '</div>' +
+    (F.fb ? '<p class="fb' + (F.fbOk ? ' ok' : '') + '"' + (F.fbRot ? ' style="color: var(--red)"' : '') + '>' + App.wahl(F.fb) + '</p>' : '');
+}
+function taxiAntwort(v) {
+  var t = taxiGP(), km = TAXI_KM[F.runde - 1];
+  if (v !== t.g + t.p * km) { F.fb = TAXI_TEXT.einsetzen(km); F.fbOk = false; F.fbRot = true; return; }
+  F.fbRot = false; F.taxiOpts = null;
+  if (F.runde < TAXI_KM.length) { F.runde++; F.fb = RICHTIG; F.fbOk = true; }
+  else { F.fn = true; F.fb = ''; }
+}
 var HS_TEXT = {
-  falsch: { de: 'Das ist nicht die allgemeine Geradengleichung. Tipp: Sie hat m für die Steigung und b für den y-Achsenabschnitt.',
-            en: 'That is not the general equation of a line. Hint: it has m for the slope and b for the y-intercept.',
-            fi: 'Tämä ei ole suoran yleinen yhtälö. Vihje: siinä on m kulmakertoimelle ja b y-akselin leikkauskohdalle.',
-            tr: 'Bu, doğrunun genel denklemi değil. İpucu: eğim için m, y eksenini kestiği yer için b vardır.',
-            fr: 'Ce n’est pas l’équation générale d’une droite. Astuce : elle a m pour la pente et b pour l’ordonnée à l’origine.',
-            es: 'Esa no es la ecuación general de la recta. Pista: tiene m para la pendiente y b para la ordenada en el origen.',
-            ja: 'それは直線の一般的な式ではありません。ヒント：傾きの m と切片の b が入ります。',
-            ar: 'هذه ليست المعادلة العامة للمستقيم. تلميح: فيها m للميل وb للجزء المقطوع من محور y.' },
+  falsch: { de: 'Nicht ganz. m ist der Preis pro Kilometer, b die Grundgebühr.',
+            en: 'Not quite. m is the price per kilometre, b the base fare.',
+            fi: 'Ei aivan. m on kilometrihinta, b perusmaksu.',
+            tr: 'Tam değil. m kilometre başına ücret, b açılış ücreti.',
+            fr: 'Pas tout à fait. m est le prix par kilomètre, b la prise en charge.',
+            es: 'Casi. m es el precio por kilómetro, b la bajada de bandera.',
+            ja: 'おしい。m は1キロごとの料金、b は基本料金です。',
+            ar: 'ليس تمامًا. m هو سعر الكيلومتر، وb هو الأجرة الأساسية.' },
   unklar: { de: 'Ich kann nicht alles lesen. Schreib die Zeichen etwas größer und mit Abstand.',
             en: 'I can’t read everything. Write the symbols a bit bigger and with gaps.',
             fi: 'En saa kaikesta selvää. Kirjoita merkit vähän isommin ja välejä jättäen.',
@@ -1081,6 +1126,7 @@ function hsFb() {
   if (p) p.outerHTML = F.fb ? '<p class="fb hsfb" style="color: var(--red)">' + App.wahl(F.fb) + '</p>' : '<p class="hsfb" hidden></p>';
 }
 function hsKarte() {
+  if (F.runde > 0) return taxiKarte();
   var pad = schreib.querySelector('canvas.pad');
   if (pad) {   // das Feld bleibt stehen, nur Gelesenes und Hinweis neu
     schreib.querySelector('.gelesen').innerHTML = '<bdi dir="ltr">' + hsGelesen() + '</bdi>';
@@ -1105,10 +1151,12 @@ function hsKarte() {
   hsKarte();
 }
 function hsPruefen() {
-  var z = HS.lesen(F.hs).map(function (c) { return c.z; }).join('');
+  var z = HS.lesen(F.hs).map(function (c) { return c.z; }).join(''), t = taxiGP(), m = t.p === 1 ? ['', '1'] : [String(t.p)];
   if (!z) return;
+  var gut = [];
+  m.forEach(function (mm) { gut.push('y=' + mm + 'x+' + t.g, 'y=' + t.g + '+' + mm + 'x'); });
   if (z.indexOf('?') >= 0) F.fb = HS_TEXT.unklar;
-  else if (z === 'y=mx+b' || z === 'y=b+mx') { F.fn = true; F.fb = ''; }
+  else if (gut.indexOf(z) >= 0) { F.runde = 1; F.hs = []; F.fb = RICHTIG; F.fbOk = true; F.fbRot = false; }   // weiter zu den Fahrten
   else F.fb = HS_TEXT.falsch;
 }
 // Level mit nullfrage: welche Zahl muss in die Maschine der Geraden, damit der Punkt auf der y-Achse herauskommt?
@@ -1163,6 +1211,7 @@ function schreibClick(e) {
   else if (act === 'pruefen' && FLEVELS[F.level].zweipunkt) zpPruefen();
   else if (act === 'pruefen' && FLEVELS[F.level].handschrift) hsPruefen();
   else if (act === 'hsweg') { F.hs.pop(); F.fb = ''; }
+  else if (act === 'taxi') taxiAntwort(Number(b.getAttribute('data-v')));
   else if (act === 'schritt' && FLEVELS[F.level].zweipunkt) zpWeiter();
   else if (act === 'schritt') herlSchritt();
   else if (act === 'pruefen') {
@@ -1267,6 +1316,7 @@ function machClick(e) {
 }
 
 App.funk = {
+  taxi: function () { return taxiGP(); }, taxiGl: function () { return taxiGl(); },
   ARROW: ARROW, rnd: rnd, shuffle: shuffle, options: options, keypad: keypad, optButtons: optButtons,
   f: f, finish: finish, falsch: falsch, M: function () { return M; }
 };

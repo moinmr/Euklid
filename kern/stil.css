@@ -172,10 +172,6 @@ body {
 .mcol .last b { font-weight: 400; }
 .mcol .log { font-size: 14.5px; opacity: .75; text-align: center; line-height: 1.5; min-height: 22px; word-break: break-word; }
 .feedbtn { width: 100%; font-size: 17px; }
-.taxi { display: grid; grid-template-columns: 1fr 1fr; border: 1.2px solid var(--ink); border-radius: 14px; overflow: hidden; }
-.taxi div { padding: 10px 14px; font-size: 20px; text-align: center; border-top: 1px solid rgba(56,41,26,.25); }
-.taxi div.h { font-weight: 700; font-size: 16px; border-top: 0; opacity: .75; }
-.taxi div.good { color: var(--green); }
 /* Level "Zahlen mit Namen": Variablen-Namen, Tabelle quer, zwei parallele Achsen */
 .vn { font-family: Georgia, "Times New Roman", serif; font-style: italic; font-size: 1.1em; }
 .vk { position: relative; }
