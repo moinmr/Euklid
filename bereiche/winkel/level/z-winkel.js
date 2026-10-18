@@ -1,7 +1,7 @@
 // Level: Zwei parallele Geraden. Antippen zeigt eine schräge Strecke dazwischen, zusammen eine Z-Form.
 // Die beiden Winkel im Z (Wechselwinkel) sind immer gleich groß. Am Griff oben dreht man die schräge Strecke um ihre Mitte,
-// beide Winkel ändern sich mit und bleiben gleich. Nach insgesamt 60° Drehung, beim Loslassen, die Frage: oben steht
-// die Gradzahl, unten ein Fragezeichen, die Zahl schreibt man ins Schreibfeld. Gelöst bei der richtigen Antwort.
+// beide Winkel ändern sich mit und bleiben gleich. Nach insgesamt 60° Drehung, beim Loslassen, eine neue Z-Form mit Frage:
+// oben steht die Gradzahl, unten ein Fragezeichen, die Zahl schreibt man ins Schreibfeld. Gelöst bei der richtigen Antwort.
 (function () {
 var App = window.App, S = App.S, C = App.C;
 var DREH_NOETIG = 60;              // Grad
@@ -110,14 +110,15 @@ App.level('winkel', {
     if (Z.zieht) drehen(Z, w);
   },
   move: function (Z, w) { if (Z.zieht) drehen(Z, w); },
-  // Genug gedreht: beim Loslassen auf ganze Fünfer runden und fragen
+  // Genug gedreht: beim Loslassen eine neue Z-Form mit Frage
   up: function (Z) {
     if (!Z.zieht) return;
     Z.zieht = false;
     if (offen(Z)) {
-      var g = Math.max(30, Math.min(150, Math.round(Z.th * 180 / Math.PI / 5) * 5));
-      if (g === 90) g = 85;   // bei 90° gäbe es kein Z
-      Z.th = g * Math.PI / 180;
+      // neue Z-Form für die Frage: anderer Winkel (35° bis 70°), nach links oder rechts geneigt
+      var alt = Math.round(Math.min(Z.th, Math.PI - Z.th) * 180 / Math.PI), g;
+      do { g = 35 + 5 * Math.floor(Math.random() * 8); } while (Math.abs(g - alt) < 10);
+      Z.th = (Math.random() < 0.5 ? g : 180 - g) * Math.PI / 180;
       start(Z);
     }
   },
