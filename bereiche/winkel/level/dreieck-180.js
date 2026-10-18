@@ -171,7 +171,8 @@ App.level('winkel', {
       ctx.beginPath(); ctx.arc(w.t2[0], w.t2[1], 15 * k, 0, H.TAU); ctx.stroke();
       ctx.fillStyle = 'rgba(56,41,25,0.12)'; ctx.fill();
     }
-    felder.forEach(function (f) {
+    felder.forEach(function (f, i) {
+      if (i === 4 && !Z.ok) return;   // γ ohne Zahl, solange die Frage offen ist
       var mid = f[1][0] + f[1][1] / 2, ra = Math.max(r + 12 * k, (52 + Math.max(0, 40 - grad(f[1][1])) * 0.8) * k * q);
       var lx = Math.max(20, Math.min(S.w - 20, f[0][0] + Math.cos(mid) * ra));   // Zahl bleibt auf dem Bildschirm
       App.text(ctx, f[3] + '°', lx, f[0][1] - Math.sin(mid) * ra, f[2].linie, 16);
