@@ -809,12 +809,18 @@ function zpFest(art) {
     if (zpP(r[0]).y2 - zpP(r[0]).y1 > 0 !== zpP(r[1]).y2 - zpP(r[1]).y1 > 0) return r;
   }
 }
-// wandern: der gezogene Punkt liegt 1 bis 4 rechts vom festen Punkt (bei Steigung ±2 bis 3), das Dreieck höchstens 6 hoch
+// wandern: der gezogene Punkt liegt in Zehnteln 0,5 bis 4 rechts vom festen Punkt (bei Steigung ±2 bis 3), das Dreieck höchstens 6 hoch
 function zpGmax() { var p = zpP(F.lines[0]); return p.x1 + (Math.abs(p.y2 - p.y1) > 1 ? 3 : 4); }
-function zpGx(x) { var p = zpP(F.lines[0]); return Math.max(p.x1 + 1, Math.min(zpGmax(), x)); }
+function zpGx(x) { var p = zpP(F.lines[0]); return Math.max(p.x1 + 0.5, Math.min(zpGmax(), x)); }
+// Zahl mit höchstens einer Kommastelle, Komma oder Punkt je nach Sprache
+function fmtD(n) {
+  var r = Math.round(n * 10) / 10, t = Math.abs(r).toFixed(r % 1 ? 1 : 0);
+  if (['en', 'ja', 'ar'].indexOf(App.sprache()) < 0) t = t.replace('.', ',');
+  return (r < 0 ? '−' : '') + t;
+}
 function zpZiehen(pos) {
   if (zpArt() !== 'wandern' || F.fn) return;
-  var g = zpGx(Math.round(pos[0] / U));
+  var g = zpGx(Math.round(pos[0] / U * 10) / 10);
   if (g !== F.gx) { F.gx = g; F.gesehen[g] = true; F.fb = ''; F.fbRot = false; fSchreib(true); render(); }
 }
 // der zweite Punkt des Dreiecks: in wandern der gezogene, sonst der rechte
@@ -822,7 +828,7 @@ function zpZiel() {
   var l = F.lines[F.runde], p = zpP(l);
   if (zpArt() !== 'wandern') return p;
   var m = (p.y2 - p.y1) / (p.x2 - p.x1);
-  return { x1: p.x1, y1: p.y1, x2: F.gx, y2: p.y1 + m * (F.gx - p.x1) };
+  return { x1: p.x1, y1: p.y1, x2: F.gx, y2: Math.round((p.y1 + m * (F.gx - p.x1)) * 10) / 10 };
 }
 function zpAnsicht() {
   var l = F.lines[F.runde], hud = document.getElementById('hud');
@@ -846,12 +852,12 @@ function zpZeichnen(ctx, ws) {
     ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(E[0], E[1]); ctx.lineTo(B[0], B[1]); ctx.stroke(); ctx.restore();
   }
   if (zpArt() === 'wandern' || F.zpZeig || F.fn) {
-    text(ctx, fmt(q.x2) + ' − ' + zahl(q.x1) + ' = ' + fmt(q.x2 - q.x1), (A[0] + E[0]) / 2, E[1] + (hoch ? 15 : -15) * k, REIN, 14);
-    zpLinks(ctx, fmt(q.y2) + ' − ' + zahl(q.y1) + ' = ' + fmt(q.y2 - q.y1), E[0] + 10 * k, (E[1] + B[1]) / 2, RAUS, 14);
+    text(ctx, fmtD(q.x2) + ' − ' + zahl(q.x1) + ' = ' + fmtD(q.x2 - q.x1), (A[0] + E[0]) / 2, E[1] + (hoch ? 15 : -15) * k, REIN, 14);
+    zpLinks(ctx, fmtD(q.y2) + ' − ' + zahl(q.y1) + ' = ' + fmtD(q.y2 - q.y1), E[0] + 10 * k, (E[1] + B[1]) / 2, RAUS, 14);
   }
   ctx.fillStyle = INK; dotAt(ctx, A, false, 6); dotAt(ctx, B, false, zpArt() === 'wandern' ? 8 : 6);
   koordText(ctx, fmt(q.x1), fmt(q.y1), A[0] - 42 * k, A[1] + (hoch ? -14 : 16) * k, 14);
-  koordText(ctx, fmt(q.x2), fmt(q.y2), B[0] - 40 * k, B[1] + (hoch ? -16 : 18) * k, 14);   // links neben der Geraden, weg vom Dreieck
+  koordText(ctx, fmtD(q.x2), fmtD(q.y2), B[0] - 40 * k, B[1] + (hoch ? -16 : 18) * k, 14);   // links neben der Geraden, weg vom Dreieck
 }
 // Text links ausgerichtet (die senkrechte Rechnung steht rechts neben dem Dreieck)
 function zpLinks(ctx, txt, x, y, col, size) {
@@ -921,7 +927,7 @@ function zpKarte() {
   else if (art === 'ohnegitter') zeile = '<span>' + App.wahl(STEIG) + '</span>' + slotHTML(0);
   else if (art === 'wandern') {
     var q = zpZiel();
-    zeile = '<bdi dir="ltr"><span class="raus">' + fmt(q.y2 - q.y1) + '</span> : <span class="rein">' + fmt(q.x2 - q.x1) + '</span> = </bdi>' + slotHTML(0);
+    zeile = '<bdi dir="ltr"><span class="raus">' + fmtD(q.y2 - q.y1) + '</span> : <span class="rein">' + fmtD(q.x2 - q.x1) + '</span> = </bdi>' + slotHTML(0);
   } else {
     zeile = '<bdi dir="ltr"><span class="raus">y</span> = ' + slotHTML(0) + '· (<span class="rein">x</span> − ' + sl(1, 'rein') + ') + ' + sl(2, 'raus') + '</bdi>';
   }
