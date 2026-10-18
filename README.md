@@ -72,7 +72,7 @@ Jedes Winkel-Level bringt sein Verhalten selbst mit (`neu`, `down`, `move`, `up`
 
 | Level | Titel | Erkenntnis |
 |---|---|---|
-| 1 | Eine volle Umdrehung | Kein Zeichnen: Ein Kreis zeigt 360°, dann erscheint von selbst eine waagrechte Strecke durch den Mittelpunkt (180° + 180°), dann eine senkrechte aus dem Mittelpunkt (90° + 90° + 180°). Antippen springt zum nächsten Schritt. Nur das Ende der senkrechten Strecke hat einen Griff (Ring), daran dreht man sie; Winkelfelder im Kreis (Tinte, Braun, Grau) und Zahlen ändern sich live, unten „a° + b° + c° = 360°, eine volle Umdrehung“. Gelöst nach insgesamt 120° Drehung (Kennung `volle-umdrehung`). |
+| 1 | Eine volle Umdrehung | Kein Zeichnen, keine Animation: Ein Kreis zeigt 360°. Antippen zeigt den nächsten Schritt: eine waagrechte Strecke durch den Mittelpunkt (180° + 180°), dann eine senkrechte aus dem Mittelpunkt (90° + 90° + 180°). Nur das Ende der senkrechten Strecke hat einen Griff (Ring), daran dreht man sie; Winkelfelder im Kreis (Tinte, Braun, Grau) und Zahlen ändern sich live, unten „a° + b° + c° = 360°, eine volle Umdrehung“. Gelöst nach insgesamt 120° Drehung (Kennung `volle-umdrehung`). |
 
 ## Bereich Funktionen
 

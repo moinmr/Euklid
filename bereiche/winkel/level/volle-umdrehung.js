@@ -1,12 +1,10 @@
-// Level: Ein Kreis ist eine volle Umdrehung (360°). Nacheinander und von selbst erscheinen eine waagrechte Strecke
+// Level: Ein Kreis ist eine volle Umdrehung (360°). Nacheinander, mit je einem Antippen, erscheinen eine waagrechte Strecke
 // durch den Mittelpunkt (180° + 180°) und eine senkrechte Strecke aus dem Mittelpunkt (90° + 90° + 180°).
 // Nur das Ende der senkrechten Strecke hat einen Griff, daran dreht man sie; die Winkel ändern sich mit, die Summe bleibt 360°.
-// Antippen springt zum nächsten Schritt. Gelöst nach insgesamt 120° Drehung.
+// Jedes Antippen zeigt den nächsten Schritt. Gelöst nach insgesamt 120° Drehung.
 (function () {
 var App = window.App, S = App.S, C = App.C;
 var DREH_NOETIG = 120;   // Grad
-// Zeitplan in Sekunden: Kreis allein, waagrechte Strecke wächst, Pause, senkrechte Strecke wächst
-var T1 = 1.5, T2 = 2.3, T3 = 3.8, T4 = 4.6;
 
 var TEXT = {
   umdrehung: { de: 'eine volle Umdrehung', en: 'one full turn', fi: 'yksi täysi kierros', tr: 'tam bir tur',
@@ -14,12 +12,10 @@ var TEXT = {
 };
 
 function abst(p, q) { return Math.hypot(q[0] - p[0], q[1] - p[1]); }
-function klemm(x) { return Math.max(0, Math.min(1, x)); }
 // Kreis in der Bildmitte
 function kreis() { return { m: [S.w / 2, S.h * 0.52], r: Math.max(70, Math.min(S.w * 0.3, S.h * 0.2)) }; }
-function zeit(Z) { return App.now() - Z.start; }
 // Schritt: 0 nur Kreis, 1 waagrechte Strecke da, 2 senkrechte Strecke da (mit Griff)
-function schritt(Z) { var t = zeit(Z); return t < T2 ? 0 : (t < T4 ? 1 : 2); }
+function schritt(Z) { return Z.schritt; }
 function enden(Z) {
   var K = kreis(), m = K.m, h = K.r * 1.2;
   return { a: [m[0] - h, m[1]], b: [m[0] + h, m[1]] };
@@ -64,42 +60,41 @@ App.level('winkel', {
   id: 'volle-umdrehung',
   text: {
     de: { title: 'Eine volle Umdrehung',
-          task: 'Ein Kreis ist eine volle Umdrehung: 360°. Schau, wie die Strecken ihn teilen. Dreh dann die senkrechte Strecke am Griff.',
+          task: 'Ein Kreis ist eine volle Umdrehung: 360°. Tippe für den nächsten Schritt. Dreh am Ende die senkrechte Strecke am Griff.',
           done: 'Richtig! Die Winkel um einen Punkt ergeben zusammen immer 360°. Das ist eine volle Umdrehung.' },
     en: { title: 'One full turn',
-          task: 'A circle is one full turn: 360°. Watch how the segments divide it. Then turn the upright segment by its handle.',
+          task: 'A circle is one full turn: 360°. Tap for the next step. At the end, turn the upright segment by its handle.',
           done: 'Right! The angles around a point always add up to 360°. That is one full turn.' },
     fi: { title: 'Yksi täysi kierros',
-          task: 'Ympyrä on yksi täysi kierros: 360°. Katso, miten janat jakavat sen. Käännä sitten pystysuoraa janaa kahvasta.',
+          task: 'Ympyrä on yksi täysi kierros: 360°. Napauta, niin näet seuraavan vaiheen. Käännä lopuksi pystysuoraa janaa kahvasta.',
           done: 'Oikein! Pisteen ympärillä olevat kulmat ovat yhteensä aina 360°. Se on yksi täysi kierros.' },
     tr: { title: 'Tam bir tur',
-          task: 'Bir çember tam bir turdur: 360°. Doğru parçalarının onu nasıl böldüğüne bak. Sonra dik doğru parçasını tutamağından döndür.',
+          task: 'Bir çember tam bir turdur: 360°. Sonraki adım için dokun. En sonda dik doğru parçasını tutamağından döndür.',
           done: 'Doğru! Bir noktanın etrafındaki açıların toplamı her zaman 360°. Bu tam bir turdur.' },
     fr: { title: 'Un tour complet',
-          task: 'Un cercle, c’est un tour complet : 360°. Regarde comment les segments le partagent. Puis fais tourner le segment vertical par sa poignée.',
+          task: 'Un cercle, c’est un tour complet : 360°. Touche l’écran pour l’étape suivante. À la fin, fais tourner le segment vertical par sa poignée.',
           done: 'Bravo ! Les angles autour d’un point font toujours 360° ensemble. C’est un tour complet.' },
     es: { title: 'Una vuelta completa',
-          task: 'Un círculo es una vuelta completa: 360°. Mira cómo lo dividen los segmentos. Después gira el segmento vertical por su asa.',
+          task: 'Un círculo es una vuelta completa: 360°. Toca para ver el siguiente paso. Al final, gira el segmento vertical por su asa.',
           done: '¡Correcto! Los ángulos alrededor de un punto suman siempre 360°. Eso es una vuelta completa.' },
     ja: { title: 'ちょうど1回転',
-          task: '円はちょうど1回転、360°です。線分が円をどう分けるか見てみよう。それから、たての線分を持ち手で回そう。',
+          task: '円はちょうど1回転、360°です。タップすると次に進みます。最後に、たての線分を持ち手で回そう。',
           done: '正解！1つの点のまわりの角を合わせると、いつも360°。これがちょうど1回転です。' },
     ar: { title: 'دورة كاملة',
-          task: 'الدائرة دورة كاملة: 360°. انظر كيف تقسمها القطع المستقيمة. ثم أدِر القطعة العمودية من مقبضها.',
+          task: 'الدائرة دورة كاملة: 360°. انقر للخطوة التالية. في النهاية أدِر القطعة العمودية من مقبضها.',
           done: 'صحيح! مجموع الزوايا حول نقطة دائمًا 360°. هذه دورة كاملة.' }
   },
   werkzeuge: ['clear'],
 
   neu: function (Z) {
     var K = kreis();
-    Z.start = App.now(); Z.p = [K.m[0], K.m[1] - K.r * 1.2];
+    Z.schritt = 0; Z.p = [K.m[0], K.m[1] - K.r * 1.2];
     Z.dreh = 0; Z.letzte = -Math.PI / 2; Z.zieht = false;
   },
 
   down: function (Z, w) {
-    var t = zeit(Z);
-    // Antippen während der Schritte: gleich zum nächsten
-    if (t < T4) { Z.start -= (t < T2 ? T2 : T4) - t; return; }
+    // Antippen: nächster Schritt
+    if (Z.schritt < 2) { Z.schritt++; return; }
     Z.zieht = abst(w, Z.p) <= C.GRAB * 1.3 * S.k;   // nur am Griff
     if (Z.zieht) drehen(Z, w);
   },
@@ -107,14 +102,11 @@ App.level('winkel', {
   up: function (Z) { Z.zieht = false; },
 
   draw: function (ctx, Z, ws) {
-    var H = App.winkel, k = S.k, ink = C.INK, K = kreis(), m = K.m, r = K.r, e = enden(Z), t = zeit(Z);
+    var H = App.winkel, k = S.k, ink = C.INK, K = kreis(), m = K.m, r = K.r, e = enden(Z);
     var wl = winkel(Z), st = schritt(Z);
     wl.forEach(function (w) { var f = H.farben[w.f]; H.feld(ctx, m, r, w.a0, w.sw, f.fuell, f.linie, ws); });
-    // waagrechte Strecke wächst von der Mitte nach außen, die senkrechte aus der Mitte nach oben
-    var g1 = klemm((t - T1) / (T2 - T1)), g2 = klemm((t - T3) / (T4 - T3));
-    function zu(p, g) { return [m[0] + (p[0] - m[0]) * g, m[1] + (p[1] - m[1]) * g]; }
-    if (g2 > 0) H.strecke(ctx, m, zu(Z.p, g2), ink, ws);
-    if (g1 > 0) H.strecke(ctx, zu(e.a, g1), zu(e.b, g1), ink, ws);
+    if (st === 2) H.strecke(ctx, m, Z.p, ink, ws);
+    if (st >= 1) H.strecke(ctx, e.a, e.b, ink, ws);
     ctx.fillStyle = ink; App.dotAt(ctx, m, false, 5);
     // Griff am Ende der senkrechten Strecke
     if (st === 2) {
@@ -133,7 +125,6 @@ App.level('winkel', {
       }
       App.text(ctx, w.zahl + '°', lx, ly, H.farben[w.f].linie, 17);
     });
-    if (t < T4) requestAnimationFrame(App.render);   // die Schritte laufen weiter
   },
 
   // Unten über der Leiste: 360° bzw. 180° + 180° = 360° bzw. a° + b° + c° = 360°, darunter "eine volle Umdrehung"
@@ -165,7 +156,7 @@ App.level('winkel', {
     var K = kreis();
     Z.p = [K.m[0] + b.p[0] * K.r, K.m[1] + b.p[1] * K.r];
     Z.letzte = Math.atan2(Z.p[1] - K.m[1], Z.p[0] - K.m[0]);
-    Z.start = App.now() - T4;   // Schritte schon gesehen
+    Z.schritt = 2;   // Schritte schon gesehen
   }
 });
 })();
