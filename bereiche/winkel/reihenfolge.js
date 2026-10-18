@@ -2,5 +2,6 @@
 // Eine Kennung nie ändern: der Fortschritt hängt an ihr.
 App.ordnung.winkel = [
   'volle-umdrehung',
-  'z-winkel'
+  'z-winkel',
+  'dreieck-180'
 ];

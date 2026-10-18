@@ -73,8 +73,8 @@ Jedes Winkel-Level bringt sein Verhalten selbst mit (`neu`, `down`, `move`, `up`
 | Level | Titel | Erkenntnis |
 |---|---|---|
 | 1 | Eine volle Umdrehung | Kein Zeichnen, keine Animation: Ein Kreis zeigt 360°. Antippen zeigt den nächsten Schritt: eine waagrechte Strecke durch den Mittelpunkt (180° + 180°), dann eine senkrechte aus dem Mittelpunkt (90° + 90° + 180°). Nur das Ende der senkrechten Strecke hat einen Griff (Ring), daran dreht man sie; Winkelfelder im Kreis (Tinte, Braun, Grau) und Zahlen ändern sich live, unten „a° + b° + c° = 360°, eine volle Umdrehung“. Gelöst nach insgesamt 120° Drehung (Kennung `volle-umdrehung`). |
-| 2 | Winkel im Z | Zwei parallele Geraden (grau, mit Pfeilchen). Antippen zeigt eine schräge Strecke durch die Mitte dazwischen, das Z kräftig in Tinte, die zwei Wechselwinkel in Braun mit Zahl. Am Griff oben dreht man die Strecke um ihre Mitte (25° bis 155°), beide Winkel bleiben gleich, unten „a° = a°, Die Winkel im Z sind gleich groß“. Gelöst nach insgesamt 60° Drehung (Kennung `z-winkel`). Grüner Text nennt das Wort Wechselwinkel. |
-| 3 | (geplant) | Warum die Winkel im Dreieck zusammen 180° ergeben (mit den Z-Winkeln). |
+| 2 | Winkel im Z | Zwei parallele Geraden (grau). Antippen zeigt eine schräge Strecke durch die Mitte dazwischen, das Z kräftig in Tinte, die zwei Wechselwinkel in Braun mit Zahl. Am Griff oben dreht man die Strecke um ihre Mitte (25° bis 155°), beide Winkel bleiben gleich, unten „a° = a°, Die Winkel im Z sind gleich groß“. Gelöst nach insgesamt 60° Drehung (Kennung `z-winkel`). Grüner Text nennt das Wort Wechselwinkel. |
+| 3 | Winkel im Dreieck | Zwei Parallelen, unten die Strecke AB. Antippen zeigt nacheinander zwei Z-Formen: links von A nach oben (α = 60°, unten und oben braun), rechts von B nach oben (β = 65°, Tinte). Die rechte obere Ecke schiebt man am Griff nach links, sie rastet an der linken ein: ein Dreieck, oben liegen α, γ (grau) und β nebeneinander auf der Geraden, unten „α + γ + β = 180°“. Danach lässt sich die Spitze weiter schieben, die Summe bleibt 180°. Gelöst beim Einrasten (Kennung `dreieck-180`). |
 
 ## Bereich Funktionen
 

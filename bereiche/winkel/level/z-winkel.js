@@ -95,14 +95,10 @@ App.level('winkel', {
 
   draw: function (ctx, Z, ws) {
     var H = App.winkel, k = S.k, ink = C.INK, M = mass(), m = M.m;
-    // die zwei Parallelen über die ganze Breite, mit Pfeilchen als Zeichen für parallel
+    // die zwei Parallelen über die ganze Breite
     var yo = m[1] - M.d, yu = m[1] + M.d, x0 = -S.w, x1 = 2 * S.w;
     ctx.strokeStyle = C.PENCIL; ctx.lineWidth = 2 * ws * k; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(x0, yo); ctx.lineTo(x1, yo); ctx.moveTo(x0, yu); ctx.lineTo(x1, yu); ctx.stroke();
-    [yo, yu].forEach(function (y) {
-      var x = S.w * 0.88;
-      ctx.beginPath(); ctx.moveTo(x - 7 * k, y - 6 * k); ctx.lineTo(x, y); ctx.lineTo(x - 7 * k, y + 6 * k); ctx.stroke();
-    });
     if (Z.schritt < 1) return;
     var z = zWinkel(Z), e = z.e, f = H.farben[1], L = M.d * 1.6;
     // Felder der zwei Winkel, beide in derselben Farbe: sie sind gleich
