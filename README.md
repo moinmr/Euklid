@@ -1,4 +1,4 @@
-# Mathe-App (Euklid und Funktionen)
+# Mathe-App (Funktionen, Winkel, Euklid)
 
 Lern-App für Kinder, gebaut als Web-App aus mehreren kleinen Dateien (ohne Build-Schritt), läuft als installierte App auf einem Samsung-Android-Handy. Der Entwickler arbeitet nur am Handy, ohne PC.
 
@@ -16,7 +16,7 @@ Lern-App für Kinder, gebaut als Web-App aus mehreren kleinen Dateien (ohne Buil
 - Hosting: GitHub Pages, Repository `moinmr/euklid` (öffentlich), Adresse `https://moinmr.github.io/euklid/`.
 - Dateien im Repository: siehe "Aufbau" unten, dazu `manifest.webmanifest` (Anzeige `standalone`, Hochformat), `sw.js` (Service Worker), `icon-192.png`, `icon-512.png`.
 - Installation: In Chrome die Adresse öffnen, dann "App installieren". Änderungen am Manifest greifen nur nach Deinstallieren und Neuinstallieren.
-- Fortschritt liegt im Browser (localStorage), nur auf diesem Gerät. Schlüssel: `euklid-fortschritt` (Euklid), `euklid-funk` (Funktionen), `mathe-sprache` (aktuelle Sprache), `mathe-sprachpaar` (die zwei gewählten Sprachen). Die alten Stände aus `euklid-fortschritt-v1` und `euklid-funk-v3` werden beim ersten Start einmal übernommen.
+- Fortschritt liegt im Browser (localStorage), nur auf diesem Gerät. Schlüssel: `euklid-fortschritt` (Euklid), `euklid-funk` (Funktionen), `mathe-winkel` (Winkel), `mathe-sprache` (aktuelle Sprache), `mathe-sprachpaar` (die zwei gewählten Sprachen). Die alten Stände aus `euklid-fortschritt-v1` und `euklid-funk-v3` werden beim ersten Start einmal übernommen.
 
 ## Aufbau
 
@@ -51,7 +51,7 @@ App ganz schließen und neu öffnen. Hilft das nicht: in Chrome `.../index.html?
 - Schrift Jost: Normal für alles, nur die Level-Überschrift unten fett. Zahlen im Bild und Text unten gleiche Schrift.
 - Leiste oben (allgemein): Haus, Pfeile ‹ › (immer in der Mitte), Sprechblase (Aufgabentext ein/aus), Sprachknopf (zeigt die Sprache, zu der man wechselt). Darunter der Aufgabentext als schwebende Karte (verschiebt nichts, Tippen blendet aus); er erscheint bei jedem neuen Level. "Geschafft" erscheint als eigene Karte unten über der Werkzeugleiste (der Aufgabentext oben bleibt stehen), mit einem ›-Knopf (die ganze Karte geht weiter zum nächsten Level).
 - Leiste unten (Werkzeuge des Levels): Punkt, Linie, Zirkel, Ecke schieben, Trennen, Rückgängig (gebogener Pfeil), Papierkorb, Ansicht zurücksetzen. Bei Maschinen-Leveln nur der Papierkorb. Der Papierkorb setzt das Level zurück und stellt es auf ungelöst.
-- Startseite "Mathe" mit zwei Karten: Euklid, Funktionen. Haus-Symbol und Zurück-Taste führen zur Startseite.
+- Startseite "Mathe" mit drei Karten in dieser Reihenfolge: Funktionen, Winkel, Euklid. Ein Bereich ohne Level zeigt eine gedämpfte Karte "Level kommen bald" und lässt sich nicht öffnen. Haus-Symbol und Zurück-Taste führen zur Startseite.
 - Keine Längenwerte. Winkel nur als Zahl mit Gradzeichen.
 - Lupe über dem Finger (2,5-fach), darf aus dem Bildschirm laufen.
 - Zwei Finger: zoomen, verschieben, drehen (bei Funktionen ohne Drehen).
@@ -65,6 +65,10 @@ Konstruieren mit Linie und Zirkel auf einer vorgegebenen Strecke AB (Canvas, Poi
 - Ecke schieben (mit Verbinden), Trennen (rot nur wenn mehrere Kanten zusammenkommen).
 - Level: 1 Gleichseitiges Dreieck, 2 Sechseck, 3 Mittelsenkrechte. Prüfung geometrisch mit Toleranz. Gelöste Level und Lösungsbild werden gemerkt, angefangene Zeichnungen auch.
 - Referenz: die frühere Kivy-Version `geometrie_app.py` (Pydroid 3) ist die Vorlage der Logik.
+
+## Bereich Winkel
+
+Neu angelegt (Ordner `bereiche/winkel/`), noch ohne Level. Werkzeuge und Logik kommen mit dem ersten Level dazu.
 
 ## Bereich Funktionen
 

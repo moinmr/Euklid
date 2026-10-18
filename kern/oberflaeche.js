@@ -146,7 +146,9 @@ App.start = function () {
   function updateStand() {
     bereiche.forEach(function (a) {
       a.karte.querySelector('.n').textContent = App.wahl(a.name);
-      a.karte.querySelector('.s').textContent = standText(a.solved().size, a.levels().length);
+      var leer = !a.levels().length;   // Bereich ohne Level: Karte gedämpft, noch nicht zu öffnen
+      a.karte.setAttribute('aria-disabled', leer ? 'true' : 'false');
+      a.karte.querySelector('.s').textContent = leer ? T('bald') : standText(a.solved().size, a.levels().length);
     });
   }
   function persist() { var a = App.aktiv(); if (a) a.persist(); }
@@ -176,6 +178,7 @@ App.start = function () {
     document.getElementById('mach').hidden = true;
   }
   function openArea(a) {
+    if (!a.levels().length) return;
     S.mode = a.id;
     toolButtons(a);
     a.open();

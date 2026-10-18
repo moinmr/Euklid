@@ -70,6 +70,8 @@ var TEXTE = {
             es: 'Elige un tema', ja: 'テーマを選ぼう', ar: 'اختر موضوعًا' },
   nichts: { de: 'Noch nichts gelöst', en: 'Nothing solved yet', fi: 'Ei vielä ratkaistuja', tr: 'Henüz hiçbiri çözülmedi',
             fr: 'Rien de résolu pour l’instant', es: 'Todavía nada resuelto', ja: 'まだ解いていません', ar: 'لم يُحلّ شيء بعد' },
+  bald: { de: 'Level kommen bald', en: 'Levels coming soon', fi: 'Tasot tulossa pian', tr: 'Seviyeler yakında',
+          fr: 'Niveaux bientôt disponibles', es: 'Niveles muy pronto', ja: 'レベルは近日公開', ar: 'المستويات قريبًا' },
   stand: { de: function (n, t) { return n + ' von ' + t + ' Leveln gelöst'; },
            en: function (n, t) { return n + ' of ' + t + ' levels solved'; },
            fi: function (n, t) { return n + '/' + t + ' tasoa ratkaistu'; },
