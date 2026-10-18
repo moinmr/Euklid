@@ -269,7 +269,11 @@ function feldOffen() { return !!(feldKarte && !feldKarte.hidden); }
 // Höhe der ersten von zeilen Textzeilen unten (über dem Schreibfeld, sonst über der Leiste bzw. der grünen Karte)
 function textY(zeilen) {
   if (feldOffen()) return feldOben() - 12 - 22 * zeilen;
-  return S.h - (S.unten || 70) - (document.body.classList.contains('geschafft') ? 80 : 2) - 22 * zeilen;
+  var y = S.h - (S.unten || 70) - (document.body.classList.contains('geschafft') ? 80 : 2) - 22 * zeilen;
+  // eine hohe grüne Karte (langer Text, schmaler Bildschirm) schiebt die Zeilen weiter nach oben
+  var f = document.getElementById('fertig');
+  if (f && !f.hidden && document.body.classList.contains('geschafft')) y = Math.min(y, f.getBoundingClientRect().top - 14 - 22 * (zeilen - 1) - 10);
+  return y;
 }
 // Platz fürs Bild zwischen Aufgabentext und den Textzeilen unten. Rechnet immer mit der grünen Karte,
 // damit das Bild beim Lösen nicht springt; mit offenem Schreibfeld wird es kleiner.
