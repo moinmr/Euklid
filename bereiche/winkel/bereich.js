@@ -280,7 +280,7 @@ function textY(zeilen) {
 function platz(zeilen) {
   var hud = document.getElementById('hud'), oben = (hud && hud.firstChild ? hud.getBoundingClientRect().bottom : 60) + 24;
   var z = zeilen || 2, unten = (feldOffen() ? feldOben() - 12 : S.h - (S.unten || 70) - 80) - 22 * z - 30;
-  if (unten - oben < 140) unten = oben + 140;
+  if (unten - oben < 60) unten = oben + 60;   // sehr kleiner Bildschirm: Bild klein, aber nie unter dem Schreibfeld
   return { oben: oben, unten: unten, my: (oben + unten) / 2, h: unten - oben };
 }
 // Gleichung aus farbigen Stücken, mittig in Höhe y
