@@ -766,6 +766,7 @@ function herlKarte() {
    'ohnegitter': kein Gitter, nur die zwei Koordinaten; die Steigung eintippen (drei Geraden)
    'wandern':    ein Punkt (x|y) wird auf der Geraden gezogen; was kommt bei (y − y₁) : (x − x₁) immer heraus?
    'mb':         drei Gleichungen y = mx + b, jeweils m und b ablesen (die Gerade ist dazu gezeichnet; a = (0|b), b = (1|b + m))
+   'hand':       fünf Geraden im Gitter (wie mb gespeichert), die Gleichung jeweils mit dem Finger schreiben
    Jede Gerade: a ist der linke Punkt, b der rechte, beide ganzzahlig. Nach dem Richtigen steht die Rechnung am Dreieck. */
 function zpArt() { return FLEVELS[F.level].zweipunkt; }
 function zpP(l) { return { x1: Math.round(l.a[0] / U), y1: -Math.round(l.a[1] / U), x2: Math.round(l.b[0] / U), y2: -Math.round(l.b[1] / U) }; }
@@ -792,6 +793,11 @@ function zpFest(art) {
   }
   // mb: erst steigend mit b > 0, dann m = ±1 (nur x oder −x) mit b < 0, dann fallend mit b = 0 oder positiv
   var g1 = [2 + rnd(2), 1 + rnd(3)], g2 = [rnd(2) ? 1 : -1, -1 - rnd(3)], g3 = [-2 - rnd(2), [0, 2, 3][rnd(3)]];
+  if (art === 'hand') {
+    // m und b nur von −5 bis 5 (die Handschrift kennt die Ziffern 0 bis 5): steigend, ±1, fallend, b = 0, beides negativ
+    var h = [[2 + rnd(2), 1 + rnd(3)], [rnd(2) ? 1 : -1, -1 - rnd(3)], [-2 - rnd(2), 1 + rnd(3)], [1 + rnd(3), 0], [-1 - rnd(2), -1 - rnd(2)]];
+    return h.map(function (g) { return zpLinie(0, g[1], 1, g[1] + g[0]); });
+  }
   return [g1, g2, g3].map(function (g) { return zpLinie(0, g[1], 1, g[1] + g[0]); });
 }
 // wandern: der gezogene Punkt liegt in Zehnteln 0,5 bis 4 rechts vom festen Punkt (bei Steigung ±2 bis 3), das Dreieck höchstens 6 hoch
@@ -831,7 +837,7 @@ function zpAnsicht() {
 function zpZeichnen(ctx, ws) {
   var k = S.k, l = F.lines[F.runde];
   if (!l) return;
-  if (zpArt() === 'mb') return;   // nur die Gerade, kein Dreieck
+  if (zpArt() === 'mb' || zpArt() === 'hand') return;   // nur die Gerade, kein Dreieck
   var q = zpZiel(), A = [q.x1 * U, -q.y1 * U], B = [q.x2 * U, -q.y2 * U], E = [B[0], A[1]], hoch = q.y2 > q.y1;
   if (q.x2 !== q.x1) {
     ctx.save(); ctx.strokeStyle = INK; ctx.globalAlpha = 0.75; ctx.lineWidth = 2 * ws * k; ctx.setLineDash([6 * k, 5 * k]);
@@ -902,6 +908,7 @@ function zpKarte() {
       '<button class="opt pruefen" data-act="schritt">' + App.wahl(HERL.weiter) + ' →</button>';
     return;
   }
+  if (art === 'hand') return hsPad(stand);
   for (var d = -4; d <= 4; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + fmt(d) + '</button>';
   var zeile;
   if (art === 'ohnegitter') zeile = '<span>' + App.wahl(STEIG) + '</span>' + slotHTML(0);
@@ -1178,15 +1185,16 @@ function hsFb() {
   var p = schreib.querySelector('.hsfb');
   if (p) p.outerHTML = F.fb ? '<p class="fb hsfb" style="color: var(--red)">' + App.wahl(F.fb) + '</p>' : '<p class="hsfb" hidden></p>';
 }
-function hsKarte() {
-  if (F.runde > 0) return taxiKarte();
+function hsKarte() { return F.runde > 0 ? taxiKarte() : hsPad(''); }
+// Schreibfeld mit ↶ und Prüfen (Taxi und zweipunkt 'hand'); oben rechts optional der Stand
+function hsPad(stand) {
   var pad = schreib.querySelector('canvas.pad');
   if (pad) {   // das Feld bleibt stehen, nur Gelesenes und Hinweis neu
     schreib.querySelector('.gelesen').innerHTML = '<bdi dir="ltr">' + hsGelesen() + '</bdi>';
     schreib.querySelector('.pruefen').textContent = App.wahl(PRUEFEN);   // falls die Sprache gewechselt wurde
     hsFb(); hsZeichnen(pad); return;
   }
-  schreib.innerHTML = '<canvas class="pad"></canvas><p class="gelesen"></p>' +
+  schreib.innerHTML = (stand ? '<div class="steig zp">' + stand + '</div>' : '') + '<canvas class="pad"></canvas><p class="gelesen"></p>' +
     '<div class="hsknoepfe"><button class="opt hsweg" data-act="hsweg" aria-label="↶">↶</button>' +
     '<button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button></div><p class="hsfb" hidden></p>';
   pad = schreib.querySelector('canvas.pad');
@@ -1199,17 +1207,66 @@ function hsKarte() {
     hsZeichnen(pad);
   });
   pad.addEventListener('pointermove', function (e) { if (!st) return; e.preventDefault(); st.push(pos(e)); hsZeichnen(pad); });
-  function ende() { if (!st) return; st = null; hsKarte(); }
+  function ende() { if (!st) return; st = null; hsPad(stand); }
   pad.addEventListener('pointerup', ende); pad.addEventListener('pointercancel', ende);
-  hsKarte();
+  hsPad(stand);
+}
+// Gelesene Zeichen als Gleichung y = mx + b in beliebiger Reihenfolge (y = b + mx); null, wenn es keine ist
+function hsGleichung(z) {
+  var r = z.replace(/−/g, '-'), m = 0, b = 0, hatX = false, hatB = false;
+  if (r.slice(0, 2) !== 'y=' || r.length < 3) return null;
+  r = r.slice(2);
+  var t = r.match(/[+-]?[^+-]+/g) || [];
+  if (t.join('') !== r) return null;
+  for (var i = 0; i < t.length; i++) {
+    var q = t[i].match(/^([+-]?)(\d*)(x?)$/);
+    if (!q || (!q[2] && !q[3])) return null;
+    var v = (q[1] === '-' ? -1 : 1) * (q[2] ? Number(q[2]) : 1);
+    if (q[3]) { if (hatX) return null; hatX = true; m = v; }
+    else { if (hatB) return null; hatB = true; b = v; }
+  }
+  return { m: m, b: b };
+}
+function hsZeichenkette() { return HS.lesen(F.hs).map(function (c) { return c.z; }).join(''); }
+// zweipunkt 'hand': die geschriebene Gleichung mit der gezeichneten Geraden vergleichen
+var ZPH = {
+  form: { de: 'Schreib die Gleichung so: y = mx + b.', en: 'Write the equation like this: y = mx + b.',
+          fi: 'Kirjoita yhtälö näin: y = mx + b.', tr: 'Denklemi şöyle yaz: y = mx + b.',
+          fr: 'Écris l’équation ainsi : y = mx + b.', es: 'Escribe la ecuación así: y = mx + b.',
+          ja: '式はこう書こう：y = mx + b。', ar: 'اكتب المعادلة هكذا: ⁦y = mx + b⁩.' },
+  m: { de: 'm stimmt nicht. Geh 1 nach rechts: Um wie viel geht die Gerade hoch oder runter?',
+       en: 'm is not right. Go 1 to the right: how much does the line go up or down?',
+       fi: 'm ei täsmää. Mene 1 oikealle: kuinka paljon suora nousee tai laskee?',
+       tr: 'm yanlış. 1 sağa git: doğru ne kadar yukarı ya da aşağı gidiyor?',
+       fr: 'm n’est pas juste. Avance de 1 vers la droite : de combien la droite monte-t-elle ou descend-elle ?',
+       es: 'm no está bien. Avanza 1 a la derecha: ¿cuánto sube o baja la recta?',
+       ja: 'm が合っていません。右へ1進むと、直線はいくつ上がる？下がる？',
+       ar: 'm غير صحيح. تحرك 1 إلى اليمين: كم يصعد المستقيم أو ينزل؟' },
+  b: { de: 'b stimmt nicht. Wo kreuzt die Gerade die y-Achse?', en: 'b is not right. Where does the line cross the y-axis?',
+       fi: 'b ei täsmää. Missä suora leikkaa y-akselin?', tr: 'b yanlış. Doğru y eksenini nerede kesiyor?',
+       fr: 'b n’est pas juste. Où la droite coupe-t-elle l’axe des y ?', es: 'b no está bien. ¿Dónde corta la recta el eje y?',
+       ja: 'b が合っていません。直線は y 軸のどこを通る？', ar: 'b غير صحيح. أين يقطع المستقيم محور y؟' }
+};
+function zpHandPruefen() {
+  var z = hsZeichenkette(), p = zpP(F.lines[F.runde]), g = hsGleichung(z);
+  if (!z) return;
+  if (z.indexOf('?') >= 0) F.fb = HS_TEXT.unklar;
+  else if (!g) F.fb = ZPH.form;
+  else if (g.m !== p.y2 - p.y1) F.fb = ZPH.m;
+  else if (g.b !== p.y1) F.fb = ZPH.b;
+  else {
+    F.hs = []; F.fbRot = false;
+    if (F.runde < F.lines.length - 1) { F.zpZeig = true; F.fb = RICHTIG; F.fbOk = true; }
+    else { F.fn = true; F.fb = ''; }
+    return;
+  }
+  F.fbOk = false;
 }
 function hsPruefen() {
-  var f = taxiW().f, z = HS.lesen(F.hs).map(function (c) { return c.z; }).join(''), t = taxiGP(), m = t.p * f === 1 ? ['', '1'] : [String(t.p * f)];
+  var f = taxiW().f, z = hsZeichenkette(), t = taxiGP(), g = hsGleichung(z);
   if (!z) return;
-  var gut = [];
-  m.forEach(function (mm) { gut.push('y=' + mm + 'x+' + t.g * f, 'y=' + t.g * f + '+' + mm + 'x'); });
   if (z.indexOf('?') >= 0) F.fb = HS_TEXT.unklar;
-  else if (gut.indexOf(z) >= 0) { F.runde = 1; F.hs = []; F.fb = RICHTIG; F.fbOk = true; F.fbRot = false; }   // weiter zu den Fahrten
+  else if (g && g.m === t.p * f && g.b === t.g * f) { F.runde = 1; F.hs = []; F.fb = RICHTIG; F.fbOk = true; F.fbRot = false; }   // weiter zu den Fahrten
   else F.fb = HS_TEXT.falsch;
 }
 // Level mit nullfrage: welche Zahl muss in die Maschine der Geraden, damit der Punkt auf der y-Achse herauskommt?
@@ -1261,6 +1318,7 @@ function schreibClick(e) {
   else if (act === 'pruefen' && FLEVELS[F.level].steigung) steigPruefen();
   else if (act === 'pruefen' && FLEVELS[F.level].herleitung) herlPruefen();
   else if (act === 'pruefen' && FLEVELS[F.level].nullfrage) nullPruefen();
+  else if (act === 'pruefen' && zpArt() === 'hand') zpHandPruefen();
   else if (act === 'pruefen' && FLEVELS[F.level].zweipunkt) zpPruefen();
   else if (act === 'pruefen' && FLEVELS[F.level].handschrift) hsPruefen();
   else if (act === 'hsweg') { F.hs.pop(); F.fb = ''; }

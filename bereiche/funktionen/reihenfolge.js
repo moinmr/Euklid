@@ -14,5 +14,6 @@ App.ordnung.funktionen = [
   'steigung-ohne-gitter',
   'punkt-wandert',
   'mb-ablesen',
+  'gerade-schreiben',
   'taxi-gleichung'
 ];
