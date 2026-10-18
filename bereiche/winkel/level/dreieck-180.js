@@ -28,14 +28,16 @@ function zwischen(d1, d2) {
   var T = App.winkel.TAU, sw = ((d2 - d1) % T + T) % T;
   return sw <= Math.PI ? [d1, sw] : [d2, T - sw];
 }
-// Oben an der Ecke t der Winkel zwischen der Strecke nach unten zu u und der Geraden zur Seite von u hin
-function oben(t, u) { return zwischen(App.winkel.richtung(t, u), u[0] < t[0] ? Math.PI : 0); }
+// Oben an der Ecke t der Wechselwinkel zum Winkel unten bei u: zwischen der Strecke nach unten zu u und der Geraden
+// in die Richtung, die unten von der anderen Ecke weg zeigt (α: nach links, β: nach rechts). So bleibt er auch
+// richtig, wenn der Winkel unten stumpf ist.
+function oben(t, u, richtung) { return zwischen(App.winkel.richtung(t, u), richtung); }
 function unten(u, t, nach) { return zwischen(App.winkel.richtung(u, t), App.winkel.richtung(u, nach)); }
 
 // Alle Winkel mit ganzen Gradzahlen; im Dreieck so gerundet, dass α + β + γ genau 180 ergibt
 function winkel(Z) {
   var M = mass(), a = M.a, b = M.b, t1 = [Z.x1, M.yo], t2 = [Z.x2, M.yo];
-  var w = { a: unten(a, t1, b), a2: oben(t1, a), b: unten(b, t2, a), b2: oben(t2, b) };
+  var w = { a: unten(a, t1, b), a2: oben(t1, a, Math.PI), b: unten(b, t2, a), b2: oben(t2, b, 0) };
   var al = grad(w.a[1]), be = grad(w.b[1]);
   if (Z.zu) {
     w.c = zwischen(App.winkel.richtung(t1, a), App.winkel.richtung(t1, b));
@@ -89,7 +91,7 @@ App.level('winkel', {
   },
   move: function (Z, w) {
     if (!Z.zieht) return;
-    var x = Math.max(24, Math.min(S.w - 24, w[0]));
+    var x = Math.max(48, Math.min(S.w - 48, w[0]));
     if (Z.zu) { Z.x1 = Z.x2 = x; return; }
     Z.x2 = x;
     // rastet ein, auch wenn ein schneller Finger über die linke Ecke hinaus springt
@@ -123,7 +125,8 @@ App.level('winkel', {
     }
     felder.forEach(function (f) {
       var mid = f[1][0] + f[1][1] / 2, ra = (52 + Math.max(0, 40 - grad(f[1][1])) * 0.8) * k;
-      App.text(ctx, f[3] + '°', f[0][0] + Math.cos(mid) * ra, f[0][1] - Math.sin(mid) * ra, f[2].linie, 16);
+      var lx = Math.max(20, Math.min(S.w - 20, f[0][0] + Math.cos(mid) * ra));   // Zahl bleibt auf dem Bildschirm
+      App.text(ctx, f[3] + '°', lx, f[0][1] - Math.sin(mid) * ra, f[2].linie, 16);
     });
   },
 
