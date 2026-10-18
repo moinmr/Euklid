@@ -316,3 +316,5 @@ body {
 #fschreib .nullm .rein .slot { color: var(--rein); }
 #fschreib .nullm .raus { color: var(--raus); font-size: 24px; }
 #fschreib .nullm .pf { opacity: .7; }
+#fschreib .zp { gap: 6px; font-weight: 400; font-size: 20px; }
+#fschreib .zp .rein .slot { color: var(--rein); } #fschreib .zp .raus .slot { color: var(--raus); }

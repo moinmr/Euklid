@@ -11,5 +11,9 @@ App.ordnung.funktionen = [
   'punkte',
   'punkte-verbinden',
   'null-einwerfen',
-  'steigung-ablesen'
+  'steigung-ablesen',
+  'punkt-zu-punkt',
+  'steigung-ohne-gitter',
+  'punkt-wandert',
+  'gleichung-zwei-punkte'
 ];

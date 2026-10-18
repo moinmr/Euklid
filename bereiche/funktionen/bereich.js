@@ -122,6 +122,9 @@ function koordText(ctx, x, y, cx, cy, size) {
   ctx.translate(cx, cy);
   if (Math.abs(S.vth) > 1e-6) ctx.rotate(-S.vth);
   var breit = teile.reduce(function (s, t) { return s + ctx.measureText(t[0]).width; }, 0), px = -breit / 2;
+  // heller Rand, damit die Koordinate auch auf Achsen und Gitterlinien lesbar bleibt
+  ctx.strokeStyle = C.PARCH; ctx.lineWidth = 4 * S.k; ctx.lineJoin = 'round';
+  ctx.strokeText(teile.map(function (t) { return t[0]; }).join(''), px, 0);
   teile.forEach(function (t) { ctx.fillStyle = t[1]; ctx.fillText(t[0], px, 0); px += ctx.measureText(t[0]).width; });
   ctx.restore();
 }
@@ -152,33 +155,36 @@ function buildFunk(ctx, ws) {
   var steps = [1, 2, 5, 10, 20, 50, 100], st = 100;
   for (i = 0; i < steps.length; i++) { if (steps[i] * U * S.vs >= 26) { st = steps[i]; break; } }
   var sp = st * U, gx, gy;
-  ctx.lineCap = 'butt';
-  ctx.strokeStyle = 'rgba(56,41,26,0.13)'; ctx.lineWidth = 1 * ws * k;
-  ctx.beginPath();
-  for (gx = Math.ceil(x0 / sp) * sp; gx <= x1; gx += sp) { ctx.moveTo(gx, y0); ctx.lineTo(gx, y1); }
-  for (gy = Math.ceil(y0 / sp) * sp; gy <= y1; gy += sp) { ctx.moveTo(x0, gy); ctx.lineTo(x1, gy); }
-  ctx.stroke();
-  ctx.strokeStyle = INK; ctx.lineWidth = 1.5 * ws * k;
-  ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x1, 0); ctx.moveTo(0, y0); ctx.lineTo(0, y1); ctx.stroke();
-  var lab = 'rgba(56,41,26,0.65)';
-  var ly = Math.min(Math.max(14 * k, y0 + 135 * k), y1 - 14 * k);
-  var lx = Math.min(Math.max(-14 * k, x0 + 16 * k), x1 - 16 * k);
-  for (gx = Math.ceil(x0 / sp) * sp; gx <= x1; gx += sp) {
-    var nx = Math.round(gx / U);
-    if (nx !== 0) text(ctx, fmt(nx), gx, ly, lab, 11);
+  var ohneGitter = FLEVELS[F.level] && FLEVELS[F.level].zweipunkt === 'ohnegitter';   // nichts zum Kästchenzählen
+  if (!ohneGitter) {
+    ctx.lineCap = 'butt';
+    ctx.strokeStyle = 'rgba(56,41,26,0.13)'; ctx.lineWidth = 1 * ws * k;
+    ctx.beginPath();
+    for (gx = Math.ceil(x0 / sp) * sp; gx <= x1; gx += sp) { ctx.moveTo(gx, y0); ctx.lineTo(gx, y1); }
+    for (gy = Math.ceil(y0 / sp) * sp; gy <= y1; gy += sp) { ctx.moveTo(x0, gy); ctx.lineTo(x1, gy); }
+    ctx.stroke();
+    ctx.strokeStyle = INK; ctx.lineWidth = 1.5 * ws * k;
+    ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x1, 0); ctx.moveTo(0, y0); ctx.lineTo(0, y1); ctx.stroke();
+    var lab = 'rgba(56,41,26,0.65)';
+    var ly = Math.min(Math.max(14 * k, y0 + 135 * k), y1 - 14 * k);
+    var lx = Math.min(Math.max(-14 * k, x0 + 16 * k), x1 - 16 * k);
+    for (gx = Math.ceil(x0 / sp) * sp; gx <= x1; gx += sp) {
+      var nx = Math.round(gx / U);
+      if (nx !== 0) text(ctx, fmt(nx), gx, ly, lab, 11);
+    }
+    for (gy = Math.ceil(y0 / sp) * sp; gy <= y1; gy += sp) {
+      var ny = -Math.round(gy / U);
+      if (ny !== 0) text(ctx, fmt(ny), lx, gy, lab, 11);
+    }
+    if (y0 < 0 && y1 > 0 && x0 < 0 && x1 > 0) text(ctx, '0', -9 * k, 13 * k, lab, 11);
+    if (y0 < 0 && y1 > 0) text(ctx, 'x', x1 - 14 * k, -13 * k, INK, 13);
+    if (x0 < 0 && x1 > 0) text(ctx, 'y', 13 * k, y0 + 122 * k, INK, 13);
   }
-  for (gy = Math.ceil(y0 / sp) * sp; gy <= y1; gy += sp) {
-    var ny = -Math.round(gy / U);
-    if (ny !== 0) text(ctx, fmt(ny), lx, gy, lab, 11);
-  }
-  if (y0 < 0 && y1 > 0 && x0 < 0 && x1 > 0) text(ctx, '0', -9 * k, 13 * k, lab, 11);
-  if (y0 < 0 && y1 > 0) text(ctx, 'x', x1 - 14 * k, -13 * k, INK, 13);
-  if (x0 < 0 && x1 > 0) text(ctx, 'y', 13 * k, y0 + 122 * k, INK, 13);
 
   ctx.lineCap = 'round';
-  var lvz = FLEVELS[F.level], nurFeste = !!(lvz && (lvz.verbinden || lvz.schnitt || lvz.steigung || lvz.herleitung || lvz.nullfrage));   // nur die vorgegebenen Punkte zeigen
+  var lvz = FLEVELS[F.level], nurFeste = !!(lvz && (lvz.verbinden || lvz.schnitt || lvz.steigung || lvz.herleitung || lvz.nullfrage || lvz.zweipunkt));   // nur die vorgegebenen Punkte zeigen
   F.lines.forEach(function (l, i) {
-    if (lvz && (lvz.steigung || lvz.herleitung) && i !== F.runde) return;   // immer nur die aktuelle Gerade
+    if (lvz && (lvz.steigung || lvz.herleitung || lvz.zweipunkt) && i !== F.runde) return;   // immer nur die aktuelle Gerade
     var col = l.fest ? INK : fLinieFalsch(l) ? C.RED : BLUE;   // vorgegebene Gerade dunkel, falsche Linie rot
     ctx.strokeStyle = col; extLine(ctx, l.a, l.b, 2.5 * ws * k);
     if (!nurFeste) { ctx.fillStyle = col; dotAt(ctx, l.a, false); dotAt(ctx, l.b, false); }
@@ -190,6 +196,7 @@ function buildFunk(ctx, ws) {
     ctx.beginPath(); ctx.moveTo(sl.a[0], sl.a[1]); ctx.lineTo(ecke[0], ecke[1]); ctx.lineTo(sl.b[0], sl.b[1]); ctx.stroke(); ctx.restore();
     text(ctx, String(fLauf(sl)), (sl.a[0] + ecke[0]) / 2, ecke[1] + (hoch ? 13 : -13) * k, INK, 14);
   }
+  if (lvz && lvz.zweipunkt) zpZeichnen(ctx, ws);
   if (lvz && lvz.nullfrage && F.lines[0]) {
     // Schnittpunkt mit der y-Achse, x noch offen; ein falsch eingegebener Wert als roter Punkt
     var nf = fNull();
@@ -306,16 +313,16 @@ function herlZiehen(pos) {
   if (g !== F.gx) { F.gx = g; fSchreib(true); render(); }
 }
 function fDown(pos) {
-  herlZiehen(pos);
-  if (FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung || FLEVELS[F.level].herleitung || FLEVELS[F.level].nullfrage) return true;
+  herlZiehen(pos); zpZiehen(pos);
+  if (FLEVELS[F.level].zweipunkt || FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung || FLEVELS[F.level].herleitung || FLEVELS[F.level].nullfrage) return true;
   S.drawing = true; S.lmode = S.ls ? 'end' : 'start';
   S.end = [pos[0], pos[1]]; S.target = fTarget(pos);
   S.loupe = S.sp; render();
   return true;
 }
 function fMove(pos) {
-  herlZiehen(pos);
-  if (FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung || FLEVELS[F.level].herleitung || FLEVELS[F.level].nullfrage) return true;
+  herlZiehen(pos); zpZiehen(pos);
+  if (FLEVELS[F.level].zweipunkt || FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung || FLEVELS[F.level].herleitung || FLEVELS[F.level].nullfrage) return true;
   if (S.drawing) { S.end = [pos[0], pos[1]]; S.target = fTarget(pos); }
   S.loupe = S.sp; render();
   return true;
@@ -431,7 +438,7 @@ function fCheck() {
     var q = fRegel(), linie = !!q && F.lines.some(function (l) { return fLineOk(l, q); });
     ok = linie;
     fSchreib(false, F.lines.length && !linie ? LINIE_FALSCH : null);
-  } else if (lv.schnitt || lv.steigung || lv.herleitung || lv.nullfrage) {
+  } else if (lv.schnitt || lv.steigung || lv.herleitung || lv.nullfrage || lv.zweipunkt) {
     ok = F.fn;
     fSchreib(!F.fn);
   } else {
@@ -457,7 +464,7 @@ function fCheck() {
   }
 }
 function fLoadLevel(n, restore) {
-  F.level = n; F.pts = []; F.lines = []; F.gid = 0; F.fn = false; F.ein = ['', '', '', '']; F.slot = 0; F.fb = ''; F.fbOk = false; F.runde = 0; F.phase = 0; F.nullFalsch = null;
+  F.level = n; F.pts = []; F.lines = []; F.gid = 0; F.fn = false; F.ein = ['', '', '', '']; F.slot = 0; F.fb = ''; F.fbOk = false; F.runde = 0; F.phase = 0; F.nullFalsch = null; F.fbRot = false; F.zpZeig = false;
   fSchreib(false);
   App.setTool('point');
   S.done = false;
@@ -495,6 +502,11 @@ function fLoadLevel(n, restore) {
     if (!F.lines.some(function (l) { return l.fest; })) F.lines = [fFestNull()];
     F.ein = [''];
   }
+  if (lv.zweipunkt) {
+    if (!F.lines.some(function (l) { return l.fest; })) { F.lines = zpFest(lv.zweipunkt); F.runde = 0; }
+    F.ein = lv.zweipunkt === 'abstand' ? ['', ''] : lv.zweipunkt === 'gleichung' ? ['', '', ''] : [''];
+    if (lv.zweipunkt === 'wandern') { F.gx = zpGx(zpP(F.lines[0]).x1 + 2); F.gesehen = {}; F.gesehen[F.gx] = true; }
+  }
   if (lv.herleitung) {
     // auch neu, wenn noch Geraden aus der alten Fassung gespeichert sind (zweiter Punkt nicht auf der x-Achse)
     if (!F.lines.some(function (l) { return l.fest; }) || F.lines.some(function (l) { return l.b[1] !== 0; })) { F.lines = fFestHerleitung(); F.runde = 0; }
@@ -510,6 +522,7 @@ function fLoadLevel(n, restore) {
   if (S.onLevel) S.onLevel(n, false);
   fCheck();
   if (lv.steigung || lv.herleitung || lv.nullfrage) steigAnsicht();
+  if (lv.zweipunkt) zpAnsicht();
 }
 function fStore() { if (!isMach(FLEVELS[F.level]) && !F.solved.has(F.level)) F.work[F.level] = fnow(); }
 function fUndo() {
@@ -568,6 +581,7 @@ function fSchreib(zeigen, hinweis) {
   if (FLEVELS[F.level].steigung) return steigKarte();
   if (FLEVELS[F.level].herleitung) return herlKarte();
   if (FLEVELS[F.level].nullfrage) return nullKarte();
+  if (FLEVELS[F.level].zweipunkt) return zpKarte();
   // vier Kästchen: beide Schnittpunkte ganz eintippen, auch die 0; Tasten von −4 bis 4, Minuszahlen direkt
   function slot(k) { return '<button class="slot' + (F.slot === k ? ' sel' : '') + '" data-act="slot" data-i="' + k + '">' + F.ein[k] + '</button>'; }
   var keys = '', t = App.wahl(ACHSE);
@@ -740,6 +754,197 @@ function herlKarte() {
     (F.fb ? '<p class="fb' + (F.fbOk ? ' ok' : '') + '">' + App.wahl(F.fb) + '</p>' : '');
 }
 // Weiter in der Erklärung; nach Schritt 3 kommt die zweite Gerade zum Selbermachen
+/* ---------- Level mit zweipunkt: von zwei Punkten zur Geradengleichung, in kleinen Schritten ----------
+   'abstand':    nach rechts und nach oben vom linken zum rechten Punkt eintippen (drei Geraden)
+   'ohnegitter': kein Gitter, nur die zwei Koordinaten; die Steigung eintippen (drei Geraden)
+   'wandern':    ein Punkt (x|y) wird auf der Geraden gezogen; was kommt bei (y − y₁) : (x − x₁) immer heraus?
+   'gleichung':  y = □ · (x − □) + □ aus zwei Punkten ausfüllen (zwei Geraden)
+   Jede Gerade: a ist der linke Punkt, b der rechte, beide ganzzahlig. Nach dem Richtigen steht die Rechnung am Dreieck. */
+function zpArt() { return FLEVELS[F.level].zweipunkt; }
+function zpP(l) { return { x1: Math.round(l.a[0] / U), y1: -Math.round(l.a[1] / U), x2: Math.round(l.b[0] / U), y2: -Math.round(l.b[1] / U) }; }
+function zpLinie(x1, y1, x2, y2) { return { a: [x1 * U, -y1 * U], b: [x2 * U, -y2 * U], gid: 0, fest: true }; }
+function zpFest(art) {
+  var r = [], i, d, e, m, x1, y1;
+  if (art === 'abstand') {
+    // drei verschiedene: mindestens eine fallende und eine, die mehr als 1 nach rechts geht
+    for (;;) {
+      r = [];
+      for (i = 0; i < 3; i++) {
+        d = 1 + rnd(4); e = (1 + rnd(4)) * (rnd(2) ? 1 : -1); x1 = 1 + rnd(2); y1 = (e > 0 ? 1 : 1 - e) + rnd(2);
+        r.push(zpLinie(x1, y1, x1 + d, y1 + e));
+      }
+      var pp = r.map(zpP);
+      if (pp.some(function (p) { return p.y2 < p.y1; }) && pp.some(function (p) { return p.y2 > p.y1; }) &&
+          pp.some(function (p) { return p.x2 - p.x1 > 1; })) return r;
+    }
+  }
+  if (art === 'ohnegitter') {
+    // ganzzahlige Steigung von −3 bis 3, das Dreieck höchstens 6 hoch; Koordinaten größer, damit man rechnet
+    var paare = [];
+    [-3, -2, -1, 1, 2, 3].forEach(function (m) { [2, 3].forEach(function (d) { if (Math.abs(m * d) <= 6) paare.push([m, d]); }); });
+    for (;;) {
+      var w = shuffle(paare.slice()).slice(0, 3);
+      if (w.some(function (p) { return p[0] > 0; }) && w.some(function (p) { return p[0] < 0; })) {
+        return w.map(function (p) {
+          x1 = 2 + rnd(5); y1 = (p[0] < 0 ? -p[0] * p[1] : 0) + 2 + rnd(5);
+          return zpLinie(x1, y1, x1 + p[1], y1 + p[0] * p[1]);
+        });
+      }
+    }
+  }
+  if (art === 'wandern') {
+    m = [1, 2, -1, -2][rnd(4)]; x1 = 1 + rnd(2); y1 = m > 0 ? 1 : 1 - m * (m === -2 ? 3 : 4);
+    return [zpLinie(x1, y1, x1 + 1, y1 + m)];
+  }
+  // gleichung: Koordinaten von 1 bis 4 (die Tasten gehen bis 4, nicht auf den Achsen), Steigung ±1 oder ±2
+  for (;;) {
+    r = [];
+    for (i = 0; i < 2; i++) {
+      for (;;) {
+        m = [1, 2, -1, -2][rnd(4)]; d = 1 + rnd(2); x1 = 1 + rnd(2); y1 = 1 + rnd(4);
+        if (x1 + d <= 4 && y1 + m * d >= 1 && y1 + m * d <= 4) break;
+      }
+      r.push(zpLinie(x1, y1, x1 + d, y1 + m * d));
+    }
+    if (zpP(r[0]).y2 - zpP(r[0]).y1 > 0 !== zpP(r[1]).y2 - zpP(r[1]).y1 > 0) return r;
+  }
+}
+// wandern: der gezogene Punkt liegt 1 bis 4 rechts vom festen Punkt (bei Steigung ±2 bis 3), das Dreieck höchstens 6 hoch
+function zpGmax() { var p = zpP(F.lines[0]); return p.x1 + (Math.abs(p.y2 - p.y1) > 1 ? 3 : 4); }
+function zpGx(x) { var p = zpP(F.lines[0]); return Math.max(p.x1 + 1, Math.min(zpGmax(), x)); }
+function zpZiehen(pos) {
+  if (zpArt() !== 'wandern' || F.fn) return;
+  var g = zpGx(Math.round(pos[0] / U));
+  if (g !== F.gx) { F.gx = g; F.gesehen[g] = true; F.fb = ''; F.fbRot = false; fSchreib(true); render(); }
+}
+// der zweite Punkt des Dreiecks: in wandern der gezogene, sonst der rechte
+function zpZiel() {
+  var l = F.lines[F.runde], p = zpP(l);
+  if (zpArt() !== 'wandern') return p;
+  var m = (p.y2 - p.y1) / (p.x2 - p.x1);
+  return { x1: p.x1, y1: p.y1, x2: F.gx, y2: p.y1 + m * (F.gx - p.x1) };
+}
+function zpAnsicht() {
+  var l = F.lines[F.runde], hud = document.getElementById('hud');
+  if (!l || !schreib) return;
+  var p = zpP(l);
+  if (zpArt() === 'wandern') { var m = (p.y2 - p.y1) / (p.x2 - p.x1), g = zpGmax(); p.y2 = p.y1 + (g - p.x1) * m; p.x2 = g; }
+  var oben = hud && hud.firstChild ? hud.getBoundingClientRect().bottom : 60;
+  var unten = schreib.hidden ? S.h - (S.unten || 70) : schreib.getBoundingClientRect().top;
+  S.oy = (oben + unten) / 2 + (p.y1 + p.y2) / 2 * U;
+  S.ox = S.w / 2 - (p.x1 + p.x2) / 2 * U;
+  App.applyView();
+}
+// Zeichnen: die Gerade, beide Punkte mit Koordinaten, das gestrichelte Dreieck; die Rechnung daran,
+// sobald sie dran ist (nach dem Richtigen, in wandern immer)
+function zpZeichnen(ctx, ws) {
+  var k = S.k, l = F.lines[F.runde];
+  if (!l) return;
+  var q = zpZiel(), A = [q.x1 * U, -q.y1 * U], B = [q.x2 * U, -q.y2 * U], E = [B[0], A[1]], hoch = q.y2 > q.y1;
+  if (q.x2 !== q.x1) {
+    ctx.save(); ctx.strokeStyle = INK; ctx.globalAlpha = 0.75; ctx.lineWidth = 2 * ws * k; ctx.setLineDash([6 * k, 5 * k]);
+    ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(E[0], E[1]); ctx.lineTo(B[0], B[1]); ctx.stroke(); ctx.restore();
+  }
+  if (zpArt() === 'wandern' || F.zpZeig || F.fn) {
+    text(ctx, fmt(q.x2) + ' − ' + zahl(q.x1) + ' = ' + fmt(q.x2 - q.x1), (A[0] + E[0]) / 2, E[1] + (hoch ? 15 : -15) * k, REIN, 14);
+    zpLinks(ctx, fmt(q.y2) + ' − ' + zahl(q.y1) + ' = ' + fmt(q.y2 - q.y1), E[0] + 10 * k, (E[1] + B[1]) / 2, RAUS, 14);
+  }
+  ctx.fillStyle = INK; dotAt(ctx, A, false, 6); dotAt(ctx, B, false, zpArt() === 'wandern' ? 8 : 6);
+  koordText(ctx, fmt(q.x1), fmt(q.y1), A[0] - 42 * k, A[1] + (hoch ? -14 : 16) * k, 14);
+  koordText(ctx, fmt(q.x2), fmt(q.y2), B[0] - 40 * k, B[1] + (hoch ? -16 : 18) * k, 14);   // links neben der Geraden, weg vom Dreieck
+}
+// Text links ausgerichtet (die senkrechte Rechnung steht rechts neben dem Dreieck)
+function zpLinks(ctx, txt, x, y, col, size) {
+  ctx.save();
+  ctx.font = '400 ' + (size * S.k) + 'px ' + C.FONT; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = col;
+  ctx.translate(x, y);
+  if (Math.abs(S.vth) > 1e-6) ctx.rotate(-S.vth);
+  ctx.fillText(txt, 0, 0);
+  ctx.restore();
+}
+var RICHTIG = { de: 'Richtig!', en: 'Right!', fi: 'Oikein!', tr: 'Doğru!', fr: 'Bravo !', es: '¡Correcto!', ja: '正解！', ar: 'صحيح!' };
+var ZP = {
+  rechts: { de: 'Nach rechts stimmt nicht. Rechne: x rechts − x links.', en: 'To the right is not correct. Work out: right x − left x.',
+            fi: 'Oikealle ei täsmää. Laske: oikean x − vasemman x.', tr: 'Sağa doğru olan yanlış. Hesapla: sağdaki x − soldaki x.',
+            fr: 'Vers la droite, ce n’est pas juste. Calcule : x de droite − x de gauche.', es: 'Hacia la derecha no está bien. Calcula: x de la derecha − x de la izquierda.',
+            ja: '右へが合っていません。右の x − 左の x を計算しよう。', ar: 'إلى اليمين غير صحيح. احسب: x اليمنى − x اليسرى.' },
+  hoch: { de: 'Nach oben stimmt nicht. Rechne: y rechts − y links. Geht es nach unten, ist die Zahl negativ.',
+          en: 'Up is not correct. Work out: right y − left y. If it goes down, the number is negative.',
+          fi: 'Ylös ei täsmää. Laske: oikean y − vasemman y. Jos mennään alas, luku on negatiivinen.',
+          tr: 'Yukarı doğru olan yanlış. Hesapla: sağdaki y − soldaki y. Aşağı iniyorsa sayı negatiftir.',
+          fr: 'Vers le haut, ce n’est pas juste. Calcule : y de droite − y de gauche. Si ça descend, le nombre est négatif.',
+          es: 'Hacia arriba no está bien. Calcula: y de la derecha − y de la izquierda. Si baja, el número es negativo.',
+          ja: '上へが合っていません。右の y − 左の y を計算しよう。下がるときはマイナスです。',
+          ar: 'إلى الأعلى غير صحيح. احسب: y اليمنى − y اليسرى. إذا نزل المستقيم يكون العدد سالبًا.' },
+  steig: { de: 'Nicht ganz. Steigung = nach oben : nach rechts. Rechne beides aus den Koordinaten.',
+           en: 'Not quite. Slope = up : right. Work out both from the coordinates.',
+           fi: 'Ei aivan. Kulmakerroin = ylös : oikealle. Laske molemmat koordinaateista.',
+           tr: 'Tam değil. Eğim = yukarı : sağa. İkisini de koordinatlardan hesapla.',
+           fr: 'Pas tout à fait. Pente = vers le haut : vers la droite. Calcule les deux avec les coordonnées.',
+           es: 'Casi. Pendiente = hacia arriba : hacia la derecha. Calcula las dos con las coordenadas.',
+           ja: 'おしい。傾き＝上へ÷右へ。どちらも座標から計算しよう。',
+           ar: 'ليس تمامًا. الميل = إلى الأعلى : إلى اليمين. احسب الاثنين من الإحداثيات.' },
+  teil: { de: 'Nicht ganz. Teile die lila Zahl durch die orange Zahl.', en: 'Not quite. Divide the purple number by the orange number.',
+          fi: 'Ei aivan. Jaa violetti luku oranssilla luvulla.', tr: 'Tam değil. Mor sayıyı turuncu sayıya böl.',
+          fr: 'Pas tout à fait. Divise le nombre violet par le nombre orange.', es: 'Casi. Divide el número morado entre el naranja.',
+          ja: 'おしい。むらさきの数をオレンジの数でわろう。', ar: 'ليس تمامًا. اقسم العدد البنفسجي على العدد البرتقالي.' },
+  zieh: { de: 'Zieh den Punkt erst an eine andere Stelle und schau, was dann herauskommt.',
+          en: 'First drag the point to another place and see what comes out then.',
+          fi: 'Vedä ensin piste toiseen kohtaan ja katso, mitä silloin tulee.',
+          tr: 'Önce noktayı başka bir yere sürükle ve ne çıktığına bak.',
+          fr: 'Fais d’abord glisser le point ailleurs et regarde ce qu’on obtient.',
+          es: 'Primero arrastra el punto a otro sitio y mira qué sale.',
+          ja: 'まず点を別の場所へ動かして、何が出るか見てみよう。',
+          ar: 'اسحب النقطة أولًا إلى مكان آخر وانظر ماذا يخرج.' },
+  punkt: { de: 'Die Steigung stimmt. Für x₁ und y₁ gehören die Koordinaten von einem der zwei Punkte hinein.',
+           en: 'The slope is right. For x₁ and y₁, put in the coordinates of one of the two points.',
+           fi: 'Kulmakerroin on oikein. Kohtiin x₁ ja y₁ tulevat toisen pisteen koordinaatit.',
+           tr: 'Eğim doğru. x₁ ve y₁ yerine iki noktadan birinin koordinatları gelir.',
+           fr: 'La pente est juste. Pour x₁ et y₁, mets les coordonnées d’un des deux points.',
+           es: 'La pendiente está bien. En x₁ e y₁ van las coordenadas de uno de los dos puntos.',
+           ja: '傾きは合っています。x₁ と y₁ には、2つの点のどちらかの座標を入れよう。',
+           ar: 'الميل صحيح. مكان x₁ و y₁ نضع إحداثيي إحدى النقطتين.' }
+};
+function zpKarte() {
+  var art = zpArt(), keys = '', stand = F.lines.length > 1 ? '<span class="stand">' + (F.runde + 1) + ' / ' + F.lines.length + '</span>' : '';
+  var fb = F.fb ? '<p class="fb' + (F.fbOk ? ' ok' : '') + '"' + (F.fbRot ? ' style="color: var(--red)"' : '') + '>' + App.wahl(F.fb) + '</p>' : '';
+  if (F.zpZeig) {
+    // richtig, die Rechnung steht am Dreieck; weiter zur nächsten Geraden
+    schreib.innerHTML = '<div class="steig">' + stand + '</div>' + fb +
+      '<button class="opt pruefen" data-act="schritt">' + App.wahl(HERL.weiter) + ' →</button>';
+    return;
+  }
+  for (var d = -4; d <= 4; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + fmt(d) + '</button>';
+  function sl(i, cls) { return '<span class="' + cls + '">' + slotHTML(i) + '</span>'; }
+  var zeile;
+  if (art === 'abstand') zeile = '<span class="rein">→</span>' + sl(0, 'rein') + '<span class="raus">↑</span>' + sl(1, 'raus');
+  else if (art === 'ohnegitter') zeile = '<span>' + App.wahl(STEIG) + '</span>' + slotHTML(0);
+  else if (art === 'wandern') {
+    var q = zpZiel();
+    zeile = '<bdi dir="ltr"><span class="raus">' + fmt(q.y2 - q.y1) + '</span> : <span class="rein">' + fmt(q.x2 - q.x1) + '</span> = </bdi>' + slotHTML(0);
+  } else {
+    zeile = '<bdi dir="ltr"><span class="raus">y</span> = ' + slotHTML(0) + '· (<span class="rein">x</span> − ' + sl(1, 'rein') + ') + ' + sl(2, 'raus') + '</bdi>';
+  }
+  schreib.innerHTML = '<div class="steig zp">' + zeile + stand + '</div>' +
+    '<div class="keys reihe neun">' + keys + '</div><button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button>' + fb;
+}
+function zpPruefen() {
+  var art = zpArt(), p = zpP(F.lines[F.runde]), m = (p.y2 - p.y1) / (p.x2 - p.x1);
+  var w = F.ein.map(function (s) { return Number(s.replace('−', '-')); });
+  if (F.ein.some(function (s) { return s === ''; })) return;   // noch nicht alles gewählt
+  var falsch = null;
+  if (art === 'abstand') falsch = w[0] !== p.x2 - p.x1 ? ZP.rechts : w[1] !== p.y2 - p.y1 ? ZP.hoch : null;
+  else if (art === 'ohnegitter') falsch = w[0] !== m ? ZP.steig : null;
+  else if (art === 'wandern') falsch = w[0] !== m ? ZP.teil : Object.keys(F.gesehen).length < 2 ? ZP.zieh : null;
+  else falsch = w[0] !== m ? ZP.steig : w[2] !== p.y1 + m * (w[1] - p.x1) ? ZP.punkt : null;
+  if (falsch) { F.fb = falsch; F.fbOk = false; F.fbRot = art !== 'wandern' || w[0] !== m; return; }
+  F.fbRot = false;
+  if (F.runde < F.lines.length - 1) { F.zpZeig = true; F.fb = RICHTIG; F.fbOk = true; }
+  else { F.fn = true; F.fb = ''; }
+}
+function zpWeiter() {
+  F.zpZeig = false; F.runde++; F.ein = F.ein.map(function () { return ''; }); F.slot = 0; F.fb = ''; F.fbOk = false; F.neueAnsicht = true;
+}
 // Level mit nullfrage: welche Zahl muss in die Maschine der Geraden, damit der Punkt auf der y-Achse herauskommt?
 function nullFalschFB(w, y) {
   var P = '<bdi dir="ltr">(<span class="rein">' + fmt(w) + '</span>|<span class="raus">' + fmt(y) + '</span>)</bdi>';
@@ -785,10 +990,12 @@ function schreibClick(e) {
   if (!b) return;
   var act = b.getAttribute('data-act');
   if (act === 'slot') F.slot = Number(b.getAttribute('data-i'));
-  else if (act === 'ziffer') { F.ein[F.slot] = fmt(Number(b.getAttribute('data-n'))); F.slot = Math.min(F.ein.length - 1, F.slot + 1); F.fb = ''; F.fbOk = false; F.nullFalsch = null; }
+  else if (act === 'ziffer') { F.ein[F.slot] = fmt(Number(b.getAttribute('data-n'))); F.slot = Math.min(F.ein.length - 1, F.slot + 1); F.fb = ''; F.fbOk = false; F.fbRot = false; F.nullFalsch = null; }
   else if (act === 'pruefen' && FLEVELS[F.level].steigung) steigPruefen();
   else if (act === 'pruefen' && FLEVELS[F.level].herleitung) herlPruefen();
   else if (act === 'pruefen' && FLEVELS[F.level].nullfrage) nullPruefen();
+  else if (act === 'pruefen' && FLEVELS[F.level].zweipunkt) zpPruefen();
+  else if (act === 'schritt' && FLEVELS[F.level].zweipunkt) zpWeiter();
   else if (act === 'schritt') herlSchritt();
   else if (act === 'pruefen') {
     var z = fSchnitt(), w = F.ein.map(function (s) { return Number(s.replace('−', '-')); });
@@ -800,7 +1007,7 @@ function schreibClick(e) {
     else { F.fn = true; F.fb = ''; }
   } else return;
   fCheck();
-  if (F.neueAnsicht) { F.neueAnsicht = false; steigAnsicht(); }
+  if (F.neueAnsicht) { F.neueAnsicht = false; if (FLEVELS[F.level].zweipunkt) zpAnsicht(); else steigAnsicht(); }
   render();
 }
 
