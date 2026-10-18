@@ -147,6 +147,7 @@ function extLine(ctx, a, b, width) {
 }
 
 function buildFunk(ctx, ws) {
+  if (FLEVELS[F.level] && FLEVELS[F.level].handschrift) return;   // Taxi: eigene Grafik in drawTable
   var k = S.k, i;
   var cs = [[0, 0], [S.w, 0], [0, S.h], [S.w, S.h]].map(App.toWorld);
   var xs = cs.map(function (c) { return c[0]; }), ys = cs.map(function (c) { return c[1]; });
@@ -185,16 +186,9 @@ function buildFunk(ctx, ws) {
   var lvz = FLEVELS[F.level], nurFeste = !!(lvz && (lvz.verbinden || lvz.schnitt || lvz.steigung || lvz.herleitung || lvz.nullfrage || lvz.zweipunkt || lvz.handschrift));   // nur die vorgegebenen Punkte zeigen
   F.lines.forEach(function (l, i) {
     if (lvz && (lvz.steigung || lvz.herleitung || lvz.zweipunkt) && i !== F.runde) return;   // immer nur die aktuelle Gerade
-    if (lvz && lvz.handschrift && !F.runde && !F.fn) return;   // Taxi: die Gerade erst, wenn die Gleichung stimmt
     var col = l.fest ? INK : fLinieFalsch(l) ? C.RED : BLUE;   // vorgegebene Gerade dunkel, falsche Linie rot
     ctx.strokeStyle = col;
-    if (lvz && lvz.handschrift) {
-      // Taxi: es gibt keine negativen Kilometer, die Gerade beginnt bei 0 km mit der Grundgebühr
-      var n = Math.hypot(l.b[0] - l.a[0], l.b[1] - l.a[1]);
-      ctx.lineWidth = 2.5 * ws * k; ctx.beginPath(); ctx.moveTo(l.a[0], l.a[1]);
-      ctx.lineTo(l.a[0] + (l.b[0] - l.a[0]) / n * 8000, l.a[1] + (l.b[1] - l.a[1]) / n * 8000); ctx.stroke();
-      ctx.fillStyle = col; dotAt(ctx, l.a, false, 6);
-    } else extLine(ctx, l.a, l.b, 2.5 * ws * k);
+    extLine(ctx, l.a, l.b, 2.5 * ws * k);
     if (!nurFeste) { ctx.fillStyle = col; dotAt(ctx, l.a, false); dotAt(ctx, l.b, false); }
   });
   if (lvz && lvz.steigung && F.lines[F.runde]) {
@@ -261,6 +255,7 @@ function buildFunk(ctx, ws) {
 // Tabelle bzw. Punkteliste unten rechts über den Werkzeugen (Bildschirmkoordinaten)
 function drawTable(ctx) {
   var lv = FLEVELS[F.level];
+  if (lv && lv.handschrift) return taxiGrafik(ctx);
   if (!lv || isMach(lv) || lv.tabelle === false) return;
   var title, head = null, rows;
   if (lv.eq) {
@@ -513,7 +508,6 @@ function fLoadLevel(n, restore) {
   if (lv.handschrift) {
     if (!F.lines.some(function (l) { return l.fest; })) { var g = 2 + rnd(3), p = 1 + rnd(3); F.lines = [{ a: [0, -g * U], b: [U, -(g + p) * U], gid: 0, fest: true }]; F.runde = 0; }
     F.taxiOpts = null;
-    S.ox = 48; S.oy = S.h * 0.55;   // fast nur positive Kilometer und Preise im Bild
   }
   if (lv.zweipunkt) {
     if (!F.lines.some(function (l) { return l.fest; })) { F.lines = zpFest(lv.zweipunkt); F.runde = 0; }
@@ -1057,12 +1051,63 @@ var HS = (function () {
 // Finger ins Feld schreiben (die App liest mit), dann drei Fahrten ausrechnen. g und p stecken in F.lines[0]:
 // a = (0|g), b = (1|g + p); F.runde 0 ist die Gleichung, 1 bis 3 die Fahrten.
 var TAXI_KM = [2, 5, 10];
+// Taxi-Grafik: nur die positiven Achsen, x Strecke (0 bis 10), y Preis, so skaliert, dass alle Fahrten ins Bild passen.
+// Die Gerade erst, wenn die Gleichung stimmt; beantwortete Fahrten als lila Punkte mit Preis.
+function taxiGrafik(ctx) {
+  var hud = document.getElementById('hud'), w = taxiW(), t = taxiGP();
+  var oben = (hud && hud.firstChild ? hud.getBoundingClientRect().bottom : 60) + 34;
+  var unten = (schreib && !schreib.hidden ? schreib.getBoundingClientRect().top : S.h - (S.unten || 70) - 130) - 34;
+  var links = 50, rechts = S.w - 30;
+  if (unten - oben < 80) return;
+  var XM = 10, ymax = (t.g + t.p * XM) * w.f, st = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000].filter(function (s) { return ymax / s <= 7; })[0];
+  var YM = Math.ceil(ymax / st) * st;
+  function px(x) { return links + x / XM * (rechts - links); }
+  function py(y) { return unten - y / YM * (unten - oben); }
+  ctx.save(); ctx.font = '400 11px ' + C.FONT; ctx.textBaseline = 'middle';
+  ctx.strokeStyle = 'rgba(56,41,26,0.13)'; ctx.lineWidth = 1; ctx.beginPath();
+  for (var x = 1; x <= XM; x++) { ctx.moveTo(px(x), py(0)); ctx.lineTo(px(x), py(YM)); }
+  for (var y = st; y <= YM; y += st) { ctx.moveTo(px(0), py(y)); ctx.lineTo(px(XM), py(y)); }
+  ctx.stroke();
+  // Achsen mit Pfeilspitze
+  ctx.strokeStyle = INK; ctx.fillStyle = INK; ctx.lineWidth = 1.5; ctx.beginPath();
+  ctx.moveTo(px(0), py(0)); ctx.lineTo(rechts + 14, py(0)); ctx.moveTo(px(0), py(0)); ctx.lineTo(px(0), oben - 14); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(rechts + 18, py(0)); ctx.lineTo(rechts + 10, py(0) - 4); ctx.lineTo(rechts + 10, py(0) + 4); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(px(0), oben - 18); ctx.lineTo(px(0) - 4, oben - 10); ctx.lineTo(px(0) + 4, oben - 10); ctx.fill();
+  ctx.fillStyle = 'rgba(56,41,26,0.65)'; ctx.textAlign = 'center';
+  for (x = 0; x <= XM; x += 2) ctx.fillText(String(x), px(x), py(0) + 12);
+  ctx.textAlign = 'right';
+  for (y = st; y <= YM; y += st) ctx.fillText(String(y), px(0) - 6, py(y));
+  // Achsentitel: Strecke orange (rein), Preis lila (raus)
+  ctx.font = '400 14px ' + C.FONT; ctx.fillStyle = REIN; ctx.textAlign = 'right'; ctx.fillText('x (' + w.e + ')', rechts + 14, py(0) - 12);
+  ctx.fillStyle = RAUS; ctx.textAlign = 'left'; ctx.fillText('y (' + w.z + ')', px(0) + 8, oben - 12);
+  if (F.runde || F.fn) {
+    var x2 = Math.min(XM, (YM - t.g * w.f) / (t.p * w.f));
+    ctx.save(); ctx.beginPath(); ctx.rect(px(0), oben - 20, rechts - px(0) + 20, unten - oben + 20); ctx.clip();
+    ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.beginPath();
+    ctx.moveTo(px(0), py(t.g * w.f)); ctx.lineTo(px(x2), py((t.g + t.p * x2) * w.f)); ctx.stroke(); ctx.restore();
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(px(0), py(t.g * w.f), 5, 0, 7); ctx.fill();
+    var fertig = F.fn ? TAXI_KM.length : F.runde - 1;
+    for (var i = 0; i < fertig; i++) {
+      var km = TAXI_KM[i], P = [px(km), py((t.g + t.p * km) * w.f)];
+      ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = 'rgba(56,41,26,0.5)'; ctx.lineWidth = 1; ctx.beginPath();
+      ctx.moveTo(P[0], py(0)); ctx.lineTo(P[0], P[1]); ctx.lineTo(px(0), P[1]); ctx.stroke(); ctx.restore();
+      ctx.fillStyle = RAUS; ctx.beginPath(); ctx.arc(P[0], P[1], 5, 0, 7); ctx.fill();
+      ctx.font = '400 13px ' + C.FONT; ctx.textAlign = 'right';   // links oberhalb: dort liegt die steigende Gerade nicht
+      ctx.fillText(geld(t.g + t.p * km), P[0] - 9, P[1] - 9);
+    }
+  }
+  ctx.restore();
+}
 function taxiGP() { var l = F.lines[0]; return l ? { g: -Math.round(l.a[1] / U), p: -Math.round(l.b[1] / U) + Math.round(l.a[1] / U) } : { g: 3, p: 2 }; }
-function taxiGl() { var t = taxiGP(); return eqStr({ m: t.p, b: t.g }); }
+// Währung und Strecke je nach Sprache: Englisch Dollar und Meilen, Japanisch Yen (Beträge mal 100), sonst km
+var TAXI_GELD = { en: { z: '$', vor: true, e: 'mi' }, tr: { z: '₺' }, ja: { z: '円', f: 100, eng: true }, ar: { z: 'ريال' } };
+function taxiW() { var w = TAXI_GELD[App.sprache()] || {}; return { z: w.z || '€', vor: !!w.vor, e: w.e || 'km', f: w.f || 1, eng: !!w.eng }; }
+function geld(v) { var w = taxiW(), n = v * w.f; return w.vor ? w.z + n : n + (w.eng ? '' : ' ') + w.z; }
+function taxiGl() { var t = taxiGP(), f = taxiW().f; return eqStr({ m: t.p * f, b: t.g * f }); }
 var TAXI_TEXT = {
   frage: function (km) {
-    var K = '<span class="rein">' + km + ' km</span>';
-    return { de: 'Was kostet eine Fahrt über ' + K + '?', en: 'What does a ' + K + ' ride cost?', fi: 'Paljonko maksaa ' + K + ':n matka?',
+    var K = '<span class="rein">' + km + ' ' + taxiW().e + '</span>';
+    return { de: 'Was kostet eine Fahrt über ' + K + '?', en: 'What does a ride of ' + K + ' cost?', fi: 'Paljonko maksaa ' + K + ':n matka?',
              tr: K + '’lik yolculuk ne kadar?', fr: 'Combien coûte un trajet de ' + K + ' ?', es: '¿Cuánto cuesta un viaje de ' + K + '?',
              ja: K + ' の料金はいくら？', ar: 'كم تكلف رحلة طولها <bdi dir="ltr">' + K + '</bdi>؟' };
   },
@@ -1080,7 +1125,7 @@ function taxiKarte() {
   var gl = taxiGl().replace(/^y/, '<span class="raus">y</span>').replace('x', '<span class="rein">x</span>');
   schreib.innerHTML = '<div class="steig zp"><bdi dir="ltr" class="mbgl">' + gl + '</bdi><span class="stand">' + F.runde + ' / ' + TAXI_KM.length + '</span></div>' +
     '<p class="fb">' + App.wahl(TAXI_TEXT.frage(km)) + '</p>' +
-    '<div class="opts">' + F.taxiOpts.map(function (v) { return '<button class="opt" data-act="taxi" data-v="' + v + '">' + v + ' €</button>'; }).join('') + '</div>' +
+    '<div class="opts">' + F.taxiOpts.map(function (v) { return '<button class="opt" data-act="taxi" data-v="' + v + '"><bdi dir="ltr">' + geld(v) + '</bdi></button>'; }).join('') + '</div>' +
     (F.fb ? '<p class="fb' + (F.fbOk ? ' ok' : '') + '"' + (F.fbRot ? ' style="color: var(--red)"' : '') + '>' + App.wahl(F.fb) + '</p>' : '');
 }
 function taxiAntwort(v) {
@@ -1092,7 +1137,7 @@ function taxiAntwort(v) {
 }
 var HS_TEXT = {
   falsch: { de: 'Nicht ganz. m ist der Preis pro Kilometer, b die Grundgebühr.',
-            en: 'Not quite. m is the price per kilometre, b the base fare.',
+            en: 'Not quite. m is the price per mile, b the base fare.',
             fi: 'Ei aivan. m on kilometrihinta, b perusmaksu.',
             tr: 'Tam değil. m kilometre başına ücret, b açılış ücreti.',
             fr: 'Pas tout à fait. m est le prix par kilomètre, b la prise en charge.',
@@ -1159,10 +1204,10 @@ function hsKarte() {
   hsKarte();
 }
 function hsPruefen() {
-  var z = HS.lesen(F.hs).map(function (c) { return c.z; }).join(''), t = taxiGP(), m = t.p === 1 ? ['', '1'] : [String(t.p)];
+  var f = taxiW().f, z = HS.lesen(F.hs).map(function (c) { return c.z; }).join(''), t = taxiGP(), m = t.p * f === 1 ? ['', '1'] : [String(t.p * f)];
   if (!z) return;
   var gut = [];
-  m.forEach(function (mm) { gut.push('y=' + mm + 'x+' + t.g, 'y=' + t.g + '+' + mm + 'x'); });
+  m.forEach(function (mm) { gut.push('y=' + mm + 'x+' + t.g * f, 'y=' + t.g * f + '+' + mm + 'x'); });
   if (z.indexOf('?') >= 0) F.fb = HS_TEXT.unklar;
   else if (gut.indexOf(z) >= 0) { F.runde = 1; F.hs = []; F.fb = RICHTIG; F.fbOk = true; F.fbRot = false; }   // weiter zu den Fahrten
   else F.fb = HS_TEXT.falsch;
@@ -1324,7 +1369,7 @@ function machClick(e) {
 }
 
 App.funk = {
-  taxi: function () { return taxiGP(); }, taxiGl: function () { return taxiGl(); },
+  taxi: function () { var t = taxiGP(); return { g: geld(t.g), p: geld(t.p) }; }, taxiGl: function () { return taxiGl(); },
   ARROW: ARROW, rnd: rnd, shuffle: shuffle, options: options, keypad: keypad, optButtons: optButtons,
   f: f, finish: finish, falsch: falsch, M: function () { return M; }
 };

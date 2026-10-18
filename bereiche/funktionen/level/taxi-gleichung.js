@@ -1,8 +1,8 @@
-// Level: Taxipreis mit Geradengleichung. Oben Grundgebühr und Preis pro km (zufällig). Erst die Gleichung y = px + g
+// Level: Taxipreis mit Geradengleichung. Oben Grundgebühr und Preis pro km (zufällig, Währung und km/Meilen je nach Sprache). Erst die Gleichung y = px + g
 // mit dem Finger ins Feld schreiben, dann kosten drei Fahrten (2, 5, 10 km); Auswahl mit typischen Denkfehlern.
 (function () {
 // Aufgabentext mit den Preisen des aktuellen Taxis
-function mitPreis(f) { return function () { var t = App.funk.taxi(); return f(t.g + ' €', t.p + ' €'); }; }
+function mitPreis(f) { return function () { var t = App.funk.taxi(); return f(t.g, t.p); }; }
 function mitGl(f) { return function () { return f(App.funk.taxiGl()); }; }
 App.level('funktionen', {
   id: 'taxi-gleichung',
@@ -11,8 +11,8 @@ App.level('funktionen', {
           task: mitPreis(function (g, p) { return 'Ein Taxi kostet ' + g + ' Grundgebühr plus ' + p + ' pro Kilometer. x sind die Kilometer, y ist der Preis. Schreib die Geradengleichung mit dem Finger ins Feld.'; }),
           done: mitGl(function (q) { return 'Richtig! Mit ' + q + ' rechnest du jeden Fahrpreis aus. Die Steigung ist der Preis pro Kilometer, der y-Achsenabschnitt die Grundgebühr.'; }) },
     en: { title: 'Taxi fare',
-          task: mitPreis(function (g, p) { return 'A taxi costs a ' + g + ' base fare plus ' + p + ' per kilometre. x is the kilometres, y is the price. Write the equation of the line in the box with your finger.'; }),
-          done: mitGl(function (q) { return 'Right! With ' + q + ' you can work out every fare. The slope is the price per kilometre, the y-intercept the base fare.'; }) },
+          task: mitPreis(function (g, p) { return 'A taxi costs a ' + g + ' base fare plus ' + p + ' per mile. x is the miles, y is the price. Write the equation of the line in the box with your finger.'; }),
+          done: mitGl(function (q) { return 'Right! With ' + q + ' you can work out every fare. The slope is the price per mile, the y-intercept the base fare.'; }) },
     fi: { title: 'Taksin hinta',
           task: mitPreis(function (g, p) { return 'Taksi maksaa ' + g + ' perusmaksun ja ' + p + ' kilometriltä. x on kilometrit, y on hinta. Kirjoita suoran yhtälö sormella kenttään.'; }),
           done: mitGl(function (q) { return 'Oikein! Yhtälöllä ' + q + ' lasket minkä tahansa matkan hinnan. Kulmakerroin on kilometrihinta, y-akselin leikkauskohta perusmaksu.'; }) },
