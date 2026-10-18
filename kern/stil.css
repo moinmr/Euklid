@@ -318,11 +318,9 @@ body {
 #fschreib .nullm .pf { opacity: .7; }
 #fschreib .zp { gap: 6px; font-weight: 400; font-size: 20px; }
 #fschreib .zp .rein .slot { color: var(--rein); } #fschreib .zp .raus .slot { color: var(--raus); }
-#fschreib .formel { font-size: 20px; }
-#fschreib .bruch { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 3px; line-height: 1.25; }
-#fschreib .bruch > span + span { border-top: 1.5px solid currentColor; padding-top: 1px; }
 #fschreib canvas.pad { width: 100%; height: 150px; display: block; touch-action: none; background: #fffaf0; border: 1.2px dashed rgba(56,41,26,.45); border-radius: 10px; }
 #fschreib .gelesen { margin: 0; min-height: 1.3em; text-align: center; font-size: 24px; }
 #fschreib .hsknoepfe { display: flex; gap: 8px; }
 #fschreib .hsknoepfe .hsweg { flex: 0 0 64px; font-size: 22px; }
 #fschreib .hsknoepfe .pruefen { flex: 1; }
+#fschreib .zp .mbgl { font-size: 26px; }

@@ -503,8 +503,8 @@ function fLoadLevel(n, restore) {
     F.ein = [''];
   }
   if (lv.zweipunkt) {
-    if (!F.lines.some(function (l) { return l.fest; }) || lv.zweipunkt === 'herleiten') { F.lines = zpFest(lv.zweipunkt); F.runde = 0; }
-    F.ein = [''];
+    if (!F.lines.some(function (l) { return l.fest; })) { F.lines = zpFest(lv.zweipunkt); F.runde = 0; }
+    F.ein = lv.zweipunkt === 'mb' ? ['', ''] : [''];
     if (lv.zweipunkt === 'wandern') { F.gx = zpGx(zpP(F.lines[0]).x1 + 2); F.gesehen = {}; F.gesehen[F.gx] = true; }
   }
   if (lv.herleitung) {
@@ -758,7 +758,7 @@ function herlKarte() {
 /* ---------- Level mit zweipunkt: von zwei Punkten zur Geradengleichung, in kleinen Schritten ----------
    'ohnegitter': kein Gitter, nur die zwei Koordinaten; die Steigung eintippen (drei Geraden)
    'wandern':    ein Punkt (x|y) wird auf der Geraden gezogen; was kommt bei (y − y₁) : (x − x₁) immer heraus?
-   'herleiten':  an einer Beispielgeraden in vier Schritten (Weiter) zu m = Δy : Δx und y = m · (x − x₁) + y₁
+   'mb':         drei Gleichungen y = mx + b, jeweils m und b ablesen (die Gerade ist dazu gezeichnet; a = (0|b), b = (1|b + m))
    Jede Gerade: a ist der linke Punkt, b der rechte, beide ganzzahlig. Nach dem Richtigen steht die Rechnung am Dreieck. */
 function zpArt() { return FLEVELS[F.level].zweipunkt; }
 function zpP(l) { return { x1: Math.round(l.a[0] / U), y1: -Math.round(l.a[1] / U), x2: Math.round(l.b[0] / U), y2: -Math.round(l.b[1] / U) }; }
@@ -783,7 +783,9 @@ function zpFest(art) {
     m = [1, 2, -1, -2][rnd(4)]; x1 = 1 + rnd(2); y1 = m > 0 ? 1 : 1 - m * (m === -2 ? 3 : 4);
     return [zpLinie(x1, y1, x1 + 1, y1 + m)];
   }
-  return [zpLinie(1, 1, 3, 5)];   // herleiten: immer dieselbe Beispielgerade
+  // mb: erst steigend mit b > 0, dann m = ±1 (nur x oder −x) mit b < 0, dann fallend mit b = 0 oder positiv
+  var g1 = [2 + rnd(2), 1 + rnd(3)], g2 = [rnd(2) ? 1 : -1, -1 - rnd(3)], g3 = [-2 - rnd(2), [0, 2, 3][rnd(3)]];
+  return [g1, g2, g3].map(function (g) { return zpLinie(0, g[1], 1, g[1] + g[0]); });
 }
 // wandern: der gezogene Punkt liegt in Zehnteln 0,5 bis 4 rechts vom festen Punkt (bei Steigung ±2 bis 3), das Dreieck höchstens 6 hoch
 function zpGmax() { var p = zpP(F.lines[0]); return p.x1 + (Math.abs(p.y2 - p.y1) > 1 ? 3 : 4); }
@@ -811,7 +813,6 @@ function zpAnsicht() {
   if (!l || !schreib) return;
   var p = zpP(l);
   if (zpArt() === 'wandern') { var m = (p.y2 - p.y1) / (p.x2 - p.x1), g = zpGmax(); p.y2 = p.y1 + (g - p.x1) * m; p.x2 = g; }
-  if (zpArt() === 'herleiten') { p.x2 = HL.G[0]; p.y2 = HL.G[1]; }   // bis zum Punkt (x|y)
   var oben = hud && hud.firstChild ? hud.getBoundingClientRect().bottom : 60;
   var unten = schreib.hidden ? S.h - (S.unten || 70) : schreib.getBoundingClientRect().top;
   S.oy = (oben + unten) / 2 + (p.y1 + p.y2) / 2 * U;
@@ -823,7 +824,7 @@ function zpAnsicht() {
 function zpZeichnen(ctx, ws) {
   var k = S.k, l = F.lines[F.runde];
   if (!l) return;
-  if (zpArt() === 'herleiten') return hlZeichnen(ctx, ws);
+  if (zpArt() === 'mb') return;   // nur die Gerade, kein Dreieck
   var q = zpZiel(), A = [q.x1 * U, -q.y1 * U], B = [q.x2 * U, -q.y2 * U], E = [B[0], A[1]], hoch = q.y2 > q.y1;
   if (q.x2 !== q.x1) {
     ctx.save(); ctx.strokeStyle = INK; ctx.globalAlpha = 0.75; ctx.lineWidth = 2 * ws * k; ctx.setLineDash([6 * k, 5 * k]);
@@ -860,6 +861,22 @@ var ZP = {
           fi: 'Ei aivan. Jaa violetti luku oranssilla luvulla.', tr: 'Tam değil. Mor sayıyı turuncu sayıya böl.',
           fr: 'Pas tout à fait. Divise le nombre violet par le nombre orange.', es: 'Casi. Divide el número morado entre el naranja.',
           ja: 'おしい。むらさきの数をオレンジの数でわろう。', ar: 'ليس تمامًا. اقسم العدد البنفسجي على العدد البرتقالي.' },
+  m: { de: 'm stimmt nicht. m ist die Zahl vor dem x. Steht nur x da, ist m = 1, bei −x ist m = −1.',
+       en: 'm is not right. m is the number in front of x. If there is just x, m = 1; with −x, m = −1.',
+       fi: 'm ei täsmää. m on luku x:n edessä. Jos on pelkkä x, m = 1, ja −x:llä m = −1.',
+       tr: 'm yanlış. m, x’in önündeki sayıdır. Sadece x varsa m = 1, −x varsa m = −1.',
+       fr: 'm n’est pas juste. m est le nombre devant le x. S’il n’y a que x, m = 1 ; avec −x, m = −1.',
+       es: 'm no está bien. m es el número delante de la x. Si solo hay x, m = 1; con −x, m = −1.',
+       ja: 'm が合っていません。m は x の前の数です。x だけなら m＝1、−x なら m＝−1。',
+       ar: 'm غير صحيح. m هو العدد أمام x. إذا كان x وحده فإن m = 1، ومع −x يكون m = −1.' },
+  b: { de: 'b stimmt nicht. b ist die Zahl ohne x. Fehlt sie, ist b = 0. Bei „− 3“ ist b = −3.',
+       en: 'b is not right. b is the number without x. If it is missing, b = 0. With “− 3”, b = −3.',
+       fi: 'b ei täsmää. b on luku ilman x:ää. Jos sitä ei ole, b = 0. Kun on ”− 3”, b = −3.',
+       tr: 'b yanlış. b, x’siz sayıdır. Yoksa b = 0’dır. “− 3” varsa b = −3’tür.',
+       fr: 'b n’est pas juste. b est le nombre sans x. S’il manque, b = 0. Avec « − 3 », b = −3.',
+       es: 'b no está bien. b es el número sin x. Si no está, b = 0. Con “− 3”, b = −3.',
+       ja: 'b が合っていません。b は x のつかない数です。ないときは b＝0。「− 3」なら b＝−3。',
+       ar: 'b غير صحيح. b هو العدد بدون x. إذا لم يوجد فإن b = 0. ومع «− 3» يكون b = −3.' },
   zieh: { de: 'Zieh den Punkt erst an eine andere Stelle und schau, was dann herauskommt.',
           en: 'First drag the point to another place and see what comes out then.',
           fi: 'Vedä ensin piste toiseen kohtaan ja katso, mitä silloin tulee.',
@@ -870,7 +887,6 @@ var ZP = {
           ar: 'اسحب النقطة أولًا إلى مكان آخر وانظر ماذا يخرج.' }
 };
 function zpKarte() {
-  if (zpArt() === 'herleiten') return hlKarte();
   var art = zpArt(), keys = '', stand = F.lines.length > 1 ? '<span class="stand">' + (F.runde + 1) + ' / ' + F.lines.length + '</span>' : '';
   var fb = F.fb ? '<p class="fb' + (F.fbOk ? ' ok' : '') + '"' + (F.fbRot ? ' style="color: var(--red)"' : '') + '>' + App.wahl(F.fb) + '</p>' : '';
   if (F.zpZeig) {
@@ -882,7 +898,14 @@ function zpKarte() {
   for (var d = -4; d <= 4; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + fmt(d) + '</button>';
   var zeile;
   if (art === 'ohnegitter') zeile = '<span>' + App.wahl(STEIG) + '</span>' + slotHTML(0);
-  else {
+  else if (art === 'mb') {
+    // die Gleichung groß, darunter m = □ und b = □
+    var g = zpP(F.lines[F.runde]), gl = eqStr({ m: g.y2 - g.y1, b: g.y1 }).replace(/^y/, '<span class="raus">y</span>').replace('x', '<span class="rein">x</span>');
+    schreib.innerHTML = '<div class="steig zp"><bdi dir="ltr" class="mbgl">' + gl + '</bdi>' + stand + '</div>' +
+      '<div class="steig zp"><bdi dir="ltr">m = ' + slotHTML(0) + '</bdi><bdi dir="ltr">b = ' + slotHTML(1) + '</bdi></div>' +
+      '<div class="keys reihe neun">' + keys + '</div><button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button>' + fb;
+    return;
+  } else {
     var q = zpZiel();
     zeile = '<bdi dir="ltr"><span class="raus">' + fmtD(q.y2 - q.y1) + '</span> : <span class="rein">' + fmtD(q.x2 - q.x1) + '</span> = </bdi>' + slotHTML(0);
   }
@@ -895,6 +918,7 @@ function zpPruefen() {
   if (F.ein.some(function (s) { return s === ''; })) return;   // noch nicht alles gewählt
   var falsch = null;
   if (art === 'ohnegitter') falsch = w[0] !== m ? ZP.steig : null;
+  else if (art === 'mb') falsch = w[0] !== m ? ZP.m : w[1] !== p.y1 ? ZP.b : null;
   else falsch = w[0] !== m ? ZP.teil : Object.keys(F.gesehen).length < 2 ? ZP.zieh : null;
   if (falsch) { F.fb = falsch; F.fbOk = false; F.fbRot = art !== 'wandern' || w[0] !== m; return; }
   F.fbRot = false;
@@ -902,87 +926,7 @@ function zpPruefen() {
   else { F.fn = true; F.fb = ''; }
 }
 function zpWeiter() {
-  if (zpArt() === 'herleiten') { if (F.phase < 3) { F.phase++; F.neueAnsicht = true; } else F.fn = true; return; }
   F.zpZeig = false; F.runde++; F.ein = F.ein.map(function () { return ''; }); F.slot = 0; F.fb = ''; F.fbOk = false; F.neueAnsicht = true;
-}
-// herleiten: Beispielgerade durch (1|1) und (3|5), dazu ein beliebiger Punkt (x|y) bei (4|7).
-// Schritt 0 Beispiel mit Zahlen, 1 allgemein mit Δx und Δy, 2 bis zum Punkt (x|y), 3 umgestellt zur Gleichung.
-var HL = { G: [4, 7] };
-function hlSchritt() { return F.fn ? 3 : F.phase; }
-function hlZeichnen(ctx, ws) {
-  var k = S.k, ph = hlSchritt(), p = zpP(F.lines[0]), A = [p.x1 * U, -p.y1 * U], B = [p.x2 * U, -p.y2 * U];
-  var Z = ph < 2 ? B : [HL.G[0] * U, -HL.G[1] * U], E = [Z[0], A[1]];
-  ctx.save(); ctx.strokeStyle = INK; ctx.globalAlpha = 0.75; ctx.lineWidth = 2 * ws * k; ctx.setLineDash([6 * k, 5 * k]);
-  ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(E[0], E[1]); ctx.lineTo(Z[0], Z[1]); ctx.stroke(); ctx.restore();
-  var unten = ph === 0 ? [p.x2 + ' − ' + p.x1 + ' = ' + (p.x2 - p.x1), p.y2 + ' − ' + p.y1 + ' = ' + (p.y2 - p.y1)] :
-              ph === 1 ? ['Δx = x₂ − x₁', 'Δy = y₂ − y₁'] : ['x − x₁', 'y − y₁'];
-  text(ctx, unten[0], (A[0] + E[0]) / 2, E[1] + 15 * k, REIN, 14);
-  zpLinks(ctx, unten[1], E[0] + 10 * k, (E[1] + Z[1]) / 2, RAUS, 14);
-  ctx.fillStyle = INK; dotAt(ctx, A, false, 6);
-  if (ph < 2) {
-    dotAt(ctx, B, false, 6);
-    if (ph === 0) { koordText(ctx, String(p.x1), String(p.y1), A[0] - 40 * k, A[1] - 14 * k, 14); koordText(ctx, String(p.x2), String(p.y2), B[0] - 40 * k, B[1] - 16 * k, 14); }
-    else { koordText(ctx, 'x₁', 'y₁', A[0] - 44 * k, A[1] - 14 * k, 14); koordText(ctx, 'x₂', 'y₂', B[0] - 44 * k, B[1] - 16 * k, 14); }
-  } else {
-    ctx.globalAlpha = 0.35; dotAt(ctx, B, false, 5); ctx.globalAlpha = 1;   // der zweite Punkt tritt zurück
-    dotAt(ctx, Z, false, 7);
-    koordText(ctx, 'x₁', 'y₁', A[0] - 44 * k, A[1] - 14 * k, 14); koordText(ctx, 'x', 'y', Z[0] - 36 * k, Z[1] - 16 * k, 14);
-  }
-}
-function hlX(t) { return '<span class="rein">' + t + '</span>'; }
-function hlY(t) { return '<span class="raus">' + t + '</span>'; }
-function hlBruch(o, u) { return '<span class="bruch"><span>' + o + '</span><span>' + u + '</span></span>'; }
-function hlPunkt(x, y) { return '<bdi dir="ltr">(' + hlX(x) + '|' + hlY(y) + ')</bdi>'; }
-var HL_TEXT = [
-  { de: 'Ein Beispiel: Von {A} nach {B} geht es 2 nach rechts und 4 nach oben. Die Steigung nennen wir m:',
-    en: 'An example: from {A} to {B} it goes 2 to the right and 4 up. We call the slope m:',
-    fi: 'Esimerkki: pisteestä {A} pisteeseen {B} mennään 2 oikealle ja 4 ylös. Kulmakerrointa kutsutaan m:ksi:',
-    tr: 'Bir örnek: {A} noktasından {B} noktasına 2 sağa ve 4 yukarı gidilir. Eğime m diyoruz:',
-    fr: 'Un exemple : de {A} à {B}, on va de 2 vers la droite et de 4 vers le haut. On appelle la pente m :',
-    es: 'Un ejemplo: de {A} a {B} se va 2 a la derecha y 4 hacia arriba. A la pendiente la llamamos m:',
-    ja: '例：{A} から {B} へは、右へ 2、上へ 4。傾きを m とよびます：',
-    ar: 'مثال: من {A} إلى {B} نذهب 2 إلى اليمين و4 إلى الأعلى. نسمي الميل m:' },
-  { de: 'Das geht mit zwei beliebigen Punkten {A} und {B}. Δ heißt „Unterschied“:',
-    en: 'This works for any two points {A} and {B}. Δ means “difference”:',
-    fi: 'Tämä toimii mille tahansa kahdelle pisteelle {A} ja {B}. Δ tarkoittaa ”erotusta”:',
-    tr: 'Bu, herhangi iki nokta {A} ve {B} için geçerli. Δ “fark” demektir:',
-    fr: 'Cela marche pour deux points quelconques {A} et {B}. Δ veut dire « différence » :',
-    es: 'Esto vale para dos puntos cualesquiera {A} y {B}. Δ significa “diferencia”:',
-    ja: 'どんな2つの点 {A} と {B} でも同じです。Δ は「差」という意味です：',
-    ar: 'هذا يصح لأي نقطتين {A} و{B}. Δ تعني «الفرق»:' },
-  { de: 'Die Steigung ist überall gleich, auch bis zu einem beliebigen Punkt {G} auf der Geraden:',
-    en: 'The slope is the same everywhere, also up to any point {G} on the line:',
-    fi: 'Kulmakerroin on kaikkialla sama, myös mihin tahansa suoran pisteeseen {G}:',
-    tr: 'Eğim her yerde aynıdır, doğru üzerindeki herhangi bir {G} noktasına kadar da:',
-    fr: 'La pente est la même partout, aussi jusqu’à un point quelconque {G} de la droite :',
-    es: 'La pendiente es igual en todas partes, también hasta cualquier punto {G} de la recta:',
-    ja: '傾きはどこでも同じ。直線上のどんな点 {G} までも：',
-    ar: 'الميل متساوٍ في كل مكان، حتى إلى أي نقطة {G} على المستقيم:' },
-  { de: 'Mal {K} nehmen, dann {Y} dazuzählen. Das ist die Gleichung der Geraden:',
-    en: 'Multiply by {K}, then add {Y}. That is the equation of the line:',
-    fi: 'Kerro luvulla {K} ja lisää {Y}. Tämä on suoran yhtälö:',
-    tr: '{K} ile çarp, sonra {Y} ekle. Doğrunun denklemi budur:',
-    fr: 'On multiplie par {K}, puis on ajoute {Y}. Voici l’équation de la droite :',
-    es: 'Multiplica por {K} y suma {Y}. Esta es la ecuación de la recta:',
-    ja: '{K} をかけて、{Y} をたします。これが直線の式です：',
-    ar: 'نضرب في {K} ثم نضيف {Y}. هذه معادلة المستقيم:' }
-];
-var FERTIG = { de: 'Fertig', en: 'Done', fi: 'Valmis', tr: 'Bitti', fr: 'Terminé', es: 'Listo', ja: 'できた', ar: 'تم' };
-function hlKarte() {
-  var ph = F.phase, p = zpP(F.lines[0]), K = '<bdi dir="ltr">(' + hlX('x') + ' − ' + hlX('x₁') + ')</bdi>';
-  var t = App.wahl(HL_TEXT[ph]).replace('{A}', ph ? hlPunkt('x₁', 'y₁') : hlPunkt(p.x1, p.y1))
-    .replace('{B}', ph ? hlPunkt('x₂', 'y₂') : hlPunkt(p.x2, p.y2)).replace('{G}', hlPunkt('x', 'y'))
-    .replace('{K}', K).replace('{Y}', '<bdi dir="ltr">' + hlY('y₁') + '</bdi>');
-  var f = [
-    'm = ' + hlBruch(hlY(p.y2 - p.y1), hlX(p.x2 - p.x1)) + ' = ' + (p.y2 - p.y1) / (p.x2 - p.x1),
-    'm = ' + hlBruch(hlY('Δy'), hlX('Δx')) + ' = ' + hlBruch(hlY('y₂') + ' − ' + hlY('y₁'), hlX('x₂') + ' − ' + hlX('x₁')),
-    hlBruch(hlY('y') + ' − ' + hlY('y₁'), hlX('x') + ' − ' + hlX('x₁')) + ' = m',
-    hlY('y') + ' − ' + hlY('y₁') + ' = m · (' + hlX('x') + ' − ' + hlX('x₁') + ')</bdi></p><p><bdi dir="ltr"><b>' +
-      hlY('y') + ' = m · (' + hlX('x') + ' − ' + hlX('x₁') + ') + ' + hlY('y₁') + '</b>'
-  ][ph];
-  schreib.innerHTML = '<div class="steig"><span class="stand">' + (ph + 1) + ' / 4</span></div><p class="erkl">' + t + '</p>' +
-    '<div class="zeilen formel"><p><bdi dir="ltr">' + f + '</bdi></p></div>' +
-    '<button class="opt pruefen" data-act="schritt">' + App.wahl(ph < 3 ? HERL.weiter : FERTIG) + ' →</button>';
 }
 // Handschrift: Zeichen aus Fingerstrichen erkennen ($P-Punktwolken-Erkenner, Vatavu u. a. 2012).
 // Striche werden nach ihrer Breite zu Zeichen gruppiert (was sich waagerecht überlappt, gehört zusammen),
@@ -1094,14 +1038,14 @@ var HS = (function () {
 })();
 // Level mit handschrift: die allgemeine Geradengleichung mit dem Finger ins Feld schreiben, die App liest mit
 var HS_TEXT = {
-  falsch: { de: 'Das ist nicht die allgemeine Geradengleichung. Tipp: Nimm in y = m · (x − x₁) + y₁ den Punkt (0|b) auf der y-Achse.',
-            en: 'That is not the general equation of a line. Hint: in y = m · (x − x₁) + y₁, take the point (0|b) on the y-axis.',
-            fi: 'Tämä ei ole suoran yleinen yhtälö. Vihje: ota yhtälöön y = m · (x − x₁) + y₁ y-akselin piste (0|b).',
-            tr: 'Bu, doğrunun genel denklemi değil. İpucu: y = m · (x − x₁) + y₁ içinde y eksenindeki (0|b) noktasını al.',
-            fr: 'Ce n’est pas l’équation générale d’une droite. Astuce : dans y = m · (x − x₁) + y₁, prends le point (0|b) sur l’axe des y.',
-            es: 'Esa no es la ecuación general de la recta. Pista: en y = m · (x − x₁) + y₁, toma el punto (0|b) del eje y.',
-            ja: 'それは直線の一般的な式ではありません。ヒント：y＝m·(x − x₁)＋y₁ に y 軸上の点 (0|b) を使おう。',
-            ar: 'هذه ليست المعادلة العامة للمستقيم. تلميح: في <bdi dir="ltr">y = m · (x − x₁) + y₁</bdi> خذ النقطة <bdi dir="ltr">(0|b)</bdi> على محور y.' },
+  falsch: { de: 'Das ist nicht die allgemeine Geradengleichung. Tipp: Sie hat m für die Steigung und b für den y-Achsenabschnitt.',
+            en: 'That is not the general equation of a line. Hint: it has m for the slope and b for the y-intercept.',
+            fi: 'Tämä ei ole suoran yleinen yhtälö. Vihje: siinä on m kulmakertoimelle ja b y-akselin leikkauskohdalle.',
+            tr: 'Bu, doğrunun genel denklemi değil. İpucu: eğim için m, y eksenini kestiği yer için b vardır.',
+            fr: 'Ce n’est pas l’équation générale d’une droite. Astuce : elle a m pour la pente et b pour l’ordonnée à l’origine.',
+            es: 'Esa no es la ecuación general de la recta. Pista: tiene m para la pendiente y b para la ordenada en el origen.',
+            ja: 'それは直線の一般的な式ではありません。ヒント：傾きの m と切片の b が入ります。',
+            ar: 'هذه ليست المعادلة العامة للمستقيم. تلميح: فيها m للميل وb للجزء المقطوع من محور y.' },
   unklar: { de: 'Ich kann nicht alles lesen. Schreib die Zeichen etwas größer und mit Abstand.',
             en: 'I can’t read everything. Write the symbols a bit bigger and with gaps.',
             fi: 'En saa kaikesta selvää. Kirjoita merkit vähän isommin ja välejä jättäen.',
