@@ -86,7 +86,7 @@ Jedes Winkel-Level bringt sein Verhalten selbst mit (`neu`, `down`, `move`, `up`
 | 12 | Sterne | Fünfstern und Achtstern (jede Ecke zur drittnächsten): Antippen zieht die Linien. An der oberen Ecke steht der Innenwinkel (108° bzw. 135°), die Spitze zeigt „?“ (36 bzw. 45, die Linien teilen den Winkel in gleiche Teile). Danach alle Spitzen, „5 × 36° = 180°“, „8 × 45° = 360°“. Gelöst nach dem Achtstern (Kennung `stern`). |
 | 13 | Ähnliche Dreiecke | Rechtwinkliges Dreieck mit α (zufällig) und β. Antippen zieht die Höhe; der Teil des rechten Winkels im linken kleinen Dreieck ist eine Frage (β = 90 − α). Danach Antippen zeigt die zwei kleinen Dreiecke einzeln in gleicher Lage: dieselben Winkel. Griff an C bewegt C auf dem Halbkreis; gelöst nach 30° Änderung (Kennung `aehnliche-dreiecke`). |
 
-- Fragen: `App.winkel.frage(zahl, hinweis, fertig)` blendet das Schreibfeld ein (Ziffern-Erkennung 0 bis 9 in `App.winkel.ziffern`, gleiche Art wie die Handschrift in Funktionen) und prüft. Unlesbar oder falsch: rote Karte über dem Feld.
+- Fragen: `App.winkel.frage(zahl, hinweis, fertig, { text, einheit })` blendet das Schreibfeld ein, `text` steht als Frage oben in der Karte, `einheit` hinter der gelesenen Zahl (ohne Angabe °) (Ziffern-Erkennung 0 bis 9 in `App.winkel.ziffern`, gleiche Art wie die Handschrift in Funktionen) und prüft. Unlesbar oder falsch: rote Karte über dem Feld.
 - Platz: `App.winkel.platz(zeilen)` gibt den Bereich zwischen Aufgabentext und den Textzeilen unten (mit offenem Schreibfeld kleiner), `App.winkel.textY(zeilen)` die Höhe der ersten Textzeile. Zustände in den Leveln sind Winkel oder relative Maße, damit das Bild sich anpassen darf.
 
 ## Bereich Funktionen
