@@ -5,6 +5,12 @@ App.ordnung.winkel = [
   'volle-umdrehung',
   'z-winkel',
   'dreieck-180',
+  'parallelogramm',
   'rundherum',
-  'innenwinkel'
+  'innenwinkel',
+  'sechs-dreiecke',
+  'mosaik',
+  'vieleck-dreiecke',
+  'stern',
+  'aehnliche-dreiecke'
 ];
