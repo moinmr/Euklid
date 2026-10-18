@@ -85,9 +85,10 @@ Leitidee: Der Schüler erlebt zuerst, dann bekommt es einen Namen, dann wird es 
 | 11 | Steigung ohne Kästchen | Zwei Punkte mit Koordinaten und Dreieck, aber ohne Gitter und Achsen (Kennung `steigung-ohne-gitter`), größere Koordinaten. Steigung (−3 bis 3) aus den Koordinaten berechnen. Drei Geraden. |
 | 12 | Ein Punkt wandert | Fester Punkt (x₁\|y₁) und ein Punkt (x\|y), den man in Zehnteln auf der Geraden zieht (Kennung `punkt-wandert`). Am Dreieck live x − x₁ und y − y₁, unten „Δy : Δx = □“. Prüfbar erst, wenn der Punkt bewegt wurde. Erkenntnis: immer die Steigung. |
 | 13 | Die Gleichung aus zwei Punkten | Reine Herleitung (Kennung `gleichung-zwei-punkte`) an der Beispielgeraden durch (1\|1) und (3\|5), vier Schritte mit „Weiter“: m = 4/2 = 2 mit Zahlen; allgemein m = Δy/Δx = (y₂ − y₁)/(x₂ − x₁); bis zu einem beliebigen Punkt (x\|y): (y − y₁)/(x − x₁) = m; umgestellt y = m · (x − x₁) + y₁. Nach „Fertig“ grün. |
-| 14 | Taxipreis | Alltag: Grundgebühr plus Preis pro km (zufällig). Tabelle für 1, 2, 3, 5 km, falsche Antworten sind typische Denkfehler. |
+| 14 | Die allgemeine Geradengleichung | Frage nach der allgemeinen Geradengleichung (Kennung `geradengleichung-schreiben`). Man schreibt mit dem Finger ins Feld; eine kleine Handschrift-Erkennung ($P-Punktwolken mit Vorlagen für y = m x + b und Ablenker c, a, n, 0, 1, 2, −) liest mit, darunter steht, was gelesen wurde. Richtig: y = mx + b oder y = b + mx. ↶ nimmt den letzten Strich zurück. |
+| 15 | Taxipreis | Alltag: Grundgebühr plus Preis pro km (zufällig). Tabelle für 1, 2, 3, 5 km, falsche Antworten sind typische Denkfehler. |
 
-- Level 1 bis 6 und 14 (Taxipreis) sind DOM-Overlays (`#mach`). Level 2 bis 6 entstehen aus Bausteinen in `App.funk.einstieg` (bereich.js). Farben: Orange = rein, Lila = raus, Grün = richtig, Menüs braun. Level 7 bis 13 laufen auf dem Canvas mit Koordinatensystem (1 Einheit = 40 px, y nach oben).
+- Level 1 bis 6 und 15 (Taxipreis) sind DOM-Overlays (`#mach`). Level 2 bis 6 entstehen aus Bausteinen in `App.funk.einstieg` (bereich.js). Farben: Orange = rein, Lila = raus, Grün = richtig, Menüs braun. Level 7 bis 13 laufen auf dem Canvas mit Koordinatensystem (1 Einheit = 40 px, y nach oben).
 - Punkte rasten auf Gitterpunkte, die Gerade wird über zwei Punkte unendlich verlängert. Prüfung über die Gleichung, nicht über irgendeine Gerade.
 - Nach den Punkten schaltet die App selbst auf das Linien-Werkzeug um.
 

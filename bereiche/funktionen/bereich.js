@@ -314,7 +314,7 @@ function herlZiehen(pos) {
 }
 function fDown(pos) {
   herlZiehen(pos); zpZiehen(pos);
-  if (FLEVELS[F.level].zweipunkt || FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung || FLEVELS[F.level].herleitung || FLEVELS[F.level].nullfrage) return true;
+  if (FLEVELS[F.level].handschrift || FLEVELS[F.level].zweipunkt || FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung || FLEVELS[F.level].herleitung || FLEVELS[F.level].nullfrage) return true;
   S.drawing = true; S.lmode = S.ls ? 'end' : 'start';
   S.end = [pos[0], pos[1]]; S.target = fTarget(pos);
   S.loupe = S.sp; render();
@@ -322,7 +322,7 @@ function fDown(pos) {
 }
 function fMove(pos) {
   herlZiehen(pos); zpZiehen(pos);
-  if (FLEVELS[F.level].zweipunkt || FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung || FLEVELS[F.level].herleitung || FLEVELS[F.level].nullfrage) return true;
+  if (FLEVELS[F.level].handschrift || FLEVELS[F.level].zweipunkt || FLEVELS[F.level].schnitt || FLEVELS[F.level].steigung || FLEVELS[F.level].herleitung || FLEVELS[F.level].nullfrage) return true;
   if (S.drawing) { S.end = [pos[0], pos[1]]; S.target = fTarget(pos); }
   S.loupe = S.sp; render();
   return true;
@@ -438,7 +438,7 @@ function fCheck() {
     var q = fRegel(), linie = !!q && F.lines.some(function (l) { return fLineOk(l, q); });
     ok = linie;
     fSchreib(false, F.lines.length && !linie ? LINIE_FALSCH : null);
-  } else if (lv.schnitt || lv.steigung || lv.herleitung || lv.nullfrage || lv.zweipunkt) {
+  } else if (lv.schnitt || lv.steigung || lv.herleitung || lv.nullfrage || lv.zweipunkt || lv.handschrift) {
     ok = F.fn;
     fSchreib(!F.fn);
   } else {
@@ -464,7 +464,7 @@ function fCheck() {
   }
 }
 function fLoadLevel(n, restore) {
-  F.level = n; F.pts = []; F.lines = []; F.gid = 0; F.fn = false; F.ein = ['', '', '', '']; F.slot = 0; F.fb = ''; F.fbOk = false; F.runde = 0; F.phase = 0; F.nullFalsch = null; F.fbRot = false; F.zpZeig = false;
+  F.level = n; F.pts = []; F.lines = []; F.gid = 0; F.fn = false; F.ein = ['', '', '', '']; F.slot = 0; F.fb = ''; F.fbOk = false; F.runde = 0; F.phase = 0; F.nullFalsch = null; F.fbRot = false; F.zpZeig = false; F.hs = [];
   fSchreib(false);
   App.setTool('point');
   S.done = false;
@@ -582,6 +582,7 @@ function fSchreib(zeigen, hinweis) {
   if (FLEVELS[F.level].herleitung) return herlKarte();
   if (FLEVELS[F.level].nullfrage) return nullKarte();
   if (FLEVELS[F.level].zweipunkt) return zpKarte();
+  if (FLEVELS[F.level].handschrift) return hsKarte();
   // vier Kästchen: beide Schnittpunkte ganz eintippen, auch die 0; Tasten von −4 bis 4, Minuszahlen direkt
   function slot(k) { return '<button class="slot' + (F.slot === k ? ' sel' : '') + '" data-act="slot" data-i="' + k + '">' + F.ein[k] + '</button>'; }
   var keys = '', t = App.wahl(ACHSE);
@@ -983,6 +984,189 @@ function hlKarte() {
     '<div class="zeilen formel"><p><bdi dir="ltr">' + f + '</bdi></p></div>' +
     '<button class="opt pruefen" data-act="schritt">' + App.wahl(ph < 3 ? HERL.weiter : FERTIG) + ' →</button>';
 }
+// Handschrift: Zeichen aus Fingerstrichen erkennen ($P-Punktwolken-Erkenner, Vatavu u. a. 2012).
+// Striche werden nach ihrer Breite zu Zeichen gruppiert (was sich waagerecht überlappt, gehört zusammen),
+// jedes Zeichen wird mit Vorlagen verglichen. Vorlagen: y = m x + b und ein paar Ablenker (c, a, n, 0, 1, 2, −).
+var HS = (function () {
+  var N = 32;
+  function pfad(st) { // Striche → Punkte mit Strichnummer
+    var p = [];
+    st.forEach(function (s, i) { s.forEach(function (q) { p.push({ x: q[0], y: q[1], id: i }); }); });
+    return p;
+  }
+  function laenge(p) { var d = 0; for (var i = 1; i < p.length; i++) if (p[i].id === p[i - 1].id) d += Math.hypot(p[i].x - p[i - 1].x, p[i].y - p[i - 1].y); return d; }
+  function neu(p) {
+    var I = laenge(p) / (N - 1), D = 0, r = [p[0]], q = p.slice();
+    for (var i = 1; i < q.length; i++) {
+      if (q[i].id !== q[i - 1].id) continue;
+      var d = Math.hypot(q[i].x - q[i - 1].x, q[i].y - q[i - 1].y);
+      if (D + d >= I && d > 0) {
+        var t = (I - D) / d, n = { x: q[i - 1].x + t * (q[i].x - q[i - 1].x), y: q[i - 1].y + t * (q[i].y - q[i - 1].y), id: q[i].id };
+        r.push(n); q.splice(i, 0, n); D = 0;
+      } else D += d;
+    }
+    while (r.length < N) r.push({ x: q[q.length - 1].x, y: q[q.length - 1].y, id: q[q.length - 1].id });
+    return r.slice(0, N);
+  }
+  function normal(p) {
+    var x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, cx = 0, cy = 0;
+    p.forEach(function (q) { x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); y0 = Math.min(y0, q.y); y1 = Math.max(y1, q.y); });
+    var s = Math.max(x1 - x0, y1 - y0) || 1;
+    p = p.map(function (q) { return { x: (q.x - x0) / s, y: (q.y - y0) / s, id: q.id }; });
+    p.forEach(function (q) { cx += q.x / p.length; cy += q.y / p.length; });
+    return p.map(function (q) { return { x: q.x - cx, y: q.y - cy, id: q.id }; });
+  }
+  function wolke(st) { return normal(neu(pfad(st))); }
+  function abstand(a, b, start) {
+    var frei = [], sum = 0, i = start;
+    do {
+      var best = Infinity, k = -1;
+      for (var j = 0; j < b.length; j++) if (!frei[j]) { var d = Math.hypot(a[i].x - b[j].x, a[i].y - b[j].y); if (d < best) { best = d; k = j; } }
+      frei[k] = true; sum += (1 - ((i - start + N) % N) / N) * best; i = (i + 1) % N;
+    } while (i !== start);
+    return sum;
+  }
+  function vergleich(a, b) {
+    var m = Infinity, step = Math.floor(Math.pow(N, 0.5));
+    for (var i = 0; i < N; i += step) m = Math.min(m, abstand(a, b, i), abstand(b, a, i));
+    return m;
+  }
+  // Grundformen im Kasten: x nach rechts, y nach unten; Kleinbuchstaben zwischen 40 und 100, Oberlänge ab 0, Unterlänge bis 140
+  var FORMEN = {
+    y: [[[[0, 40], [4, 75], [20, 98], [38, 95], [52, 75], [56, 40], [55, 90], [50, 120], [36, 138], [16, 140], [4, 130]]],
+        [[[0, 40], [28, 92]], [[56, 40], [28, 92], [8, 140]]],
+        [[[0, 40], [28, 92]], [[56, 40], [8, 140]]]],
+    '=': [[[[0, 55], [60, 55]], [[0, 85], [60, 85]]]],
+    m: [[[[0, 40], [0, 100], [0, 62], [8, 46], [18, 40], [26, 46], [28, 62], [28, 100], [28, 62], [36, 46], [46, 40], [54, 46], [56, 62], [56, 100]]],
+        [[[0, 100], [0, 42], [0, 60], [9, 44], [18, 40], [26, 46], [28, 60], [28, 100], [29, 60], [37, 44], [46, 40], [54, 46], [56, 60], [56, 100]]]],
+    x: [[[[0, 40], [52, 100]], [[52, 40], [0, 100]]]],
+    '+': [[[[28, 40], [28, 100]], [[-2, 70], [58, 70]]]],
+    b: [[[[0, 0], [0, 100], [0, 72], [10, 56], [26, 50], [42, 58], [50, 76], [44, 94], [26, 100], [10, 98], [0, 92]]],
+        [[[0, 0], [0, 100]], [[0, 64], [16, 52], [34, 52], [48, 66], [48, 86], [34, 100], [14, 100], [0, 92]]]],
+    c: [[[[50, 50], [32, 40], [12, 46], [0, 68], [8, 92], [28, 100], [50, 92]]]],
+    a: [[[[48, 52], [30, 40], [10, 48], [0, 72], [10, 96], [30, 100], [46, 86], [48, 40], [48, 94], [56, 100]]]],
+    n: [[[[0, 40], [0, 100], [0, 62], [10, 46], [24, 40], [36, 46], [40, 62], [40, 100]]]],
+    '0': [[[[25, 0], [6, 12], [0, 50], [6, 88], [25, 100], [44, 88], [50, 50], [44, 12], [25, 0]]]],
+    '1': [[[[8, 22], [30, 0], [30, 100]]]],
+    '2': [[[[0, 22], [14, 3], [34, 0], [48, 14], [44, 40], [0, 100], [52, 100]]]],
+    '−': [[[[0, 70], [60, 70]]]]
+  };
+  var VORLAGEN = [];
+  Object.keys(FORMEN).forEach(function (z) {
+    FORMEN[z].forEach(function (f) {
+      [-0.25, 0, 0.25].forEach(function (sch) {
+        [0.8, 1, 1.2].forEach(function (hy) {
+          var st = f.map(function (s) { return s.map(function (q) { return [q[0] - sch * q[1], q[1] * hy]; }); });
+          VORLAGEN.push({ z: z, n: f.length, w: wolke(st) });
+        });
+      });
+    });
+  });
+  // Striche zu Zeichen gruppieren: überlappen sie sich waagerecht deutlich, gehören sie zusammen
+  function gruppen(striche) {
+    var s = striche.filter(function (st) {   // Tupfer ohne Länge zählen nicht
+      var l = 0; for (var i = 1; i < st.length; i++) l += Math.hypot(st[i][0] - st[i - 1][0], st[i][1] - st[i - 1][1]);
+      return l > 5;
+    }).map(function (st) {
+      var xs = st.map(function (q) { return q[0]; });
+      return { st: st, a: Math.min.apply(null, xs), b: Math.max.apply(null, xs) };
+    }).sort(function (u, v) { return u.a - v.a; });
+    var g = [];
+    s.forEach(function (t) {
+      var h = g[g.length - 1];
+      if (h) {
+        var ueber = Math.min(h.b, t.b) - Math.max(h.a, t.a), schmal = Math.max(6, Math.min(h.b - h.a, t.b - t.a));
+        if (ueber > -3 && ueber >= 0.3 * schmal - 3) { h.st.push(t.st); h.a = Math.min(h.a, t.a); h.b = Math.max(h.b, t.b); return; }
+      }
+      g.push({ st: [t.st], a: t.a, b: t.b });
+    });
+    return g;
+  }
+  function zeichen(st) {
+    var w = wolke(st), best = Infinity, z = '?', gleich = VORLAGEN.filter(function (v) { return v.n === st.length; });
+    (gleich.length ? gleich : VORLAGEN).forEach(function (v) { var d = vergleich(w, v.w); if (d < best) { best = d; z = v.z; } });
+    return { z: best < 3 ? z : '?', d: best };   // zu weit von allen Vorlagen: unleserlich
+  }
+  return {
+    lesen: function (striche) { return gruppen(striche).map(function (g) { return zeichen(g.st); }); },
+    gruppen: gruppen
+  };
+})();
+// Level mit handschrift: die allgemeine Geradengleichung mit dem Finger ins Feld schreiben, die App liest mit
+var HS_TEXT = {
+  falsch: { de: 'Das ist nicht die allgemeine Geradengleichung. Tipp: Nimm in y = m · (x − x₁) + y₁ den Punkt (0|b) auf der y-Achse.',
+            en: 'That is not the general equation of a line. Hint: in y = m · (x − x₁) + y₁, take the point (0|b) on the y-axis.',
+            fi: 'Tämä ei ole suoran yleinen yhtälö. Vihje: ota yhtälöön y = m · (x − x₁) + y₁ y-akselin piste (0|b).',
+            tr: 'Bu, doğrunun genel denklemi değil. İpucu: y = m · (x − x₁) + y₁ içinde y eksenindeki (0|b) noktasını al.',
+            fr: 'Ce n’est pas l’équation générale d’une droite. Astuce : dans y = m · (x − x₁) + y₁, prends le point (0|b) sur l’axe des y.',
+            es: 'Esa no es la ecuación general de la recta. Pista: en y = m · (x − x₁) + y₁, toma el punto (0|b) del eje y.',
+            ja: 'それは直線の一般的な式ではありません。ヒント：y＝m·(x − x₁)＋y₁ に y 軸上の点 (0|b) を使おう。',
+            ar: 'هذه ليست المعادلة العامة للمستقيم. تلميح: في <bdi dir="ltr">y = m · (x − x₁) + y₁</bdi> خذ النقطة <bdi dir="ltr">(0|b)</bdi> على محور y.' },
+  unklar: { de: 'Ich kann nicht alles lesen. Schreib die Zeichen etwas größer und mit Abstand.',
+            en: 'I can’t read everything. Write the symbols a bit bigger and with gaps.',
+            fi: 'En saa kaikesta selvää. Kirjoita merkit vähän isommin ja välejä jättäen.',
+            tr: 'Hepsini okuyamıyorum. Karakterleri biraz daha büyük ve aralıklı yaz.',
+            fr: 'Je n’arrive pas à tout lire. Écris les signes un peu plus grands et espacés.',
+            es: 'No puedo leerlo todo. Escribe los signos un poco más grandes y separados.',
+            ja: 'ぜんぶは読めません。文字を少し大きく、間をあけて書こう。',
+            ar: 'لا أستطيع قراءة كل شيء. اكتب الرموز أكبر قليلًا وبمسافات بينها.' }
+};
+function hsGelesen() {
+  return HS.lesen(F.hs).map(function (c) {
+    if (c.z === 'y') return '<span class="raus">y</span>';
+    if (c.z === 'x') return '<span class="rein">x</span>';
+    return c.z === '=' || c.z === '+' || c.z === '−' ? ' ' + c.z + ' ' : c.z;
+  }).join('');
+}
+function hsZeichnen(pad) {
+  var ctx = pad.getContext('2d'), r = window.devicePixelRatio || 1, w = pad.clientWidth, h = pad.clientHeight;
+  if (pad.width !== Math.round(w * r)) { pad.width = Math.round(w * r); pad.height = Math.round(h * r); }
+  ctx.setTransform(r, 0, 0, r, 0, 0); ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(56,41,26,0.18)'; ctx.lineWidth = 1;   // Schreiblinie
+  ctx.beginPath(); ctx.moveTo(10, h * 0.68); ctx.lineTo(w - 10, h * 0.68); ctx.stroke();
+  ctx.strokeStyle = INK; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  F.hs.forEach(function (st) {
+    ctx.beginPath(); ctx.moveTo(st[0][0], st[0][1]);
+    st.forEach(function (q) { ctx.lineTo(q[0], q[1]); });
+    if (st.length === 1) ctx.lineTo(st[0][0] + 0.1, st[0][1]);
+    ctx.stroke();
+  });
+}
+function hsFb() {
+  var p = schreib.querySelector('.hsfb');
+  if (p) p.outerHTML = F.fb ? '<p class="fb hsfb" style="color: var(--red)">' + App.wahl(F.fb) + '</p>' : '<p class="hsfb" hidden></p>';
+}
+function hsKarte() {
+  var pad = schreib.querySelector('canvas.pad');
+  if (pad) {   // das Feld bleibt stehen, nur Gelesenes und Hinweis neu
+    schreib.querySelector('.gelesen').innerHTML = '<bdi dir="ltr">' + hsGelesen() + '</bdi>';
+    schreib.querySelector('.pruefen').textContent = App.wahl(PRUEFEN);   // falls die Sprache gewechselt wurde
+    hsFb(); hsZeichnen(pad); return;
+  }
+  schreib.innerHTML = '<canvas class="pad"></canvas><p class="gelesen"></p>' +
+    '<div class="hsknoepfe"><button class="opt hsweg" data-act="hsweg" aria-label="↶">↶</button>' +
+    '<button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button></div><p class="hsfb" hidden></p>';
+  pad = schreib.querySelector('canvas.pad');
+  var st = null;
+  function pos(e) { var b = pad.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; }
+  pad.addEventListener('pointerdown', function (e) {
+    e.preventDefault(); pad.setPointerCapture(e.pointerId);
+    st = [pos(e)]; F.hs.push(st);
+    if (F.fb) { F.fb = ''; hsFb(); }   // ein falscher Versuch verschwindet beim Weiterschreiben
+    hsZeichnen(pad);
+  });
+  pad.addEventListener('pointermove', function (e) { if (!st) return; e.preventDefault(); st.push(pos(e)); hsZeichnen(pad); });
+  function ende() { if (!st) return; st = null; hsKarte(); }
+  pad.addEventListener('pointerup', ende); pad.addEventListener('pointercancel', ende);
+  hsKarte();
+}
+function hsPruefen() {
+  var z = HS.lesen(F.hs).map(function (c) { return c.z; }).join('');
+  if (!z) return;
+  if (z.indexOf('?') >= 0) F.fb = HS_TEXT.unklar;
+  else if (z === 'y=mx+b' || z === 'y=b+mx') { F.fn = true; F.fb = ''; }
+  else F.fb = HS_TEXT.falsch;
+}
 // Level mit nullfrage: welche Zahl muss in die Maschine der Geraden, damit der Punkt auf der y-Achse herauskommt?
 function nullFalschFB(w, y) {
   var P = '<bdi dir="ltr">(<span class="rein">' + fmt(w) + '</span>|<span class="raus">' + fmt(y) + '</span>)</bdi>';
@@ -1033,6 +1217,8 @@ function schreibClick(e) {
   else if (act === 'pruefen' && FLEVELS[F.level].herleitung) herlPruefen();
   else if (act === 'pruefen' && FLEVELS[F.level].nullfrage) nullPruefen();
   else if (act === 'pruefen' && FLEVELS[F.level].zweipunkt) zpPruefen();
+  else if (act === 'pruefen' && FLEVELS[F.level].handschrift) hsPruefen();
+  else if (act === 'hsweg') { F.hs.pop(); F.fb = ''; }
   else if (act === 'schritt' && FLEVELS[F.level].zweipunkt) zpWeiter();
   else if (act === 'schritt') herlSchritt();
   else if (act === 'pruefen') {
