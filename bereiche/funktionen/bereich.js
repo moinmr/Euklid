@@ -740,17 +740,7 @@ function herlKarte() {
     (F.fb ? '<p class="fb' + (F.fbOk ? ' ok' : '') + '">' + App.wahl(F.fb) + '</p>' : '');
 }
 // Weiter in der Erklärung; nach Schritt 3 kommt die zweite Gerade zum Selbermachen
-// Level mit nullfrage: unten die Maschine der Geraden, x → [m·x + b] → y. Welche Zahl muss hinein?
-var NULLF = {
-  frage: { de: 'Welche Zahl muss hinein, damit der Schnittpunkt mit der y-Achse herauskommt?',
-           en: 'Which number must go in so that the point on the y-axis comes out?',
-           fi: 'Mikä luku pitää syöttää, jotta ulos tulee y-akselin leikkauspiste?',
-           tr: 'y eksenini kestiği noktanın çıkması için hangi sayı girmeli?',
-           fr: 'Quel nombre faut-il mettre pour obtenir le point sur l’axe des y ?',
-           es: '¿Qué número tiene que entrar para que salga el punto del eje y?',
-           ja: 'y 軸との交点が出てくるには、どの数を入れればいい？',
-           ar: 'أي عدد يجب إدخاله حتى تخرج نقطة التقاطع مع محور y؟' }
-};
+// Level mit nullfrage: welche Zahl muss in die Maschine der Geraden, damit der Punkt auf der y-Achse herauskommt?
 function nullFalschFB(w, y) {
   var P = '<bdi dir="ltr">(<span class="rein">' + fmt(w) + '</span>|<span class="raus">' + fmt(y) + '</span>)</bdi>';
   return { de: 'Nicht ganz. Mit ' + fmt(w) + ' kommt ' + fmt(y) + ' heraus, das ist der Punkt ' + P + '. Er liegt nicht auf der y-Achse. Auf der y-Achse ist x immer 0.',
@@ -763,19 +753,16 @@ function nullFalschFB(w, y) {
            ar: 'ليس تمامًا. مع ' + fmt(w) + ' يخرج ' + fmt(y) + '، وهي النقطة ' + P + '. إنها ليست على محور y. على محور y يكون x دائمًا 0.' };
 }
 function nullKarte() {
-  var h = fNull(), keys = '';
-  for (var d = -4; d <= 4; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + fmt(d) + '</button>';
-  // die Regel bleibt geheim; nach dem Prüfen steht der y-Wert hinten in Lila
-  var falsch = F.nullFalsch !== null && F.nullFalsch !== undefined;   // Hinweis nach falscher Zahl in Rot
-  var raus = falsch ? fmt(h.m * F.nullFalsch + h.b) : '?';
-  schreib.innerHTML = '<p class="fb">' + App.wahl(NULLF.frage) + '</p>' +
-    '<div class="steig nullm"><span class="rein">' + slotHTML(0) + '</span><span class="pf">→</span><span class="mregel">?</span><span class="pf">→</span><span class="raus">' + raus + '</span></div>' +
-    '<div class="keys reihe neun">' + keys + '</div><button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button>' +
+  // nur die Zahlentasten (die gewählte in Orange) und Prüfen; nach einer falschen Zahl der Hinweis in Rot
+  var keys = '';
+  for (var d = -4; d <= 4; d++) keys += '<button class="key' + (F.ein[0] === fmt(d) ? ' sel' : '') + '" data-act="ziffer" data-n="' + d + '">' + fmt(d) + '</button>';
+  var falsch = F.nullFalsch !== null && F.nullFalsch !== undefined;
+  schreib.innerHTML = '<div class="keys reihe neun">' + keys + '</div><button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button>' +
     (F.fb ? '<p class="fb"' + (falsch ? ' style="color: var(--red)"' : '') + '>' + App.wahl(F.fb) + '</p>' : '');
 }
 function nullPruefen() {
   var h = fNull(), w = Number(F.ein[0].replace('−', '-'));
-  if (F.ein[0] === '') { F.fb = ALLE; return; }
+  if (F.ein[0] === '') return;   // noch keine Zahl gewählt
   if (w === 0) { F.fn = true; F.fb = ''; F.nullFalsch = null; return; }
   F.nullFalsch = w; F.fb = nullFalschFB(w, h.m * w + h.b); F.neueAnsicht = true;
 }
