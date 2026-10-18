@@ -133,6 +133,7 @@ App.start = function () {
 
   // ----- Startseite -----
   var home = document.getElementById('home'), inArea = false;
+  var RAHMEN = ['board', 'mach', 'top', 'hud', 'bottom', 'home', 'langpick', 'fertig'];   // fester Rahmen aus index.html und dem Kern
   var areas = document.getElementById('areas');
   bereiche.forEach(function (a) {
     var b = document.createElement('button');
@@ -158,6 +159,12 @@ App.start = function () {
     App.cancelAction();
     S.mode = 'home';
     inArea = false;
+    // Karten, die ein Bereich selbst angelegt hat (z. B. Eingabe- oder rote Karte), gehören nicht in den nächsten Bereich.
+    // Der Bereich blendet sie beim Öffnen seines Levels selbst wieder ein.
+    Array.prototype.forEach.call(document.getElementById('app').children, function (el) {
+      if (RAHMEN.indexOf(el.id) < 0) el.hidden = true;
+    });
+    document.body.classList.remove('falschkarte');
     shownFor = null;
     updateStand();
     home.hidden = false;
