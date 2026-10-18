@@ -828,7 +828,9 @@ function zpAnsicht() {
   if (zpArt() === 'wandern') { var m = (p.y2 - p.y1) / (p.x2 - p.x1), g = zpGmax(); p.y2 = p.y1 + (g - p.x1) * m; p.x2 = g; }
   var oben = hud && hud.firstChild ? hud.getBoundingClientRect().bottom : 60;
   var unten = schreib.hidden ? S.h - (S.unten || 70) : schreib.getBoundingClientRect().top;
-  S.oy = (oben + unten) / 2 + (p.y1 + p.y2) / 2 * U;
+  var ym = (p.y1 + p.y2) / 2;
+  if (zpArt() === 'hand') ym = (Math.min(0, p.y1, p.y2) + Math.max(0, p.y1, p.y2)) / 2;   // auch die x-Achse im Bild
+  S.oy = (oben + unten) / 2 + ym * U;
   S.ox = S.w / 2 - (p.x1 + p.x2) / 2 * U;
   App.applyView();
 }
@@ -1194,7 +1196,7 @@ function hsPad(stand) {
     schreib.querySelector('.pruefen').textContent = App.wahl(PRUEFEN);   // falls die Sprache gewechselt wurde
     hsFb(); hsZeichnen(pad); return;
   }
-  schreib.innerHTML = (stand ? '<div class="steig zp">' + stand + '</div>' : '') + '<canvas class="pad"></canvas><p class="gelesen"></p>' +
+  schreib.innerHTML = '<div class="padrahmen"><canvas class="pad"></canvas>' + (stand || '') + '</div><p class="gelesen"></p>' +   // Stand oben rechts im Feld
     '<div class="hsknoepfe"><button class="opt hsweg" data-act="hsweg" aria-label="↶">↶</button>' +
     '<button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button></div><p class="hsfb" hidden></p>';
   pad = schreib.querySelector('canvas.pad');
