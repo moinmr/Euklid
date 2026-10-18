@@ -350,7 +350,9 @@ App.bereich({
   solved: function () { return W.solved; },
   open: function () { loadLevel(Math.max(0, Math.min(W.start_level, LEVELS.length - 1))); },
   draw: function (ctx, ws) { if (Z) lv().draw(ctx, Z, ws); },
-  overlay: function (ctx) { if (Z && lv().overlay) lv().overlay(ctx, Z); },
+  // Solange eine Frage offen ist (Schreibfeld da), keine Rechnung unter dem Bild; sie kommt erst nach der richtigen Antwort.
+  // Ein Level, das dort die Frage selbst stellt, setzt overlayBeiFrage und zeichnet dann nur die Frage.
+  overlay: function (ctx) { if (Z && lv().overlay && (!feldOffen() || lv().overlayBeiFrage)) lv().overlay(ctx, Z); },
   down: function (w) { if (Z) { lv().down(Z, w); App.render(); } },
   move: function (w) { if (Z) { lv().move(Z, w); App.render(); } },
   up: function (w) { if (Z) { lv().up(Z, w); App.render(); } },

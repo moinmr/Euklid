@@ -128,6 +128,7 @@ App.level('winkel', {
           done: 'ستة مثلثات متساوية الأضلاع تتسع حول نقطة: 6 × 60° = 360°، ومعًا تصنع سداسيًا. ثلاثة سداسيات تتسع حول زاوية: 3 × 120° = 360°.' }
   },
   werkzeuge: ['clear'],
+  overlayBeiFrage: true,   // bei der zweiten Frage steht sie unten
 
   // t: gelegte Dreiecke (0 bis 6), ok1: 60 geschrieben; e: Schritte in Teil 2 (1 Ecke gezeigt, 2 Frage),
   // ok2: 3 geschrieben; h: weitere Sechsecke an der Ecke (0 bis 2)
@@ -207,6 +208,7 @@ App.level('winkel', {
   // Unten: Gleichung (20px), darunter Drehung bzw. Hinweis (14.5px)
   overlay: function (ctx, Z) {
     var H = App.winkel, y = H.textY(zeilen()), br = H.farben[1].linie, gr = H.farben[2].linie, teile = [], z2 = null, z2ink = false, wt = false;
+    if (offen1(Z)) return;   // offene Frage: keine Rechnung
     if (Z.e === 0) {
       if (!Z.t) return;
       if (Z.t === 6) {
@@ -225,8 +227,7 @@ App.level('winkel', {
       teile = [{ t: '60°', c: br }, { t: ' + ', c: C.INK }, { t: '60°', c: gr }, { t: ' = 120°', c: C.INK }];
       wt = true;
     } else if (!Z.ok2) {
-      teile = [{ t: '? × ', c: C.INK }, { t: '120°', c: br }, { t: ' = 360°', c: C.INK }];
-      z2 = App.wahl(TEXT.sechseck); z2ink = true;
+      z2 = App.wahl(TEXT.sechseck); z2ink = true;   // nur die Frage, keine Rechnung
     } else {
       for (var j = 0; j <= Z.h; j++) {
         if (j) teile.push({ t: ' + ', c: C.INK });
