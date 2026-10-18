@@ -2,7 +2,7 @@
 // Eine Kennung nie ändern: der Fortschritt hängt an ihr.
 App.ordnung.winkel = [
   'drehungen',
-  'volle-umdrehung',
+  'gerade-180',
   'z-winkel',
   'dreieck-180',
   'parallelogramm',
