@@ -1,5 +1,6 @@
 // Level: Zwei parallele Geraden. Antippen zeigt eine schräge Strecke dazwischen, zusammen eine Z-Form.
-// Die beiden Winkel im Z (Wechselwinkel) sind immer gleich groß. Am Griff oben dreht man die schräge Strecke
+// Oben steht die Gradzahl, unten ein Fragezeichen: die Zahl schreibt man ins Schreibfeld (der Winkel ist bei jedem
+// Neustart ein anderer, 45° bis 70°). Die beiden Winkel im Z (Wechselwinkel) sind immer gleich groß. Danach dreht man am Griff oben die schräge Strecke
 // um ihre Mitte, beide Winkel ändern sich mit und bleiben gleich. Gelöst nach insgesamt 60° Drehung.
 (function () {
 var App = window.App, S = App.S, C = App.C;
@@ -9,14 +10,21 @@ var MIN = 25 * Math.PI / 180;      // flachste Neigung, damit die Ecken auf dem 
 var TEXT = {
   gleich: { de: 'Die Winkel im Z sind gleich groß', en: 'The angles in the Z are equal', fi: 'Z:n kulmat ovat yhtä suuret',
             tr: 'Z’deki açılar eşittir', fr: 'Les angles du Z sont égaux', es: 'Los ángulos de la Z son iguales',
-            ja: 'Zの中の2つの角は等しい', ar: 'الزاويتان في شكل Z متساويتان' }
+            ja: 'Zの中の2つの角は等しい', ar: 'الزاويتان في شكل Z متساويتان' },
+  falsch: { de: 'Noch nicht. Schau dir den Winkel oben an.', en: 'Not yet. Look at the angle at the top.',
+            fi: 'Ei vielä. Katso ylempää kulmaa.', tr: 'Henüz değil. Üstteki açıya bak.',
+            fr: 'Pas encore. Regarde l’angle en haut.', es: 'Todavía no. Mira el ángulo de arriba.',
+            ja: 'まだです。上の角を見てみよう。', ar: 'ليس بعد. انظر إلى الزاوية في الأعلى.' }
 };
 
 function abst(p, q) { return Math.hypot(q[0] - p[0], q[1] - p[1]); }
 // Mitte zwischen den Parallelen und ihr halber Abstand d
 function mass() {
-  var r = Math.max(70, Math.min(S.w * 0.3, S.h * 0.2));
-  return { m: [S.w / 2, S.h * 0.5], d: r * 0.75 };
+  var P = App.winkel.platz(2), r = Math.max(50, Math.min(S.w * 0.3, P.h / 3.2));
+  return { m: [S.w / 2, P.my], d: r * 0.75 };
+}
+function start(Z) {
+  if (Z.schritt === 1 && !Z.ok) App.winkel.frage(zWinkel(Z).grad, TEXT.falsch, function () { Z.ok = true; });
 }
 // Ecken des Z: oben T, unten B, für die Neigung th (Bogenmaß, gegen die Waagrechte, 0 bis π)
 function ecken(th) {
@@ -57,36 +65,42 @@ App.level('winkel', {
   id: 'z-winkel',
   text: {
     de: { title: 'Winkel im Z',
-          task: 'Zwei Geraden sind parallel. Tippe für den nächsten Schritt. Dreh dann die schräge Strecke am Griff und schau auf die zwei Winkel.',
+          task: 'Zwei Geraden sind parallel. Tippe für den nächsten Schritt. Wie groß ist der Winkel unten? Schreib die Zahl ins Feld. Dreh dann die schräge Strecke am Griff und schau auf die zwei Winkel.',
           done: 'Die Winkel in der Z-Form sind immer gleich groß. Man nennt sie Wechselwinkel.' },
     en: { title: 'Angles in a Z',
-          task: 'Two lines are parallel. Tap for the next step. Then turn the slanted segment by its handle and watch the two angles.',
+          task: 'Two lines are parallel. Tap for the next step. How big is the angle at the bottom? Write the number in the box. Then turn the slanted segment by its handle and watch the two angles.',
           done: 'The angles in the Z shape are always equal. They are called alternate angles.' },
     fi: { title: 'Kulmat Z-muodossa',
-          task: 'Kaksi suoraa ovat yhdensuuntaiset. Napauta, niin näet seuraavan vaiheen. Käännä sitten vinoa janaa kahvasta ja katso kahta kulmaa.',
+          task: 'Kaksi suoraa ovat yhdensuuntaiset. Napauta, niin näet seuraavan vaiheen. Kuinka suuri alempi kulma on? Kirjoita luku kenttään. Käännä sitten vinoa janaa kahvasta ja katso kahta kulmaa.',
           done: 'Z-muodon kulmat ovat aina yhtä suuret. Niitä kutsutaan vuorokulmiksi.' },
     tr: { title: 'Z’deki açılar',
-          task: 'İki doğru paraleldir. Sonraki adım için dokun. Sonra eğik doğru parçasını tutamağından döndür ve iki açıya bak.',
+          task: 'İki doğru paraleldir. Sonraki adım için dokun. Alttaki açı kaç derece? Sayıyı kutuya yaz. Sonra eğik doğru parçasını tutamağından döndür ve iki açıya bak.',
           done: 'Z şeklindeki açılar her zaman eşittir. Bunlara iç ters açılar denir.' },
     fr: { title: 'Les angles du Z',
-          task: 'Deux droites sont parallèles. Touche l’écran pour l’étape suivante. Puis fais tourner le segment oblique par sa poignée et regarde les deux angles.',
+          task: 'Deux droites sont parallèles. Touche l’écran pour l’étape suivante. Combien mesure l’angle du bas ? Écris le nombre dans la case. Puis fais tourner le segment oblique par sa poignée et regarde les deux angles.',
           done: 'Les angles en forme de Z sont toujours égaux. On les appelle angles alternes-internes.' },
     es: { title: 'Ángulos en la Z',
-          task: 'Dos rectas son paralelas. Toca para ver el siguiente paso. Después gira el segmento inclinado por su asa y mira los dos ángulos.',
+          task: 'Dos rectas son paralelas. Toca para ver el siguiente paso. ¿Cuánto mide el ángulo de abajo? Escribe el número en la casilla. Después gira el segmento inclinado por su asa y mira los dos ángulos.',
           done: 'Los ángulos en forma de Z son siempre iguales. Se llaman ángulos alternos internos.' },
     ja: { title: 'Zの中の角',
-          task: '2本の直線は平行です。タップすると次に進みます。それから、ななめの線分を持ち手で回して、2つの角を見てみよう。',
+          task: '2本の直線は平行です。タップすると次に進みます。下の角は何度かな？数を書いてね。それから、ななめの線分を持ち手で回して、2つの角を見てみよう。',
           done: 'Zの形の2つの角は、いつも等しくなります。これを錯角といいます。' },
     ar: { title: 'الزوايا في شكل Z',
-          task: 'مستقيمان متوازيان. انقر للخطوة التالية. ثم أدِر القطعة المائلة من مقبضها وانظر إلى الزاويتين.',
+          task: 'مستقيمان متوازيان. انقر للخطوة التالية. كم قياس الزاوية في الأسفل؟ اكتب العدد في المربع. ثم أدِر القطعة المائلة من مقبضها وانظر إلى الزاويتين.',
           done: 'الزاويتان في شكل Z متساويتان دائمًا. تُسمَّيان زاويتين متبادلتين.' }
   },
   werkzeuge: ['clear'],
 
-  neu: function (Z) { Z.schritt = 0; Z.th = Math.PI / 3; Z.dreh = 0; Z.zieht = false; },
+  // Startwinkel zufällig 45° bis 70° in Fünferschritten, damit man die Zahl nicht auswendig weiß
+  neu: function (Z) {
+    Z.schritt = 0; Z.ok = false; Z.dreh = 0; Z.zieht = false;
+    Z.th = (45 + 5 * Math.floor(Math.random() * 6)) * Math.PI / 180;
+  },
+  start: start,
 
   down: function (Z, w) {
-    if (Z.schritt < 1) { Z.schritt++; return; }   // Antippen: nächster Schritt
+    if (Z.schritt < 1) { Z.schritt++; start(Z); return; }   // Antippen: nächster Schritt
+    if (!Z.ok) return;   // erst die Frage beantworten
     Z.zieht = abst(w, griff(Z)) <= C.GRAB * 1.3 * S.k;   // nur am Griff
     if (Z.zieht) drehen(Z, w);
   },
@@ -114,31 +128,38 @@ App.level('winkel', {
     ctx.moveTo(e.t[0] + so * L, e.t[1]); ctx.lineTo(e.t[0], e.t[1]); ctx.lineTo(e.b[0], e.b[1]); ctx.lineTo(e.b[0] - so * L, e.b[1]);
     ctx.stroke();
     ctx.fillStyle = ink; App.dotAt(ctx, m, false, 4);
-    // Griff
-    ctx.lineWidth = 2 * ws * k;
-    ctx.beginPath(); ctx.arc(g[0], g[1], 15 * k, 0, H.TAU); ctx.stroke();
-    ctx.fillStyle = 'rgba(56,41,25,0.12)'; ctx.fill();
-    // Zahlen an den Winkeln
-    [[e.t, z.oben], [e.b, z.unten]].forEach(function (q) {
+    // Griff, erst nach der richtigen Antwort
+    if (Z.ok) {
+      ctx.lineWidth = 2 * ws * k;
+      ctx.beginPath(); ctx.arc(g[0], g[1], 15 * k, 0, H.TAU); ctx.stroke();
+      ctx.fillStyle = 'rgba(56,41,25,0.12)'; ctx.fill();
+    }
+    // Zahlen an den Winkeln; unten erst ein Fragezeichen
+    [[e.t, z.oben, false], [e.b, z.unten, !Z.ok]].forEach(function (q) {
       var mid = q[1][0] + q[1][1] / 2, ra = (58 + Math.max(0, 40 - z.grad) * 0.8) * k;
-      App.text(ctx, z.grad + '°', q[0][0] + Math.cos(mid) * ra, q[0][1] - Math.sin(mid) * ra, f.linie, 17);
+      App.text(ctx, q[2] ? '?' : z.grad + '°', q[0][0] + Math.cos(mid) * ra, q[0][1] - Math.sin(mid) * ra, f.linie, q[2] ? 22 : 17);
     });
   },
 
   // Unten über der Leiste: 60° = 60°, darunter "Die Winkel im Z sind gleich groß"
   overlay: function (ctx, Z) {
     if (Z.schritt < 1) return;
-    var H = App.winkel, z = zWinkel(Z), y = S.h - (S.unten || 70) - (document.body.classList.contains('geschafft') ? 120 : 46);
+    var H = App.winkel, z = zWinkel(Z), y = H.textY(Z.ok ? 2 : 1);
     ctx.save();
     ctx.font = '400 20px ' + C.FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
     ctx.fillStyle = H.farben[1].linie;
-    ctx.fillText(z.grad + '° = ' + z.grad + '°', S.w / 2, y);
-    ctx.font = '400 14.5px ' + C.FONT; ctx.fillStyle = C.PENCIL;
-    ctx.fillText(App.wahl(TEXT.gleich), S.w / 2, y + 22);
+    ctx.fillText(z.grad + '° = ' + (Z.ok ? z.grad + '°' : '?'), S.w / 2, y);
+    if (Z.ok) {   // der Satz verrät die Antwort, darum erst danach
+      ctx.font = '400 14.5px ' + C.FONT; ctx.fillStyle = C.PENCIL;
+      ctx.fillText(App.wahl(TEXT.gleich), S.w / 2, y + 22);
+    }
     ctx.restore();
   },
 
-  bild: function (Z) { return Z.dreh ? { v: 1, th: Z.th } : null; },
-  ausBild: function (Z, b) { if (b.v === 1) { Z.th = b.th; Z.schritt = 1; } }
+  bild: function (Z) { return Z.schritt ? { v: 2, th: Z.th, ok: Z.ok, dreh: Z.dreh } : null; },
+  ausBild: function (Z, b) {
+    if (b.v === 2) { Z.th = b.th; Z.schritt = 1; Z.ok = b.ok; Z.dreh = b.dreh; }
+    else if (b.v === 1) { Z.th = b.th; Z.schritt = 1; Z.ok = true; }   // frühere Fassung
+  }
 });
 })();

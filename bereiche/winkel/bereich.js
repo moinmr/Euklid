@@ -249,8 +249,47 @@ function feldWeg() { if (feldKarte) feldKarte.hidden = true; feldPruefen = null;
 function feldLeeren() { feldStriche = []; if (feldKarte && !feldKarte.hidden) feldZeichnen(); }
 // Oberkante der Schreibkarte (oder der Leiste unten), damit das Bild darüber Platz findet
 function feldOben() { return feldKarte && !feldKarte.hidden ? feldKarte.getBoundingClientRect().top : S.h - (S.unten || 70); }
+var LESEN = { de: 'Ich kann die Zahl nicht lesen. Schreib die Ziffern etwas größer und mit Abstand.',
+              en: 'I can’t read the number. Write the digits a bit bigger and apart.',
+              fi: 'En pysty lukemaan lukua. Kirjoita numerot vähän isommin ja erilleen.',
+              tr: 'Sayıyı okuyamıyorum. Rakamları biraz daha büyük ve aralıklı yaz.',
+              fr: 'Je n’arrive pas à lire le nombre. Écris les chiffres un peu plus grands et espacés.',
+              es: 'No puedo leer el número. Escribe las cifras un poco más grandes y separadas.',
+              ja: '数が読めません。数字を少し大きく、間をあけて書こう。',
+              ar: 'لا أستطيع قراءة العدد. اكتب الأرقام أكبر قليلًا وبمسافات بينها.' };
+// Frage mit Schreibfeld: richtig ist die gesuchte Zahl, hinweis der Text der roten Karte, fertig() läuft bei richtiger Antwort
+function frage(richtig, hinweis, fertig) {
+  schreibfeld(function (t) {
+    if (!t || t.indexOf('?') >= 0) { falsch(LESEN); return; }
+    if (Number(t) !== richtig) { falsch(hinweis); feldLeeren(); return; }
+    falschWeg(); feldWeg(); fertig(); App.render();
+  });
+}
+function feldOffen() { return !!(feldKarte && !feldKarte.hidden); }
+// Höhe der ersten von zeilen Textzeilen unten (über dem Schreibfeld, sonst über der Leiste bzw. der grünen Karte)
+function textY(zeilen) {
+  if (feldOffen()) return feldOben() - 12 - 22 * zeilen;
+  return S.h - (S.unten || 70) - (document.body.classList.contains('geschafft') ? 80 : 2) - 22 * zeilen;
+}
+// Platz fürs Bild zwischen Aufgabentext und den Textzeilen unten. Rechnet immer mit der grünen Karte,
+// damit das Bild beim Lösen nicht springt; mit offenem Schreibfeld wird es kleiner.
+function platz(zeilen) {
+  var hud = document.getElementById('hud'), oben = (hud && hud.firstChild ? hud.getBoundingClientRect().bottom : 60) + 24;
+  var z = zeilen || 2, unten = (feldOffen() ? feldOben() - 12 : S.h - (S.unten || 70) - 80) - 22 * z - 30;
+  if (unten - oben < 140) unten = oben + 140;
+  return { oben: oben, unten: unten, my: (oben + unten) / 2, h: unten - oben };
+}
+// Gleichung aus farbigen Stücken, mittig in Höhe y
+function zeile(ctx, teile, y, groesse) {
+  ctx.save();
+  ctx.font = '400 ' + (groesse || 20) + 'px ' + C.FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  var breite = teile.reduce(function (s, t) { return s + ctx.measureText(t.t).width; }, 0), x = (S.w - breite) / 2;
+  teile.forEach(function (t) { ctx.fillStyle = t.c; ctx.fillText(t.t, x, y); x += ctx.measureText(t.t).width; });
+  ctx.restore();
+}
 App.winkel.schreibfeld = schreibfeld; App.winkel.feldWeg = feldWeg; App.winkel.feldLeeren = feldLeeren;
-App.winkel.feldOben = feldOben; App.winkel.ziffern = ZIFFERN;
+App.winkel.feldOben = feldOben; App.winkel.ziffern = ZIFFERN; App.winkel.frage = frage; App.winkel.LESEN = LESEN;
+App.winkel.feldOffen = feldOffen; App.winkel.textY = textY; App.winkel.platz = platz; App.winkel.zeile = zeile;
 
 /* ===================== Level laden und merken ===================== */
 function bild() { var lv = LEVELS[W.level]; return lv && lv.bild ? lv.bild(Z) : null; }

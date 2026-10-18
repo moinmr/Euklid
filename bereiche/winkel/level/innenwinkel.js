@@ -1,6 +1,7 @@
 // Level: Dieselben Formen wie in "Einmal rundherum" (Dreieck, Quadrat, Fünfeck, Sechseck). An einer Ecke stehen
 // die Drehung von dort (grau, mit Zahl) und der Innenwinkel (braun, mit ?). Den Innenwinkel schreibt man mit dem
 // Finger ins Feld und drückt Prüfen. Richtig: alle Innenwinkel bekommen ihre Zahl, Antippen bringt die nächste Form.
+// Beim Fünfeck und Sechseck fehlt die Hilfe (Drehung und "? + 72° = 180°"), sie erscheint erst nach der Antwort.
 // Gelöst nach dem Sechseck.
 (function () {
 var App = window.App, S = App.S, C = App.C;
@@ -15,14 +16,6 @@ var TEXT = {
             es: 'Todavía no. El giro en la esquina y el ángulo interior suman 180°.',
             ja: 'まだです。角での回転と内角を合わせると180°です。',
             ar: 'ليس بعد. مجموع الدوران عند الزاوية والزاوية الداخلية 180°.' },
-  lesen: { de: 'Ich kann die Zahl nicht lesen. Schreib die Ziffern etwas größer und mit Abstand.',
-           en: 'I can’t read the number. Write the digits a bit bigger and apart.',
-           fi: 'En pysty lukemaan lukua. Kirjoita numerot vähän isommin ja erilleen.',
-           tr: 'Sayıyı okuyamıyorum. Rakamları biraz daha büyük ve aralıklı yaz.',
-           fr: 'Je n’arrive pas à lire le nombre. Écris les chiffres un peu plus grands et espacés.',
-           es: 'No puedo leer el número. Escribe las cifras un poco más grandes y separadas.',
-           ja: '数が読めません。数字を少し大きく、間をあけて書こう。',
-           ar: 'لا أستطيع قراءة العدد. اكتب الأرقام أكبر قليلًا وبمسافات بينها.' },
   weiter: { de: 'Tippe für die nächste Form', en: 'Tap for the next shape', fi: 'Napauta, niin tulee seuraava muoto',
             tr: 'Sonraki şekil için dokun', fr: 'Touche l’écran pour la forme suivante', es: 'Toca para la siguiente forma',
             ja: 'タップすると次の形', ar: 'انقر للشكل التالي' }
@@ -31,9 +24,8 @@ var TEXT = {
 function innen(k) { return 180 - 360 / k; }
 // Platz zwischen Aufgabentext und Schreibfeld; Ecken der Form wie in "Einmal rundherum" (Start unten links)
 function ecken(k) {
-  var hud = document.getElementById('hud'), oben = (hud && hud.firstChild ? hud.getBoundingClientRect().bottom : 60) + 30;
-  var unten = App.winkel.feldOben() - 70, cy = (oben + unten) / 2;
-  var R = Math.max(50, Math.min(S.w * 0.3, (unten - oben) / 2));
+  var P = App.winkel.platz(2), cy = P.my;
+  var R = Math.max(50, Math.min(S.w * 0.3, P.h / 2 - 10));
   var s = 2 * R * Math.sin(Math.PI / k), ext = 2 * Math.PI / k, p = [[0, 0]], h = 0;
   for (var i = 1; i < k; i++) { p.push([p[i - 1][0] + s * Math.cos(h), p[i - 1][1] - s * Math.sin(h)]); h += ext; }
   var mx = 0, my = 0;
@@ -41,16 +33,14 @@ function ecken(k) {
   return { p: p.map(function (q) { return [q[0] - mx + S.w / 2, q[1] - my + cy]; }), s: s, ext: ext };
 }
 
-function pruefen(Z, text) {
-  var H = App.winkel, k = FORMEN[Z.form];
-  if (!text || text.indexOf('?') >= 0) { H.falsch(TEXT.lesen); return; }
-  if (Number(text) !== innen(k)) { H.falsch(TEXT.falsch); H.feldLeeren(); return; }
-  Z.ok = true; H.feldWeg();
-  if (Z.form === FORMEN.length - 1) H.geschafft();
-}
+// Hilfe (Drehung an der Ecke und Gleichung) nur bei Dreieck und Quadrat, sonst erst nach der Antwort
+function hilfe(Z) { return Z.ok || Z.form < 2; }
 function start(Z) {
-  if (Z.ok) App.winkel.feldWeg();
-  else App.winkel.schreibfeld(function (t) { pruefen(Z, t); });
+  if (Z.ok) return;
+  App.winkel.frage(innen(FORMEN[Z.form]), TEXT.falsch, function () {
+    Z.ok = true;
+    if (Z.form === FORMEN.length - 1) App.winkel.geschafft();
+  });
 }
 
 App.level('winkel', {
@@ -99,14 +89,16 @@ App.level('winkel', {
     p.forEach(function (q) { ctx.lineTo(q[0], q[1]); });
     ctx.closePath(); ctx.stroke();
     var ri = 26 * k, ein = innen(n);
-    // Ecke unten rechts: gestrichelte Verlängerung, Drehung grau mit Zahl, Innenwinkel braun mit ? (oder Zahl)
+    // Ecke unten rechts: gestrichelte Verlängerung und Drehung grau mit Zahl (nur mit Hilfe), Innenwinkel braun mit ? (oder Zahl)
     var q = p[1], L = E.s * 0.4;
-    ctx.save(); ctx.setLineDash([6 * k, 6 * k]);
-    ctx.strokeStyle = C.PENCIL; ctx.lineWidth = 1.6 * ws * k;
-    ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(q[0] + L, q[1]); ctx.stroke();
-    ctx.restore();
-    H.feld(ctx, q, ri, 0, E.ext, fg.fuell, fg.linie, ws);
-    App.text(ctx, Math.round(360 / n) + '°', q[0] + Math.cos(E.ext / 2) * 46 * k, q[1] - Math.sin(E.ext / 2) * 46 * k, fg.linie, 15);
+    if (hilfe(Z)) {
+      ctx.save(); ctx.setLineDash([6 * k, 6 * k]);
+      ctx.strokeStyle = C.PENCIL; ctx.lineWidth = 1.6 * ws * k;
+      ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(q[0] + L, q[1]); ctx.stroke();
+      ctx.restore();
+      H.feld(ctx, q, ri, 0, E.ext, fg.fuell, fg.linie, ws);
+      App.text(ctx, Math.round(360 / n) + '°', q[0] + Math.cos(E.ext / 2) * 46 * k, q[1] - Math.sin(E.ext / 2) * 46 * k, fg.linie, 15);
+    }
     // Innenwinkel: an Ecke i zwischen der Richtung zur nächsten und zur vorigen Ecke
     for (var i = 0; i < n; i++) {
       if (!Z.ok && i !== 1) continue;
@@ -120,7 +112,8 @@ App.level('winkel', {
   // Über dem Schreibfeld: ? + 120° = 180°, nach der richtigen Antwort 60° + 120° = 180°
   overlay: function (ctx, Z) {
     var H = App.winkel, n = FORMEN[Z.form], aussen = Math.round(360 / n);
-    var y = Z.ok ? S.h - (S.unten || 70) - (document.body.classList.contains('geschafft') ? 130 : 66) : H.feldOben() - 34;
+    if (!hilfe(Z)) return;
+    var y = H.textY(Z.ok ? 2 : 1);
     var teile = [{ t: Z.ok ? innen(n) + '°' : '?', c: H.farben[1].linie }, { t: ' + ', c: C.INK },
                  { t: aussen + '°', c: H.farben[2].linie }, { t: ' = 180°', c: C.INK }];
     ctx.save();
