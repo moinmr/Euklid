@@ -7,6 +7,7 @@
 var App = window.App, S = App.S, C = App.C;
 var V = App.V, vp = App.vp, render = App.render, dotAt = App.dotAt, mark = App.mark, text = App.text;
 var GRAB = C.GRAB, INK = C.INK, BLUE = C.BLUE;
+var REIN = '#cf5a17', RAUS = '#7b3fa6';   // Orange = rein, Lila = raus (wie in stil.css)
 var U = 40;   // Pixel pro Einheit im Koordinatensystem
 var M = null;   // Zustand des aktuellen Maschinen-Levels
 var FLEVELS = [];
@@ -113,6 +114,17 @@ function steigAnsicht() {
   S.ox = S.w / 2 - xm * U;
   App.applyView();
 }
+// Koordinate (x|y) im Gitter: x orange (rein), y lila (raus), Klammern in Tinte
+function koordText(ctx, x, y, cx, cy, size) {
+  var teile = [['(', INK], [x, REIN], ['|', INK], [y, RAUS], [')', INK]];
+  ctx.save();
+  ctx.font = '400 ' + (size * S.k) + 'px ' + C.FONT; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.translate(cx, cy);
+  if (Math.abs(S.vth) > 1e-6) ctx.rotate(-S.vth);
+  var breit = teile.reduce(function (s, t) { return s + ctx.measureText(t[0]).width; }, 0), px = -breit / 2;
+  teile.forEach(function (t) { ctx.fillStyle = t[1]; ctx.fillText(t[0], px, 0); px += ctx.measureText(t[0]).width; });
+  ctx.restore();
+}
 function fSchnitt() {
   var l = F.lines.filter(function (l) { return l.fest; })[0];
   return l ? { x: Math.round(l.a[0] / U), y: -Math.round(l.b[1] / U) } : null;
@@ -182,11 +194,11 @@ function buildFunk(ctx, ws) {
     // Schnittpunkt mit der y-Achse, x noch offen; ein falsch eingegebener Wert als roter Punkt
     var nf = fNull();
     ctx.fillStyle = INK; dotAt(ctx, [0, -nf.b * U], false, 6);
-    text(ctx, '(' + (F.fn ? '0' : '?') + '|' + nf.b + ')', (nf.m > 0 ? -36 : 36) * k, -nf.b * U - 14 * k, INK, 14);
+    koordText(ctx, F.fn ? '0' : '?', fmt(nf.b), (nf.m > 0 ? -36 : 36) * k, -nf.b * U - 14 * k, 14);
     if (F.nullFalsch !== null && F.nullFalsch !== undefined && !F.fn) {
       var wy = nf.m * F.nullFalsch + nf.b;
       ctx.fillStyle = C.RED; dotAt(ctx, [F.nullFalsch * U, -wy * U], false, 6);
-      text(ctx, '(' + fmt(F.nullFalsch) + '|' + fmt(wy) + ')', F.nullFalsch * U + (nf.m > 0 ? -36 : 36) * k, -wy * U - 14 * k, C.RED, 14);
+      koordText(ctx, fmt(F.nullFalsch), fmt(wy), F.nullFalsch * U + (nf.m > 0 ? -36 : 36) * k, -wy * U - 14 * k, 14);
     }
   }
   if (lvz && lvz.herleitung && F.lines[F.runde]) {
@@ -740,7 +752,7 @@ var NULLF = {
            ar: 'أي عدد يجب إدخاله حتى تخرج نقطة التقاطع مع محور y؟' }
 };
 function nullFalschFB(w, y) {
-  var P = '<bdi dir="ltr">(' + fmt(w) + '|' + fmt(y) + ')</bdi>';
+  var P = '<bdi dir="ltr">(<span class="rein">' + fmt(w) + '</span>|<span class="raus">' + fmt(y) + '</span>)</bdi>';
   return { de: 'Nicht ganz. Mit ' + fmt(w) + ' kommt ' + fmt(y) + ' heraus, das ist der Punkt ' + P + '. Er liegt nicht auf der y-Achse. Auf der y-Achse ist x immer 0.',
            en: 'Not quite. With ' + fmt(w) + ', out comes ' + fmt(y) + ': the point ' + P + '. It is not on the y-axis. On the y-axis, x is always 0.',
            fi: 'Ei aivan. Luvulla ' + fmt(w) + ' ulos tulee ' + fmt(y) + ', eli piste ' + P + '. Se ei ole y-akselilla. y-akselilla x on aina 0.',
@@ -754,11 +766,12 @@ function nullKarte() {
   var h = fNull(), keys = '';
   for (var d = -4; d <= 4; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + fmt(d) + '</button>';
   // die Regel bleibt geheim; nach dem Prüfen steht der y-Wert hinten in Lila
-  var raus = F.nullFalsch === null || F.nullFalsch === undefined ? '?' : fmt(h.m * F.nullFalsch + h.b);
+  var falsch = F.nullFalsch !== null && F.nullFalsch !== undefined;   // Hinweis nach falscher Zahl in Rot
+  var raus = falsch ? fmt(h.m * F.nullFalsch + h.b) : '?';
   schreib.innerHTML = '<p class="fb">' + App.wahl(NULLF.frage) + '</p>' +
     '<div class="steig nullm"><span class="rein">' + slotHTML(0) + '</span><span class="pf">→</span><span class="mregel">?</span><span class="pf">→</span><span class="raus">' + raus + '</span></div>' +
     '<div class="keys reihe neun">' + keys + '</div><button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button>' +
-    (F.fb ? '<p class="fb">' + App.wahl(F.fb) + '</p>' : '');
+    (F.fb ? '<p class="fb"' + (falsch ? ' style="color: var(--red)"' : '') + '>' + App.wahl(F.fb) + '</p>' : '');
 }
 function nullPruefen() {
   var h = fNull(), w = Number(F.ein[0].replace('−', '-'));
