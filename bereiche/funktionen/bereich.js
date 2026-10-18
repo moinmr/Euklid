@@ -910,7 +910,7 @@ function zpKarte() {
       '<button class="opt pruefen" data-act="schritt">' + App.wahl(HERL.weiter) + ' →</button>';
     return;
   }
-  if (art === 'hand') return hsPad(stand);
+  if (art === 'hand') return hsPad(stand, HS_FRAGE.gerade);
   for (var d = -4; d <= 4; d++) keys += '<button class="key" data-act="ziffer" data-n="' + d + '">' + fmt(d) + '</button>';
   var zeile;
   if (art === 'ohnegitter') zeile = '<span>' + App.wahl(STEIG) + '</span>' + slotHTML(0);
@@ -1187,16 +1187,27 @@ function hsFb() {
   var p = schreib.querySelector('.hsfb');
   if (p) p.outerHTML = F.fb ? '<p class="fb hsfb" style="color: var(--red)">' + App.wahl(F.fb) + '</p>' : '<p class="hsfb" hidden></p>';
 }
-function hsKarte() { return F.runde > 0 ? taxiKarte() : hsPad(''); }
-// Schreibfeld mit ↶ und Prüfen (Taxi und zweipunkt 'hand'); oben rechts optional der Stand
-function hsPad(stand) {
+function hsKarte() { return F.runde > 0 ? taxiKarte() : hsPad('', HS_FRAGE.taxi); }
+// Frage oben in der Karte, direkt über dem Schreibfeld
+var HS_FRAGE = {
+  gerade: { de: 'Wie heißt die Gleichung dieser Geraden?', en: 'What is the equation of this line?', fi: 'Mikä on tämän suoran yhtälö?',
+            tr: 'Bu doğrunun denklemi nedir?', fr: 'Quelle est l’équation de cette droite ?', es: '¿Cuál es la ecuación de esta recta?',
+            ja: 'この直線の式は？', ar: 'ما معادلة هذا المستقيم؟' },
+  taxi: { de: 'Wie heißt die Gleichung für den Taxipreis?', en: 'What is the equation for the taxi fare?',
+          fi: 'Mikä on taksin hinnan suoran yhtälö?', tr: 'Taksi ücretinin doğru denklemi nedir?',
+          fr: 'Quelle est l’équation de la droite pour le prix du taxi ?', es: '¿Cuál es la ecuación de la recta para la tarifa del taxi?',
+          ja: 'タクシー料金の直線の式は？', ar: 'ما معادلة المستقيم لأجرة التاكسي؟' }
+};
+// Schreibfeld mit ↶ und Prüfen (Taxi und zweipunkt 'hand'); oben die Frage, oben rechts im Feld optional der Stand
+function hsPad(stand, frage) {
   var pad = schreib.querySelector('canvas.pad');
   if (pad) {   // das Feld bleibt stehen, nur Gelesenes und Hinweis neu
     schreib.querySelector('.gelesen').innerHTML = '<bdi dir="ltr">' + hsGelesen() + '</bdi>';
     schreib.querySelector('.pruefen').textContent = App.wahl(PRUEFEN);   // falls die Sprache gewechselt wurde
+    schreib.querySelector('.hsfrage').textContent = App.wahl(frage);
     hsFb(); hsZeichnen(pad); return;
   }
-  schreib.innerHTML = '<div class="padrahmen"><canvas class="pad"></canvas>' + (stand || '') + '</div><p class="gelesen"></p>' +   // Stand oben rechts im Feld
+  schreib.innerHTML = '<p class="hsfrage">' + App.wahl(frage) + '</p><div class="padrahmen"><canvas class="pad"></canvas>' + (stand || '') + '</div><p class="gelesen"></p>' +   // Stand oben rechts im Feld
     '<div class="hsknoepfe"><button class="opt hsweg" data-act="hsweg" aria-label="↶">↶</button>' +
     '<button class="opt pruefen" data-act="pruefen">' + App.wahl(PRUEFEN) + '</button></div><p class="hsfb" hidden></p>';
   pad = schreib.querySelector('canvas.pad');
@@ -1209,9 +1220,9 @@ function hsPad(stand) {
     hsZeichnen(pad);
   });
   pad.addEventListener('pointermove', function (e) { if (!st) return; e.preventDefault(); st.push(pos(e)); hsZeichnen(pad); });
-  function ende() { if (!st) return; st = null; hsPad(stand); }
+  function ende() { if (!st) return; st = null; hsPad(stand, frage); }
   pad.addEventListener('pointerup', ende); pad.addEventListener('pointercancel', ende);
-  hsPad(stand);
+  hsPad(stand, frage);
 }
 // Gelesene Zeichen als Gleichung y = mx + b in beliebiger Reihenfolge (y = b + mx); null, wenn es keine ist
 function hsGleichung(z) {

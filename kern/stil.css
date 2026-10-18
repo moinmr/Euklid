@@ -314,6 +314,7 @@ body {
 #fschreib .nullm .pf { opacity: .7; }
 #fschreib .zp { gap: 6px; font-weight: 400; font-size: 20px; }
 #fschreib .zp .rein .slot { color: var(--rein); } #fschreib .zp .raus .slot { color: var(--raus); }
+#fschreib .hsfrage { margin: 0 2px; line-height: 1.3; text-align: center; font-size: 17px; font-weight: 500; }
 #fschreib .padrahmen { position: relative; }
 #fschreib .padrahmen .stand { position: absolute; top: 6px; right: 10px; font-size: 13px; opacity: .6; pointer-events: none; }
 #fschreib canvas.pad { width: 100%; height: 112px; display: block; touch-action: none; background: #fffaf0; border: 1.2px dashed rgba(56,41,26,.45); border-radius: 10px; }
