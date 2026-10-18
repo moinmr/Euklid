@@ -1,5 +1,5 @@
 // Level: Zwei parallele Geraden. Antippen zeigt eine schräge Strecke dazwischen, zusammen eine Z-Form.
-// Die beiden Winkel im Z (Wechselwinkel) sind immer gleich groß. Am Griff oben dreht man die schräge Strecke um ihre Mitte,
+// Die beiden Winkel im Z (Wechselwinkel) sind immer gleich groß. Am Griff unten dreht man die schräge Strecke um ihre Mitte,
 // beide Winkel ändern sich mit und bleiben gleich. Nach insgesamt 120° Drehung, erst beim Loslassen, eine neue Z-Form mit Frage:
 // oben steht die Gradzahl, unten ein Fragezeichen, die Zahl schreibt man ins Schreibfeld. Gelöst bei der richtigen Antwort.
 (function () {
@@ -37,10 +37,10 @@ function ecken(th) {
   var M = mass(), dx = M.d / Math.tan(th);
   return { t: [M.m[0] + dx, M.m[1] - M.d], b: [M.m[0] - dx, M.m[1] + M.d] };
 }
-// Griff: ein Stück über der oberen Ecke auf der schrägen Strecke
+// Griff: ein Stück unter der unteren Ecke auf der schrägen Strecke, damit der Finger die Winkel nicht verdeckt
 function griff(Z) {
   var M = mass(), l = M.d / Math.sin(Z.th) + 46 * S.k;
-  return [M.m[0] + Math.cos(Z.th) * l, M.m[1] - Math.sin(Z.th) * l];
+  return [M.m[0] - Math.cos(Z.th) * l, M.m[1] + Math.sin(Z.th) * l];
 }
 // Kleinerer Winkel zwischen zwei Richtungen: Anfang und Weite (mathematisch, gegen den Uhrzeigersinn)
 function zwischen(d1, d2) {
