@@ -68,11 +68,11 @@ Konstruieren mit Linie und Zirkel auf einer vorgegebenen Strecke AB (Canvas, Poi
 
 ## Bereich Winkel
 
-Jedes Winkel-Level bringt sein Verhalten selbst mit (`neu`, `down`, `move`, `up`, `draw`, `overlay`, `bild`, `ausBild`), `bereich.js` macht Fortschritt, grüne und rote Karte, Knöpfe und Hilfen (`App.winkel`: Winkelfelder, gerundete Gradzahlen mit fester Summe, Farben Tinte/Braun/Grau). Im Level nur der Papierkorb, kein Drehen der Ansicht.
+Jedes Winkel-Level bringt sein Verhalten selbst mit (`neu`, `down`, `move`, `up`, `draw`, `overlay`, `bild`, `ausBild`), `bereich.js` macht Fortschritt, grüne und rote Karte, Knöpfe und Hilfen (`App.winkel`: Winkelfelder, gerundete Gradzahlen mit fester Summe, Farben Tinte/Braun/Grau). Unten nur der Papierkorb, kein Drehen der Ansicht.
 
 | Level | Titel | Erkenntnis |
 |---|---|---|
-| 1 | Eine volle Umdrehung | Ein Kreis in der Mitte zeigt 360°. Eine Strecke durch den Mittelpunkt zeichnen (ziehen oder zweimal tippen; verfehlt sie den Mittelpunkt: rote Karte), sie wird gleichmäßig durch den Mittelpunkt gelegt: 180° + 180°. Dann aus dem Mittelpunkt eine zweite Strecke, sie rastet senkrecht ein: 90° + 90° + 180°. Am Griff (Ring am Ende) dreht man sie, die Winkelfelder im Kreis (Tinte, Braun, Grau) und die Zahlen ändern sich live, unten „a° + b° + c° = 360°, eine volle Umdrehung“. Gelöst nach insgesamt 120° Drehung (Kennung `volle-umdrehung`). |
+| 1 | Eine volle Umdrehung | Kein Zeichnen: Ein Kreis zeigt 360°, dann erscheint von selbst eine waagrechte Strecke durch den Mittelpunkt (180° + 180°), dann eine senkrechte aus dem Mittelpunkt (90° + 90° + 180°). Antippen springt zum nächsten Schritt. Nur das Ende der senkrechten Strecke hat einen Griff (Ring), daran dreht man sie; Winkelfelder im Kreis (Tinte, Braun, Grau) und Zahlen ändern sich live, unten „a° + b° + c° = 360°, eine volle Umdrehung“. Gelöst nach insgesamt 120° Drehung (Kennung `volle-umdrehung`). |
 
 ## Bereich Funktionen
 
