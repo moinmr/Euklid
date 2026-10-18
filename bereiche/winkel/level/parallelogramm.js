@@ -1,24 +1,20 @@
 // Level: Das Parallelogramm, ein Viereck mit parallelen Gegenseiten (eine schiefe Kiste). Zwei parallele Geraden;
 // Antippen zeigt das Parallelogramm ABCD (unten AB, oben DC). Der Winkel bei A hat eine Zahl (bei jedem Neustart eine
-// andere, 50° bis 75°), bei C steht ein Fragezeichen: mit den Z-Winkeln ist C so groß wie A, die Zahl schreibt man ins
-// Schreibfeld. Danach haben alle vier Winkel eine Zahl (B und D = 180° − A), die zwei Diagonalen erscheinen gestrichelt
-// und die obere linke Ecke D hat einen Griff: Ziehen schiebt die obere Seite waagrecht, die Kiste wird schiefer oder
-// gerader. Sind die Diagonalen gleich lang (Winkel bei A bis 4° an 90°), rastet es als Rechteck ein: gelöst.
+// andere, 50° bis 75°), bei C steht ein Fragezeichen. Außen an D und B zeigen die Wechselwinkel an den Parallelen,
+// ebenfalls in Braun mit Zahl: alle so groß wie A, darum auch C. Die Zahl schreibt man ins Schreibfeld; richtig: gelöst,
+// alle vier Winkel haben eine Zahl (B und D = 180° − A). Danach hat die obere linke Ecke D einen Griff: Ziehen schiebt
+// die obere Seite waagrecht, die Kiste wird schiefer oder gerader, die gleichen Winkel bleiben gleich.
 // Der Zustand ist nur der Winkel bei A in Grad (Z.wa), die Lage folgt aus dem Platz auf dem Bildschirm.
 (function () {
 var App = window.App, S = App.S, C = App.C;
 var MIN = 30, MAX = 150;   // Grenzen für den Winkel bei A, damit die Kiste auf den Bildschirm passt
-var EINRASTEN = 4;         // Grad um 90°
+var EINRASTEN = 4;         // Grad um 90°: rastet als Rechteck ein
 
 var TEXT = {
   gleich: { de: 'Gegenüberliegende Winkel sind gleich groß', en: 'Opposite angles are equal',
             fi: 'Vastakkaiset kulmat ovat yhtä suuret', tr: 'Karşılıklı açılar eşittir',
             fr: 'Les angles opposés sont égaux', es: 'Los ángulos opuestos son iguales',
             ja: '向かい合う角は等しい', ar: 'الزوايا المتقابلة متساوية' },
-  recht: { de: 'Gleich lange Diagonalen: ein Rechteck', en: 'Diagonals of equal length: a rectangle',
-           fi: 'Yhtä pitkät lävistäjät: suorakulmio', tr: 'Köşegenler eşit uzunlukta: bir dikdörtgen',
-           fr: 'Diagonales de même longueur : un rectangle', es: 'Diagonales iguales: un rectángulo',
-           ja: '対角線の長さが同じ：長方形', ar: 'قطران متساويان في الطول: مستطيل' },
   falsch: { de: 'Noch nicht. Die Gegenseiten sind parallel. Such die Z-Formen.',
             en: 'Not yet. The opposite sides are parallel. Look for the Z shapes.',
             fi: 'Ei vielä. Vastakkaiset sivut ovat yhdensuuntaiset. Etsi Z-muodot.',
@@ -54,47 +50,45 @@ function textY(zeilen) {
   if (g && !g.hidden && g.offsetHeight) y = Math.min(y, g.getBoundingClientRect().top - 12 - 22 * zeilen);
   return y;
 }
-function rechteck(Z) { return Z.ok && Z.wa === 90; }
 function start(Z) {
-  if (Z.schritt === 1 && !Z.ok) App.winkel.frage(Math.round(Z.wa), TEXT.falsch, function () { Z.ok = true; });
+  if (Z.schritt === 1 && !Z.ok) App.winkel.frage(Math.round(Z.wa), TEXT.falsch, function () { Z.ok = true; App.winkel.geschafft(); });
 }
 // Griff an D: die Ecke folgt dem Finger, die untere Seite rückt dabei so, dass alles mittig bleibt
 function schieben(Z, w) {
   var M = mass(Z), c = 2 * (w[0] - M.m[0] + M.L / 2);
   var wa = Math.atan2(M.h, c) * 180 / Math.PI;
   wa = Math.max(MIN, Math.min(MAX, wa));
-  if (Math.abs(wa - 90) <= EINRASTEN) wa = 90;   // gleich lange Diagonalen: rastet als Rechteck ein
+  if (Math.abs(wa - 90) <= EINRASTEN) wa = 90;
   Z.wa = wa;
-  if (wa === 90) App.winkel.geschafft();
 }
 
 App.level('winkel', {
   id: 'parallelogramm',
   text: {
     de: { title: 'Parallelogramm',
-          task: 'Ein Parallelogramm hat parallele Gegenseiten, wie eine schiefe Kiste. Tippe, um es zu sehen. Wie groß ist der Winkel bei C? Schreib die Zahl ins Feld. Schieb dann die obere Seite am Griff, bis die zwei Diagonalen gleich lang sind.',
-          done: 'Im Parallelogramm sind gegenüberliegende Winkel gleich groß, Nachbarwinkel ergeben zusammen 180°. Sind die Diagonalen gleich lang, ist es ein Rechteck.' },
+          task: 'Ein Parallelogramm hat parallele Gegenseiten, wie eine schiefe Kiste. Tippe, um es zu sehen. Wie groß ist der Winkel bei C? Schreib die Zahl ins Feld. Die braunen Winkel außen sind Wechselwinkel an den Parallelen.',
+          done: 'Im Parallelogramm sind gegenüberliegende Winkel gleich groß, Nachbarwinkel ergeben zusammen 180°.' },
     en: { title: 'Parallelogram',
-          task: 'A parallelogram is a four-sided shape with parallel opposite sides, like a tilted box. Tap to see it. How big is the angle at C? Write the number in the box. Then push the top side by its handle until the two diagonals are the same length.',
-          done: 'In a parallelogram, opposite angles are equal and neighbouring angles add up to 180°. If the diagonals are the same length, it is a rectangle.' },
+          task: 'A parallelogram is a four-sided shape with parallel opposite sides, like a tilted box. Tap to see it. How big is the angle at C? Write the number in the box. The brown angles outside are alternate angles at the parallel lines.',
+          done: 'In a parallelogram, opposite angles are equal and neighbouring angles add up to 180°.' },
     fi: { title: 'Suunnikas',
-          task: 'Suunnikas on nelikulmio, jonka vastakkaiset sivut ovat yhdensuuntaiset, kuin vino laatikko. Napauta, niin näet sen. Kuinka suuri kulma C on? Kirjoita luku kenttään. Työnnä sitten yläsivua kahvasta, kunnes kaksi lävistäjää ovat yhtä pitkät.',
-          done: 'Suunnikkaassa vastakkaiset kulmat ovat yhtä suuret, ja vierekkäiset kulmat ovat yhteensä 180°. Jos lävistäjät ovat yhtä pitkät, se on suorakulmio.' },
+          task: 'Suunnikas on nelikulmio, jonka vastakkaiset sivut ovat yhdensuuntaiset, kuin vino laatikko. Napauta, niin näet sen. Kuinka suuri kulma C on? Kirjoita luku kenttään. Ruskeat kulmat ulkopuolella ovat vuorokulmia yhdensuuntaisilla suorilla.',
+          done: 'Suunnikkaassa vastakkaiset kulmat ovat yhtä suuret, ja vierekkäiset kulmat ovat yhteensä 180°.' },
     tr: { title: 'Paralelkenar',
-          task: 'Paralelkenar, karşılıklı kenarları paralel olan bir dörtgendir, eğik bir kutu gibi. Görmek için dokun. C’deki açı kaç derece? Sayıyı kutuya yaz. Sonra üst kenarı tutamağından it, ta ki iki köşegen aynı uzunlukta olana kadar.',
-          done: 'Paralelkenarda karşılıklı açılar eşittir, komşu açıların toplamı 180°’dir. Köşegenler aynı uzunluktaysa bu bir dikdörtgendir.' },
+          task: 'Paralelkenar, karşılıklı kenarları paralel olan bir dörtgendir, eğik bir kutu gibi. Görmek için dokun. C’deki açı kaç derece? Sayıyı kutuya yaz. Dıştaki kahverengi açılar paralel doğrulardaki iç ters açılardır.',
+          done: 'Paralelkenarda karşılıklı açılar eşittir, komşu açıların toplamı 180°’dir.' },
     fr: { title: 'Parallélogramme',
-          task: 'Un parallélogramme est un quadrilatère dont les côtés opposés sont parallèles, comme une boîte penchée. Touche l’écran pour le voir. Combien mesure l’angle en C ? Écris le nombre dans la case. Puis pousse le côté du haut par sa poignée jusqu’à ce que les deux diagonales aient la même longueur.',
-          done: 'Dans un parallélogramme, les angles opposés sont égaux et deux angles voisins font 180° ensemble. Si les diagonales ont la même longueur, c’est un rectangle.' },
+          task: 'Un parallélogramme est un quadrilatère dont les côtés opposés sont parallèles, comme une boîte penchée. Touche l’écran pour le voir. Combien mesure l’angle en C ? Écris le nombre dans la case. Les angles bruns à l’extérieur sont des angles alternes-internes aux parallèles.',
+          done: 'Dans un parallélogramme, les angles opposés sont égaux et deux angles voisins font 180° ensemble.' },
     es: { title: 'Paralelogramo',
-          task: 'Un paralelogramo es un cuadrilátero con los lados opuestos paralelos, como una caja inclinada. Toca para verlo. ¿Cuánto mide el ángulo en C? Escribe el número en la casilla. Después empuja el lado de arriba por su asa hasta que las dos diagonales midan lo mismo.',
-          done: 'En un paralelogramo, los ángulos opuestos son iguales y dos ángulos vecinos suman 180°. Si las diagonales miden lo mismo, es un rectángulo.' },
+          task: 'Un paralelogramo es un cuadrilátero con los lados opuestos paralelos, como una caja inclinada. Toca para verlo. ¿Cuánto mide el ángulo en C? Escribe el número en la casilla. Los ángulos marrones de fuera son ángulos alternos en las paralelas.',
+          done: 'En un paralelogramo, los ángulos opuestos son iguales y dos ángulos vecinos suman 180°.' },
     ja: { title: '平行四辺形',
-          task: '平行四辺形は、向かい合う辺が平行な四角形です。かたむいた箱のような形です。タップすると出てきます。Cの角は何度かな？数を書いてね。それから、上の辺を持ち手でおして、2本の対角線の長さを同じにしよう。',
-          done: '平行四辺形では、向かい合う角は等しく、となり合う角を合わせると180°です。対角線の長さが同じなら、長方形です。' },
+          task: '平行四辺形は、向かい合う辺が平行な四角形です。かたむいた箱のような形です。タップすると出てきます。Cの角は何度かな？数を書いてね。外の茶色の角は、平行線の錯角です。',
+          done: '平行四辺形では、向かい合う角は等しく、となり合う角を合わせると180°です。' },
     ar: { title: 'متوازي الأضلاع',
-          task: 'متوازي الأضلاع شكل رباعي أضلاعه المتقابلة متوازية، مثل صندوق مائل. انقر لتراه. كم قياس الزاوية عند C؟ اكتب العدد في المربع. ثم ادفع الضلع العلوي من مقبضه حتى يصبح القطران متساويين في الطول.',
-          done: 'في متوازي الأضلاع الزوايا المتقابلة متساوية، والزاويتان المتجاورتان مجموعهما 180°. إذا كان القطران متساويين في الطول فهو مستطيل.' }
+          task: 'متوازي الأضلاع شكل رباعي أضلاعه المتقابلة متوازية، مثل صندوق مائل. انقر لتراه. كم قياس الزاوية عند C؟ اكتب العدد في المربع. الزوايا البنية في الخارج زوايا متبادلة عند المستقيمين المتوازيين.',
+          done: 'في متوازي الأضلاع الزوايا المتقابلة متساوية، والزاويتان المتجاورتان مجموعهما 180°.' }
   },
   werkzeuge: ['clear'],
 
@@ -120,22 +114,15 @@ App.level('winkel', {
     ctx.strokeStyle = C.PENCIL; ctx.lineWidth = 2 * ws * k; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(-S.w, M.yo); ctx.lineTo(2 * S.w, M.yo); ctx.moveTo(-S.w, M.yu); ctx.lineTo(2 * S.w, M.yu); ctx.stroke();
     if (Z.schritt < 1) return;
-    var th = Z.wa * P / 180, za = Math.round(Z.wa), zb = 180 - za, recht = rechteck(Z);
+    var th = Z.wa * P / 180, za = Math.round(Z.wa), zb = 180 - za;
     ctx.fillStyle = 'rgba(56,41,25,0.06)';
     ctx.beginPath(); ctx.moveTo(e.a[0], e.a[1]); ctx.lineTo(e.b[0], e.b[1]); ctx.lineTo(e.c[0], e.c[1]); ctx.lineTo(e.d[0], e.d[1]);
     ctx.closePath(); ctx.fill();
-    // Diagonalen nach der Antwort: gestrichelt grau, als Rechteck durchgezogen in Tinte
-    if (Z.ok) {
-      ctx.save();
-      if (recht) { ctx.strokeStyle = ink; ctx.lineWidth = 2 * ws * k; }
-      else { ctx.strokeStyle = F[2].linie; ctx.lineWidth = 1.8 * ws * k; ctx.setLineDash([7 * k, 6 * k]); }
-      ctx.beginPath(); ctx.moveTo(e.a[0], e.a[1]); ctx.lineTo(e.c[0], e.c[1]); ctx.moveTo(e.b[0], e.b[1]); ctx.lineTo(e.d[0], e.d[1]);
-      ctx.stroke();
-      ctx.restore();
-    }
-    // Winkelfelder innen: A und C braun, B und D Tinte. [Ecke, Anfang, Weite, Farbe, Zahl]
+    // Winkelfelder innen: A und C braun, B und D Tinte; dazu außen an D und B die Wechselwinkel an den Parallelen,
+    // braun wie A und C: alle gleich groß. [Ecke, Anfang, Weite, Farbe, Zahl]
     var r = Math.min(28 * k, 0.32 * M.h), felder = [
-      [e.a, 0, th, F[1], za], [e.b, th, P - th, F[0], zb], [e.c, P, th, F[1], za], [e.d, P + th, P - th, F[0], zb]
+      [e.a, 0, th, F[1], za], [e.b, th, P - th, F[0], zb], [e.c, P, th, F[1], za], [e.d, P + th, P - th, F[0], zb],
+      [e.d, P, th, F[1], za], [e.b, 0, th, F[1], za]
     ];
     felder.forEach(function (f) { H.feld(ctx, f[0], r, f[1], f[2], f[3].fuell, f[3].linie, ws); });
     // die Seiten kräftig in Tinte
@@ -150,7 +137,7 @@ App.level('winkel', {
       ctx.beginPath(); ctx.arc(e.d[0], e.d[1], 15 * k, 0, H.TAU); ctx.stroke();
       ctx.fillStyle = 'rgba(56,41,25,0.12)'; ctx.fill();
     }
-    // Zahlen innen auf der Winkelhalbierenden: A immer, C erst "?", B und D erst nach der Antwort
+    // Zahlen auf der Winkelhalbierenden: A und die Wechselwinkel immer, C erst "?", B und D innen erst nach der Antwort
     felder.forEach(function (f, i) {
       if (!Z.ok && (i === 1 || i === 3)) return;
       var frage = i === 2 && !Z.ok, mid = f[1] + f[2] / 2, gr = f[2] * 180 / P;
@@ -176,7 +163,7 @@ App.level('winkel', {
                   { t: ' = 180°', c: C.INK }], y);
     ctx.save();
     ctx.font = '400 14.5px ' + C.FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.fillStyle = C.PENCIL;
-    ctx.fillText(App.wahl(rechteck(Z) ? TEXT.recht : TEXT.gleich), S.w / 2, y + 22);
+    ctx.fillText(App.wahl(TEXT.gleich), S.w / 2, y + 22);
     ctx.restore();
   },
 
