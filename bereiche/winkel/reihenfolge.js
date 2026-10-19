@@ -12,6 +12,7 @@ App.ordnung.winkel = [
   'sechsecke-ecke',
   'mosaik',
   'vieleck-dreiecke',
+  'vieleck-winkel',
   'stern',
   'aehnliche-dreiecke'
 ];
