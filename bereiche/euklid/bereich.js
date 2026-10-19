@@ -89,6 +89,16 @@ function buildScene(ctx, ws) {
   });
 }
 
+// weißer Hilfskreis des Zirkels, unter der Zeichnung, damit die Bögen darauf sichtbar bleiben
+function helperRing(ctx, ws) {
+  if (S.tool !== 'compass' || !S.cc || S.rad <= 0 || S.cmode === 'center') return;
+  var c = S.cmode === 'needle' ? (S.target ? vp(S.target) : S.end) : vp(S.cc);
+  if (!c) return;
+  ctx.lineCap = 'butt';
+  ctx.strokeStyle = '#ffffff';
+  arcLine(ctx, c, S.rad, 0, TAU, 1.6 * ws * S.k);
+}
+
 function buildTemp(ctx, ws) {
   var k = S.k;
   ctx.lineCap = 'butt';
@@ -115,8 +125,6 @@ function buildTemp(ctx, ws) {
       dotAt(ctx, c, true);
       if (S.rad > 0) {
         var r = S.rad, pa = m === 'rotate' ? S.pa0 + S.sweep : S.pa;
-        ctx.strokeStyle = '#ffffff';
-        arcLine(ctx, c, r, 0, TAU, 1.6 * ws * k);
         if (m === 'rotate' && S.hi - S.lo > 0.01) {
           ctx.strokeStyle = C.PENCIL;
           arcLine(ctx, c, r, S.pa0 + S.lo, S.hi - S.lo, 1.1 * ws * k);
@@ -453,7 +461,7 @@ App.bereich({
     App.setTool('line');
     loadLevel(S.level === null ? S.start_level : S.level);
   },
-  draw: function (ctx, ws) { buildScene(ctx, ws); buildTemp(ctx, ws); },
+  draw: function (ctx, ws) { helperRing(ctx, ws); buildScene(ctx, ws); buildTemp(ctx, ws); },
   down: _down, move: _move, up: _up, check: checkLevel,
   undo: undo, clear: clearAll, next: nextLevel,
   persist: function () { storeCurrent(); saveProgress(); }
