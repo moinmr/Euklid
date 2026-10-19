@@ -82,8 +82,10 @@ function buildScene(ctx, ws) {
     }
   });
   if (S.target) mark(ctx, S.target);
-  if (S.base) S.base.forEach(function (v) {
-    if (v.name) text(ctx, v.name, v.x, v.y + 17 * k, C.INK, 14);
+  if (S.base) S.base.forEach(function (v, i) {
+    // A und B: Name unter dem Punkt, weitere feste Punkte: Name in Verlängerung von A aus
+    var o = i < 2 ? [0, 1] : unit(vp(S.base[0]), vp(v));
+    if (v.name) text(ctx, v.name, v.x + o[0] * 17 * k, v.y + o[1] * 17 * k, C.INK, 14);
   });
 }
 
@@ -155,7 +157,9 @@ function merge(v, tgt) {
 
 function split(v) {
   var inc = S.edges.filter(function (e) { return e.a === v || e.b === v; });
-  inc.slice(1).forEach(function (o) {
+  // feste Strecken bleiben an ihrem Punkt, getrennt werden nur die eigenen
+  var own = inc.filter(function (e) { return !e.locked; });
+  (own.length < inc.length ? own : inc.slice(1)).forEach(function (o) {
     var other = o.a === v ? o.b : o.a;
     var u = unit(vp(v), vp(other));
     var d = Math.min(24 * S.k, 0.4 * Math.hypot(other.x - v.x, other.y - v.y));
@@ -311,6 +315,16 @@ function loadLevel(n, restore) {
     a.locked = b.locked = true; a.name = 'A'; b.name = 'B';
     S.base = [a, b];
     S.edges.push({ a: a, b: b, col: C.BASEC, gid: 0, locked: true });
+    // weitere feste Punkte des Levels (relativ zu A, in Längen von AB) und feste Strecken
+    var Lv = LEVELS[n], fest = { A: a, B: b };
+    Object.keys(Lv.punkte || {}).forEach(function (nm) {
+      var q = Lv.punkte[nm], v = V([a.x + q[0] * L, a.y + q[1] * L]);
+      v.locked = true; v.name = nm; fest[nm] = v;
+      S.base.push(v);
+    });
+    (Lv.kanten || []).forEach(function (k) {
+      S.edges.push({ a: fest[k[0]], b: fest[k[1]], col: C.BASEC, gid: 0, locked: true });
+    });
     if (restore) {
       var sn = S.solutions[n] || S.work[n];
       if (sn) restoreSnap(sn);
@@ -332,7 +346,8 @@ function snapshot() {
   if (!S.base) return null;
   var A = S.base[0], B = S.base[1];
   var s = Math.hypot(B.x - A.x, B.y - A.y) || 1;
-  var idx = new Map(); idx.set(A, 'A'); idx.set(B, 'B');
+  var idx = new Map();
+  S.base.forEach(function (v) { idx.set(v, v.name); });
   var verts = [];
   function ref(v) {
     if (!idx.has(v)) { idx.set(v, verts.length); verts.push([(v.x - A.x) / s, (v.y - A.y) / s]); }
@@ -349,7 +364,9 @@ function restoreSnap(sn) {
   var A = S.base[0], B = S.base[1];
   var s = Math.hypot(B.x - A.x, B.y - A.y) || 1;
   var vs = sn.verts.map(function (q) { return V([A.x + q[0] * s, A.y + q[1] * s]); });
-  function get(r) { return r === 'A' ? A : (r === 'B' ? B : vs[r]); }
+  var fest = {};
+  S.base.forEach(function (v) { fest[v.name] = v; });
+  function get(r) { return typeof r === 'string' ? fest[r] : vs[r]; }
   sn.edges.forEach(function (e) { S.edges.push({ a: get(e[0]), b: get(e[1]), col: e[2], gid: e[3] }); });
   sn.circles.forEach(function (c) {
     S.circles.push({ c: V([A.x + c[0] * s, A.y + c[1] * s]), r: c[2] * s, a0: c[3], sw: c[4], col: c[5], gid: c[6] });

@@ -63,7 +63,7 @@ Konstruieren mit Linie und Zirkel auf einer vorgegebenen Strecke AB (Canvas, Poi
 - Linie: erst tippen = Start, dann tippen = Ende. Ecken rasten ein (grün = verbinden).
 - Zirkel: Spitze setzen, Radius mit zweitem Touch, dann Bogen auf dem weißen Hilfskreis ziehen. Bögen sind nur Hilfslinien (Bleistift), sie verbinden sich nicht mit Linien.
 - Ecke schieben (mit Verbinden), Trennen (rot nur wenn mehrere Kanten zusammenkommen).
-- Level: 1 Gleichseitiges Dreieck, 2 Sechseck, 3 Mittelsenkrechte. Prüfung geometrisch mit Toleranz. Gelöste Level und Lösungsbild werden gemerkt, angefangene Zeichnungen auch.
+- Level: 1 Gleichseitiges Dreieck, 2 Sechseck, 3 Mittelsenkrechte, 4 Winkelhalbierende (fester Winkel 70° bei A zwischen AB und AC; verlangt Kreis um A durch beide Schenkel, gleich große Kreise um die zwei Schnittpunkte und eine Linie von A durch deren Schnittpunkt). Prüfung geometrisch mit Toleranz. Gelöste Level und Lösungsbild werden gemerkt, angefangene Zeichnungen auch.
 - Referenz: die frühere Kivy-Version `geometrie_app.py` (Pydroid 3) ist die Vorlage der Logik.
 
 ## Bereich Winkel
@@ -123,13 +123,13 @@ Leitidee: Der Schüler erlebt zuerst, dann bekommt es einen Namen, dann wird es 
 - Rückwärts: "Welche Eingabe ergibt 9?" mit Graph ablesen.
 - Gegenbeispiel Nicht-Funktion im Graph (Kreis, senkrechte Gerade).
 - Wort "Funktion" und Schreibweise f(x) einführen, danach Parabeln.
-- Euklid: weitere Level (Winkelhalbierende, Lot, Quadrat).
+- Euklid: weitere Level (Lot, Quadrat).
 - Optional: eigene Kinderprofile, Sterne, Ton.
 
 ## Technik-Hinweise für neue Chats
 
 - Kein Build-Schritt: einfache Skripte, alles hängt an `window.App`. `S` = Zustand Euklid und Ansicht (`App.S`), Funktionen-Zustand `F` und Maschinen-Zustand `M` liegen in `bereiche/funktionen/bereich.js`.
-- Euklid-Level bringen `pruefen(A, B, s, tol)` mit (Hilfen in `App.euklid`). Funktionen-Level sind entweder Maschinen-Level (`start`, `html`, `click`, Hilfen in `App.funk`) oder Gitter-Level (nur Daten `pts` bzw. `eq` und `xs`).
+- Euklid-Level bringen `pruefen(A, B, s, tol)` mit (Hilfen in `App.euklid`). Optional `punkte: { C: [x, y] }` (weitere feste Punkte relativ zu A, in Längen von AB, y nach unten) und `kanten: [['A', 'C']]` (feste Strecken), dazu `y` für die Höhe von AB. Funktionen-Level sind entweder Maschinen-Level (`start`, `html`, `click`, Hilfen in `App.funk`) oder Gitter-Level (nur Daten `pts` bzw. `eq` und `xs`).
 - Tests am Rechner: Oberfläche mit Playwright und Touch- bzw. Maus-Eingabe (Chromium vorhanden). Beim Umbau in Dateien wurde die alte Einzeldatei Bild für Bild gegen die neue Fassung verglichen.
 - Fortschritt und Level-Kennungen: Jedes Level hat eine feste Kennung (`id`, z. B. `dreieck`, `taxi`, `negative-steigung`), gleich dem Dateinamen. Gelöste Level, Lösungsbilder und angefangene Zeichnungen werden nach dieser Kennung gespeichert, nicht nach der Position. Darum dürfen Level frei umsortiert werden, und die Nummer im Titel ergibt sich aus der Position.
 - Eine Kennung nie ändern, sonst ist der Stand dieses Levels weg. Neue Level bekommen eine neue, eindeutige Kennung.

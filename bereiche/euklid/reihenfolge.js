@@ -3,5 +3,6 @@
 App.ordnung.euklid = [
   'dreieck',
   'sechseck',
-  'mittelsenkrechte'
+  'mittelsenkrechte',
+  'winkelhalbierende'
 ];
