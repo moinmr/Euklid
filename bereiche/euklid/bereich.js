@@ -192,10 +192,14 @@ function _down(pos) {
         S.last = Math.atan2(pos[1] - S.cc.y, pos[0] - S.cc.x);
         S.pa0 = S.last; S.sweep = 0; S.lo = 0; S.hi = 0;
       } else if (d_cc < GRAB * S.k) {
+        // Nadel ziehen: der Zirkel wandert mit, der Radius bleibt
         S.cmode = 'needle';
         S.target = csnap(pos);
       } else {
-        S.cmode = null; S.target = null;
+        // woanders tippen: neuer Radius um dieselbe Spitze
+        S.cmode = 'radius'; S.rad_old = S.rad;
+        S.target = csnap(pos, S.cc);
+        S.rad = radiusAt(pos);
       }
     }
   } else {
@@ -271,7 +275,7 @@ function _up(pos) {
       var sw = full ? TAU : span;
       S.gid += 1;
       S.circles.push({ c: V(vp(S.cc)), r: S.rad, a0: S.pa0 + S.lo, sw: sw, col: C.PENCIL, gid: S.gid });
-      S.cc = null; S.rad = 0;
+      // der Zirkel bleibt eingestellt: weiterer Bogen, Nadel ziehen oder neuer Radius
     }
     S.cmode = null; S.target = null; S.sweep = 0; S.lo = 0; S.hi = 0;
   }

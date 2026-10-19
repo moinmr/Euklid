@@ -4,5 +4,6 @@ App.ordnung.euklid = [
   'dreieck',
   'sechseck',
   'mittelsenkrechte',
-  'winkelhalbierende'
+  'winkelhalbierende',
+  'winkel-uebertragen'
 ];

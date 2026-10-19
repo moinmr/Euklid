@@ -61,9 +61,9 @@ App ganz schließen und neu öffnen. Hilft das nicht: in Chrome `.../index.html?
 Konstruieren mit Linie und Zirkel auf einer vorgegebenen Strecke AB (Canvas, Pointer Events).
 
 - Linie: erst tippen = Start, dann tippen = Ende. Ecken rasten ein (grün = verbinden).
-- Zirkel: Spitze setzen, Radius mit zweitem Touch, dann Bogen auf dem weißen Hilfskreis ziehen. Bögen sind nur Hilfslinien (Bleistift), sie verbinden sich nicht mit Linien.
+- Zirkel: Spitze setzen, Radius mit zweitem Touch, dann Bogen auf dem weißen Hilfskreis ziehen. Danach bleibt der Zirkel eingestellt: weiterer Bogen auf dem Hilfskreis, Nadel ziehen (Radius bleibt, so überträgt man Längen) oder woanders tippen (neuer Radius um dieselbe Spitze). Werkzeugwechsel oder Rückgängig nimmt ihn weg. Bögen sind nur Hilfslinien (Bleistift), sie verbinden sich nicht mit Linien.
 - Ecke schieben (mit Verbinden), Trennen (rot nur wenn mehrere Kanten zusammenkommen).
-- Level: 1 Gleichseitiges Dreieck, 2 Sechseck, 3 Mittelsenkrechte, 4 Winkelhalbierende (fester Winkel 70° bei A zwischen AB und AC; verlangt Kreis um A durch beide Schenkel, gleich große Kreise um die zwei Schnittpunkte und eine Linie von A durch deren Schnittpunkt). Prüfung geometrisch mit Toleranz. Gelöste Level und Lösungsbild werden gemerkt, angefangene Zeichnungen auch.
+- Level: 1 Gleichseitiges Dreieck, 2 Sechseck, 3 Mittelsenkrechte, 4 Winkelhalbierende (fester Winkel 70° bei A zwischen AB und AC; verlangt Kreis um A durch beide Schenkel, gleich große Kreise um die zwei Schnittpunkte und eine Linie von A durch deren Schnittpunkt), 5 Winkel übertragen (fester Winkel 55° bei D zwischen DE und DF; verlangt gleich große Kreise um D und A durch beide Schenkel bzw. AB, einen Kreis um den Punkt auf AB mit der Öffnungsweite des Winkels und eine Linie von A durch den Schnittpunkt; beide Seiten von AB zählen). Prüfung geometrisch mit Toleranz. Gelöste Level und Lösungsbild werden gemerkt, angefangene Zeichnungen auch.
 - Referenz: die frühere Kivy-Version `geometrie_app.py` (Pydroid 3) ist die Vorlage der Logik.
 
 ## Bereich Winkel
