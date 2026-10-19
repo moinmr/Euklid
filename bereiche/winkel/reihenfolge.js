@@ -14,5 +14,6 @@ App.ordnung.winkel = [
   'vieleck-dreiecke',
   'vieleck-winkel',
   'stern',
+  'thales',
   'aehnliche-dreiecke'
 ];
