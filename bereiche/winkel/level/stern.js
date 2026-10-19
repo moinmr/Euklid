@@ -3,7 +3,7 @@
 // Ist der Stern fertig, zeigt die obere Ecke den Innenwinkel des Vielecks (grau, mit Zahl) und die Spitze des Sterns
 // (braun, mit ?). Die Linien aus einer Ecke teilen den Innenwinkel in gleiche Teile von je 180°/n:
 // Fünfeck 108° = 3 × 36°, die Spitze ist ein Teil (36°); Achteck 135° = 6 × 22,5°, die Spitze ist zwei Teile (45°).
-// Die Zahl schreibt man ins Schreibfeld. Richtig: alle Spitzen bekommen ihre Zahl, unten "5 × 36° = 180°".
+// Die Zahl schreibt man ins Schreibfeld. Richtig: alle Spitzen bekommen ihre Zahl.
 // Antippen bringt den nächsten Stern. Gelöst nach dem Achtstern.
 (function () {
 var App = window.App, S = App.S, C = App.C;
@@ -165,9 +165,9 @@ App.level('winkel', {
     }
   },
 
-  // Unten: "Tippe für die nächste Linie", nach der Antwort "5 × 36° = 180°" und "Tippe für den nächsten Stern"
+  // Unten: "Tippe für die nächste Linie", nach der Antwort "Tippe für den nächsten Stern"
   overlay: function (ctx, Z) {
-    var H = App.winkel, St = STERNE[Z.s], letzter = Z.s === STERNE.length - 1;
+    var letzter = Z.s === STERNE.length - 1;
     if (fertig(Z) && !Z.ok) return;
     ctx.save();
     if (!fertig(Z)) {
@@ -176,12 +176,9 @@ App.level('winkel', {
       ctx.restore();
       return;
     }
-    var y = zeilenY(letzter ? 1 : 2);
-    H.zeile(ctx, [{ t: St.n + ' × ', c: C.INK }, { t: St.spitze + '°', c: H.farben[1].linie },
-                  { t: ' = ' + St.n * St.spitze + '°', c: C.INK }], y);
     if (!letzter) {
       ctx.font = '400 14.5px ' + C.FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.fillStyle = C.PENCIL;
-      ctx.fillText(App.wahl(TEXT.weiter), S.w / 2, y + 24);
+      ctx.fillText(App.wahl(TEXT.weiter), S.w / 2, zeilenY(1));
     }
     ctx.restore();
   },
