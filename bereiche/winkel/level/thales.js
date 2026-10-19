@@ -1,7 +1,8 @@
 // Level: Satz des Thales, ohne Zahlen bewiesen. Halbkreis über AB (Mitte O), C auf dem Halbkreis, Dreieck ABC mit α bei A
 // (braun) und β bei B (Tinte). Antippen zieht den Radius OC; OA, OB, OC heißen r. Dann tippt man an, welcher Teil des
-// Winkels bei C so groß ist wie α (Dreieck AOC hat zwei Radien), danach den Teil, der so groß ist wie β. Antippen zeigt
-// unten "α + β + (α + β) = 180°", noch einmal Antippen "α + β = 90°" und 90° über C. Dann zieht man C am Griff auf dem
+// Winkels bei C so groß ist wie α (Dreieck AOC hat zwei Radien), danach den Teil, der so groß ist wie β. Dann fragt das
+// Schreibfeld: Wie groß ist α + α + β + β? (180) und Wie groß ist der Winkel bei C? (90). Unten stehen danach
+// "α + α + β + β = 180°" und "α + β = 90°", über C 90°. Dann zieht man C am Griff auf dem
 // Halbkreis (α 20° bis 70°): es bleibt so. Gelöst nach insgesamt 30° Änderung von α.
 // Zustand: Z.s Schritt (0 bis 5), Z.al α in Grad (nur für die Zeichnung), Z.dreh wie weit schon gezogen.
 (function () {
@@ -38,8 +39,28 @@ var TEXT = {
              es: 'Todavía no. Mira el triángulo BOC: OB y OC miden lo mismo (radios), así que los ángulos en B y en C son iguales.',
              ja: 'まだです。三角形BOCを見よう：OBとOCは同じ長さ（半径）なので、BとCの角は同じ大きさ。',
              ar: 'ليس بعد. انظر إلى المثلث BOC: OB وOC لهما الطول نفسه (نصفا قطر)، لذلك الزاويتان عند B وC متساويتان.' },
-  weiter: { de: 'Tippe weiter', en: 'Tap to go on', fi: 'Napauta jatkaaksesi', tr: 'Devam etmek için dokun',
-            fr: 'Touche l’écran pour continuer', es: 'Toca para seguir', ja: 'タップして続けよう', ar: 'انقر للمتابعة' }
+  fSumme: { de: 'Wie groß ist α + α + β + β?', en: 'How big is α + α + β + β?', fi: 'Kuinka suuri on α + α + β + β?',
+            tr: 'α + α + β + β kaç derece?', fr: 'Combien vaut α + α + β + β ?', es: '¿Cuánto vale α + α + β + β?',
+            ja: 'α + α + β + β は何度かな？', ar: 'كم يساوي α + α + β + β؟' },
+  fC: { de: 'Wie groß ist der Winkel bei C?', en: 'How big is the angle at C?', fi: 'Kuinka suuri on kulma C:ssä?',
+        tr: 'C’deki açı kaç derece?', fr: 'Combien mesure l’angle en C ?', es: '¿Cuánto mide el ángulo en C?',
+        ja: 'Cの角は何度かな？', ar: 'كم قياس الزاوية عند C؟' },
+  hSumme: { de: 'Noch nicht. α, β und die zwei Teile bei C sind zusammen alle Winkel im Dreieck ABC.',
+            en: 'Not yet. α, β and the two parts at C are all the angles of triangle ABC together.',
+            fi: 'Ei vielä. α, β ja C:n kaksi osaa ovat yhdessä kaikki kolmion ABC kulmat.',
+            tr: 'Henüz değil. α, β ve C’deki iki parça birlikte ABC üçgeninin bütün açılarıdır.',
+            fr: 'Pas encore. α, β et les deux parties en C forment ensemble tous les angles du triangle ABC.',
+            es: 'Todavía no. α, β y las dos partes en C son juntos todos los ángulos del triángulo ABC.',
+            ja: 'まだです。α、β、Cの2つの部分を合わせると、三角形ABCの角ぜんぶになります。',
+            ar: 'ليس بعد. α وβ والجزآن عند C هي معًا كل زوايا المثلث ABC.' },
+  hC: { de: 'Noch nicht. Der Winkel bei C ist α + β, also die Hälfte von α + α + β + β.',
+        en: 'Not yet. The angle at C is α + β, which is half of α + α + β + β.',
+        fi: 'Ei vielä. Kulma C:ssä on α + β, eli puolet summasta α + α + β + β.',
+        tr: 'Henüz değil. C’deki açı α + β, yani α + α + β + β’nin yarısı.',
+        fr: 'Pas encore. L’angle en C vaut α + β, c’est la moitié de α + α + β + β.',
+        es: 'Todavía no. El ángulo en C es α + β, es decir, la mitad de α + α + β + β.',
+        ja: 'まだです。Cの角はα + β。つまりα + α + β + βの半分です。',
+        ar: 'ليس بعد. الزاوية عند C هي α + β، أي نصف α + α + β + β.' }
 };
 
 function abst(p, q) { return Math.hypot(q[0] - p[0], q[1] - p[1]); }
@@ -51,7 +72,8 @@ function zwischen(d1, d2) {
 // Maße: Mitte O von AB, Radius R. Oben Platz für C und 90°, unten für die Buchstaben A, O, B und drei Textzeilen.
 function mass() {
   var H = App.winkel, P = H.platz(3), k = S.k, oben = 46 * k, unter = 22 * k;
-  var ende = Math.min(P.unten, H.textY(3) - 10), h = Math.max(80, ende - P.oben);
+  // mit offenem Schreibfeld reicht das Bild bis knapp über die Karte
+  var ende = H.feldOffen() ? H.feldOben() - 14 : Math.min(P.unten, H.textY(3) - 10), h = Math.max(80, ende - P.oben);
   var R = Math.max(50, Math.min(S.w * 0.44, h - oben - unter));
   var y0 = P.oben + Math.max(0, (h - oben - R - unter) / 2);
   return { o: [S.w / 2, y0 + oben + R], R: R, f: Math.max(0.65, Math.min(1, R / 140)) };
@@ -68,6 +90,12 @@ function winkelFeld(ctx, p, q1, q2, r, f, txt, groesse, ws, ra) {
   if (txt) App.text(ctx, txt, p[0] + Math.cos(mid) * ra, p[1] - Math.sin(mid) * ra, f.linie, groesse);
 }
 
+// Schritt 3 und 4: die zwei Fragen im Schreibfeld
+function start(Z) {
+  var H = App.winkel;
+  if (Z.s === 3) H.frage(180, TEXT.hSumme, function () { Z.s = 4; start(Z); }, { text: TEXT.fSumme });
+  else if (Z.s === 4) H.frage(90, TEXT.hC, function () { Z.s = FERTIG; }, { text: TEXT.fC });
+}
 // Angetippter Teil des Winkels bei C: 'a' (Seite von A) oder 'b' (Seite von B), null wenn zu weit weg von C
 function teil(Z, w) {
   var E = ecken(Z), o = E.o, c = E.c;
@@ -113,6 +141,7 @@ App.level('winkel', {
           done: 'مبرهنة طاليس: إذا وقعت C على نصف الدائرة فوق AB فالزاوية عند C دائمًا 90°. تقسم أنصاف الأقطار المثلث إلى مثلثين لكل منهما زاويتان متساويتان، لذلك α + β + (α + β) = 180°.' }
   },
   werkzeuge: ['clear'],
+  start: start,
 
   neu: function (Z) {
     var wahl = [30, 35, 40, 50, 55, 60];
@@ -123,13 +152,14 @@ App.level('winkel', {
   // Antippen: Radius OC, dann die Fragen; am Ende nur noch der Griff an C
   down: function (Z, w) {
     var H = App.winkel;
-    if (Z.s === 0 || Z.s === 3 || Z.s === 4) { Z.s++; return; }   // Radius, dann die zwei Gleichungen
+    if (Z.s === 0) { Z.s = 1; return; }   // Radius
     if (Z.s === 1 || Z.s === 2) {
       var t = teil(Z, w), soll = Z.s === 1 ? 'a' : 'b';
       if (!t) return;
       if (t !== soll) { H.falsch(Z.s === 1 ? TEXT.falschA : TEXT.falschB); return; }
-      H.falschWeg(); Z.s++; return;
+      H.falschWeg(); Z.s++; start(Z); return;
     }
+    if (Z.s < FERTIG) return;   // erst die Fragen beantworten
     Z.zieht = abst(w, ecken(Z).c) <= C.GRAB * 1.3 * S.k;
     if (Z.zieht) ziehen(Z, w);
   },
@@ -193,7 +223,7 @@ App.level('winkel', {
     }
   },
 
-  // Unten: Hinweis bzw. Aufgabe zum Antippen; dann "α + β + (α + β) = 180°" und "α + β = 90°"
+  // Unten: Hinweis bzw. Aufgabe zum Antippen; am Ende "α + α + β + β = 180°" und "α + β = 90°"
   overlay: function (ctx, Z) {
     var H = App.winkel, F = H.farben, s = Z.s, A = { t: 'α', c: F[1].linie }, B = { t: 'β', c: F[0].linie }, plus = { t: ' + ', c: C.INK };
     function hinweis(text, y) {
@@ -203,18 +233,20 @@ App.level('winkel', {
       ctx.restore();
     }
     if (s < 3) { hinweis(s === 0 ? TEXT.radius : s === 1 ? TEXT.tippA : TEXT.tippB, H.textY(1)); return; }
+    if (s < FERTIG) return;   // die Frage steht im Schreibfeld
     var gruen = document.getElementById('fertig'), geloest = !!(gruen && !gruen.hidden), y = H.textY(3);
     if (geloest) y = Math.min(H.textY(2), gruen.getBoundingClientRect().top - 18 - 26);
-    H.zeile(ctx, [A, plus, B, plus, { t: '(', c: C.INK }, A, plus, B, { t: ') = 180°', c: C.INK }], y);
-    if (s >= FERTIG) H.zeile(ctx, [A, plus, B, { t: ' = 90°', c: C.INK }], y + 26);
-    if (!geloest) hinweis(s >= FERTIG ? TEXT.ziehen : TEXT.weiter, s >= FERTIG ? y + 52 : y + 26);
+    H.zeile(ctx, [A, plus, A, plus, B, plus, B, { t: ' = 180°', c: C.INK }], y);
+    H.zeile(ctx, [A, plus, B, { t: ' = 90°', c: C.INK }], y + 26);
+    if (!geloest) hinweis(TEXT.ziehen, y + 52);
   },
 
-  bild: function (Z) { return Z.s ? { v: 2, s: Z.s, al: Z.al, dreh: Z.dreh } : null; },
+  bild: function (Z) { return Z.s ? { v: 3, s: Z.s, al: Z.al, dreh: Z.dreh } : null; },
   ausBild: function (Z, b) {
-    if (b.v !== 1 && b.v !== 2) return;
-    // v1 war der Beweis mit Zahlen: fertig bleibt fertig, sonst von vorn
-    Z.s = b.v === 2 ? Math.max(0, Math.min(FERTIG, b.s | 0)) : ((b.s | 0) >= 4 ? FERTIG : 0); Z.al = Math.max(AL_MIN, Math.min(AL_MAX, b.al || 40)); Z.dreh = b.dreh || 0;
+    if (b.v !== 1 && b.v !== 2 && b.v !== 3) return;
+    // v1 war der Beweis mit Zahlen, v2 hatte die Gleichungen ohne Fragen: fertig bleibt fertig, sonst ab der ersten Frage
+    var bs = b.s | 0;
+    Z.s = b.v === 3 ? Math.max(0, Math.min(FERTIG, bs)) : b.v === 2 ? (bs >= 5 ? FERTIG : Math.min(bs, 3)) : (bs >= 4 ? FERTIG : 0); Z.al = Math.max(AL_MIN, Math.min(AL_MAX, b.al || 40)); Z.dreh = b.dreh || 0;
   }
 });
 })();
