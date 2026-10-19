@@ -1,5 +1,5 @@
-// Level: Ein rechtwinkliges Dreieck ABC, die lange Seite AB unten, der rechte Winkel oben bei C (C liegt auf dem
-// Halbkreis über AB, dünn angedeutet). α bei A braun (zufällig 30° bis 60° in Fünferschritten, nicht 45°), β bei B in
+// Level: Ein rechtwinkliges Dreieck ABC, die lange Seite AB unten, der rechte Winkel oben bei C (grau, „90°“ über C;
+// C liegt auf dem Halbkreis über AB, der nicht gezeichnet wird; kein Zeichen für den rechten Winkel). α bei A braun (zufällig 30° bis 60° in Fünferschritten, nicht 45°), β bei B in
 // Tinte, 90° bei C grau. Antippen zeigt die Höhe von C auf AB gestrichelt: zwei kleine Dreiecke. Der Winkel bei C im
 // linken kleinen Dreieck zeigt "?", man schreibt ihn ins Schreibfeld (er ist so groß wie β). Danach haben beide Teile
 // bei C ihre Zahl (links β, rechts α). Antippen zeigt die zwei kleinen Dreiecke einzeln unter dem großen, gleich
@@ -47,15 +47,18 @@ var KOPIE_H = 0.77;
 // s ist die Verkleinerung der einzelnen Dreiecke, damit beide nebeneinander passen (für jedes α gleich, damit nichts springt).
 function mass(Z) {
   // Platz wie App.winkel.platz, aber nie bis unter die Textzeile über dem Schreibfeld (auf kleinen Bildschirmen)
-  var H = App.winkel, P = H.platz(2), k = S.k, unten = Math.min(P.unten, H.textY(2) - 10);
-  var h = Math.max(70, unten - P.oben), my = P.oben + h / 2, R = Math.max(40, Math.min(S.w * 0.42, (h - 24) / 1.1));
+  // mit offenem Schreibfeld steht unten keine Zeile: das Bild reicht bis knapp über die Karte
+  var H = App.winkel, P = H.platz(2), k = S.k, unten = H.feldOffen() ? H.feldOben() - 14 : Math.min(P.unten, H.textY(2) - 10);
+  // Höhe des Dreiecks: R·sin 2α; beim Ziehen (mit den einzelnen Dreiecken) bis R. Oben Platz für „90°“ über C.
+  var hf = Z.getrennt ? 1 : Math.sin(2 * Z.al * RAD), oben = 26 * k;
+  var h = Math.max(70, unten - P.oben), my = P.oben + h / 2, R = Math.max(40, Math.min(S.w * 0.45, (h - oben - 8) / hf));
   var gx = 26 * k, g = 34 * k, unter = 24 * k, s = 1, yb;
   function verkl(R) { return Math.min(1, (S.w - 40 - gx) / (2 * R * Math.SQRT2)); }
   if (Z.getrennt) {
     s = verkl(R);
     while (R > 40 && R + g + KOPIE_H * s * R + unter > h) { R *= 0.96; s = verkl(R); }
     yb = my - (R + g + KOPIE_H * s * R + unter) / 2 + R;
-  } else yb = my + R / 2;
+  } else yb = my + (R * hf + oben) / 2;
   // f: kleineres Dreieck, kleinere Winkelfelder und Zahlen näher an der Ecke
   return { o: [S.w / 2, yb], R: R, s: s, g: g, gx: gx, yk: yb + g + KOPIE_H * s * R, f: Math.max(0.6, Math.min(1, R / 140)) };
 }
@@ -72,15 +75,6 @@ function start(Z) {
   if (Z.schritt === 1 && !Z.ok) App.winkel.frage(zahlen(Z).b, TEXT.falsch, function () { Z.ok = true; }, { text: TEXT.frageFeld });
 }
 
-// Zeichen für den rechten Winkel an der Ecke p zwischen den Richtungen u und v (Einheitsvektoren auf dem Bildschirm)
-function rechterWinkel(ctx, p, u, v, l, farbe, ws) {
-  ctx.strokeStyle = farbe; ctx.lineWidth = 1.6 * ws * S.k; ctx.lineJoin = 'miter';
-  ctx.beginPath();
-  ctx.moveTo(p[0] + u[0] * l, p[1] + u[1] * l);
-  ctx.lineTo(p[0] + (u[0] + v[0]) * l, p[1] + (u[1] + v[1]) * l);
-  ctx.lineTo(p[0] + v[0] * l, p[1] + v[1] * l);
-  ctx.stroke();
-}
 function einheit(p, q) { var d = abst(p, q) || 1; return [(q[0] - p[0]) / d, (q[1] - p[1]) / d]; }
 // Winkelfeld an p zwischen den Richtungen zu q1 und q2, mit Zahl (oder ?) auf der Winkelhalbierenden
 function winkelFeld(ctx, p, q1, q2, r, f, txt, groesse, ws, ra) {
@@ -100,7 +94,7 @@ function kopie(ctx, p, L, al, z, ws) {
   ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.lineTo(t[0], t[1]); ctx.closePath(); ctx.fill();
   winkelFeld(ctx, p, q, t, r, F[1], '', 0, ws);
   winkelFeld(ctx, q, p, t, r, F[0], '', 0, ws);
-  rechterWinkel(ctx, t, einheit(t, p), einheit(t, q), Math.min(9 * k, L * 0.08), F[2].linie, ws);
+  winkelFeld(ctx, t, p, q, r, F[2], '', 0, ws);
   ctx.strokeStyle = C.INK; ctx.lineWidth = 2.2 * ws * k; ctx.lineJoin = 'round';
   ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.lineTo(t[0], t[1]); ctx.closePath(); ctx.stroke();
   var yz = p[1] + 13 * k;
@@ -170,11 +164,6 @@ App.level('winkel', {
   draw: function (ctx, Z, ws) {
     var H = App.winkel, F = H.farben, k = S.k, ink = C.INK, E = ecken(Z), M = E.M, a = E.a, b = E.b, c = E.c, d = E.d;
     var z = zahlen(Z), fa = F[1], fb = F[0], fg = F[2], kf = k * M.f, r = 30 * kf;
-    // Halbkreis über AB, dünn und gestrichelt: darauf liegt C
-    ctx.save();
-    ctx.setLineDash([4 * k, 6 * k]); ctx.strokeStyle = 'rgba(115,115,122,0.45)'; ctx.lineWidth = 1.2 * ws * k;
-    ctx.beginPath(); ctx.arc(M.o[0], M.o[1], M.R, Math.PI, 2 * Math.PI); ctx.stroke();
-    ctx.restore();
     // bei der Frage das linke kleine Dreieck leicht hervorheben
     if (Z.schritt === 1 && !Z.ok) {
       ctx.fillStyle = 'rgba(56,41,25,0.07)';
@@ -183,25 +172,33 @@ App.level('winkel', {
     // Winkel bei A und B
     winkelFeld(ctx, a, b, c, r, fa, z.a + '°', 16, ws, zahlAbst(z.a, kf));
     winkelFeld(ctx, b, a, c, r, fb, z.b + '°', 16, ws, zahlAbst(z.b, kf));
-    var ua = einheit(c, a), ub = einheit(c, b);
-    if (Z.schritt < 1) {
-      // rechter Winkel bei C: grau mit Zeichen und Zahl
-      var mc = [ua[0] + ub[0], ua[1] + ub[1]], lm = Math.hypot(mc[0], mc[1]) || 1;
-      rechterWinkel(ctx, c, ua, ub, 12 * kf, fg.linie, ws);
-      App.text(ctx, '90°', c[0] + mc[0] / lm * 40 * kf, c[1] + mc[1] / lm * 40 * kf, fg.linie, 16);
-    } else {
+    // rechter Winkel bei C: grau, die Zahl oben über C; nach dem Teilen nur noch als Bogen außen um die beiden Teile
+    var ua = einheit(c, a), ub = einheit(c, b), mc = [ua[0] + ub[0], ua[1] + ub[1]], lm = Math.hypot(mc[0], mc[1]) || 1;
+    if (Z.schritt < 1) winkelFeld(ctx, c, a, b, r, fg, '', 0, ws);
+    else {
+      var wc = zwischen(H.richtung(c, a), H.richtung(c, b));
+      ctx.beginPath(); ctx.arc(c[0], c[1], 48 * kf, -wc[0], -(wc[0] + wc[1]), true);
+      ctx.strokeStyle = fg.linie; ctx.lineWidth = 1.6 * ws * k; ctx.stroke();
+    }
+    var l90 = (Z.getrennt ? 32 : 17) * k;   // über dem Griff, wenn er da ist
+    App.text(ctx, '90°', c[0] - mc[0] / lm * l90, c[1] - mc[1] / lm * l90, fg.linie, 16);
+    if (Z.schritt >= 1) {
       // Teile bei C: links (im Dreieck bei A) so groß wie β, rechts so groß wie α
       var frage = !Z.ok;
       winkelFeld(ctx, c, a, d, frage ? 36 * kf : r, frage ? { linie: fb.linie, fuell: 'rgba(56,41,25,0.22)' } : fb,
                  frage ? '?' : z.b + '°', frage ? 22 : 16, frage ? ws * 1.5 : ws, zahlAbst(z.b, kf) + (frage ? 6 * kf : 0));
       if (Z.ok) winkelFeld(ctx, c, d, b, r, fa, z.a + '°', 16, ws, zahlAbst(z.a, kf));
-      // Höhe gestrichelt, Fußpunkt mit rechtem Winkel
+      // Höhe gestrichelt, am Fußpunkt auf beiden Seiten 90° (grau)
+      var rd = Math.min(16 * kf, (d[1] - c[1]) * 0.3);
+      [a, b].forEach(function (e) {
+        var lx = d[0] + (e[0] < d[0] ? -1 : 1) * (rd + 12 * k);
+        H.feld(ctx, d, rd, e[0] < d[0] ? Math.PI / 2 : 0, Math.PI / 2, fg.fuell, fg.linie, ws);
+        App.text(ctx, '90°', lx, d[1] - rd - 8 * k, fg.linie, 13);
+      });
       ctx.save();
       ctx.setLineDash([7 * k, 6 * k]); ctx.strokeStyle = ink; ctx.lineWidth = 2 * ws * k; ctx.lineCap = 'butt';
       ctx.beginPath(); ctx.moveTo(c[0], c[1]); ctx.lineTo(d[0], d[1]); ctx.stroke();
       ctx.restore();
-      var lr = Math.min(11 * kf, Math.max(4, (c[1] - d[1]) * -0.25));
-      rechterWinkel(ctx, d, [0, -1], d[0] > M.o[0] ? [-1, 0] : [1, 0], lr, fg.linie, ws);
     }
     // das große Dreieck
     ctx.strokeStyle = ink; ctx.lineWidth = 2.5 * ws * k; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
