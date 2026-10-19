@@ -57,10 +57,11 @@ function ecken(n, zahlen) {
   }
   return { p: p, R: R };
 }
-// Stand: Z.j Diagonalen gezogen; fertig, wenn alle n − 3 da sind
-function fertig(Z) { return Z.j >= FORMEN[Z.form] - 3; }
-// Dreiecke, die schon abgeschnitten sind (die letzte Diagonale schneidet zwei ab)
-function dreiecke(Z) { var n = FORMEN[Z.form]; return fertig(Z) ? n - 2 : Z.j; }
+// Stand: Z.j Dreiecke gefüllt, eins pro Tipp; fertig, wenn alle n − 2 da sind
+function fertig(Z) { return Z.j >= FORMEN[Z.form] - 2; }
+function dreiecke(Z) { return Z.j; }
+// Diagonalen: jedes Dreieck bringt seine rechte Seite mit, das letzte braucht keine neue
+function diagonalen(Z) { return Math.min(Z.j, FORMEN[Z.form] - 3); }
 // Ergebnis zeigen: beim Quadrat sofort (Beispiel), sonst nach der richtigen Antwort
 function ergebnis(Z) { return fertig(Z) && (Z.form === 0 || Z.ok); }
 function offen(Z) { return fertig(Z) && Z.form > 0 && !Z.ok; }
@@ -117,7 +118,7 @@ App.level('winkel', {
   start: start,
 
   down: function (Z) {
-    if (!fertig(Z)) { Z.j++; start(Z); return; }                                       // nächste Diagonale
+    if (!fertig(Z)) { Z.j++; start(Z); return; }                                       // nächstes Dreieck
     if (ergebnis(Z) && Z.form < FORMEN.length - 1) { Z.form++; Z.j = 0; Z.ok = false; }  // nächste Form
   },
   move: function () {},
@@ -137,7 +138,7 @@ App.level('winkel', {
     ctx.beginPath(); ctx.moveTo(p[0][0], p[0][1]);
     p.forEach(function (q) { ctx.lineTo(q[0], q[1]); });
     ctx.closePath(); ctx.stroke();
-    for (var g = 1; g <= Z.j; g++) {
+    for (var g = 1; g <= diagonalen(Z); g++) {
       ctx.beginPath(); ctx.moveTo(top[0], top[1]); ctx.lineTo(p[g + 1][0], p[g + 1][1]); ctx.stroke();
     }
     // Innenwinkel an allen Ecken (Tinte), erst nach der Antwort, mit Zahl außen an der Ecke (innen liegen die Diagonalen)
@@ -175,7 +176,11 @@ App.level('winkel', {
     }
   },
 
-  bild: function (Z) { return (Z.form || Z.j) ? { v: 1, form: Z.form, j: Z.j, ok: Z.ok } : null; },
-  ausBild: function (Z, b) { if (b.v === 1) { Z.form = b.form; Z.j = b.j; Z.ok = b.ok; } }
+  bild: function (Z) { return (Z.form || Z.j) ? { v: 2, form: Z.form, j: Z.j, ok: Z.ok } : null; },
+  ausBild: function (Z, b) {
+    if (b.v !== 1 && b.v !== 2) return;
+    Z.form = b.form; Z.j = b.j; Z.ok = b.ok;
+    if (b.v === 1 && Z.j >= FORMEN[Z.form] - 3) Z.j = FORMEN[Z.form] - 2;   // früher: j Diagonalen
+  }
 });
 })();
