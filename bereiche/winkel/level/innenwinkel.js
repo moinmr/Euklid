@@ -89,7 +89,7 @@ App.level('winkel', {
     ctx.beginPath(); ctx.moveTo(p[0][0], p[0][1]);
     p.forEach(function (q) { ctx.lineTo(q[0], q[1]); });
     ctx.closePath(); ctx.stroke();
-    var ri = 26 * k, ein = innen(n);
+    var ri = 30 * k, ein = innen(n);   // beide Winkelfelder an der Ecke gleich groß
     // Ecke unten rechts: gestrichelte Verlängerung und Drehung grau mit Zahl (nur mit Hilfe), Innenwinkel braun mit ? (oder Zahl)
     var q = p[1], L = E.s * 0.4;
     if (hilfe(Z)) {
@@ -98,13 +98,13 @@ App.level('winkel', {
       ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(q[0] + L, q[1]); ctx.stroke();
       ctx.restore();
       H.feld(ctx, q, ri, 0, E.ext, fg.fuell, fg.linie, ws);
-      App.text(ctx, Math.round(360 / n) + '°', q[0] + Math.cos(E.ext / 2) * 46 * k, q[1] - Math.sin(E.ext / 2) * 46 * k, fg.linie, 15);
+      App.text(ctx, Math.round(360 / n) + '°', q[0] + Math.cos(E.ext / 2) * (ri + 20 * k), q[1] - Math.sin(E.ext / 2) * (ri + 20 * k), fg.linie, 15);
     }
     // Innenwinkel: an Ecke i zwischen der Richtung zur nächsten und zur vorigen Ecke
     for (var i = 0; i < n; i++) {
       if (!Z.ok && i !== 1) continue;
-      // der gesuchte Winkel hervorgehoben: größer und kräftiger
-      var c = p[i], a0 = i * E.ext, sw = Math.PI - E.ext, mid = a0 + sw / 2, gross = !Z.ok, rr = (gross ? 36 : 26) * k, ra = rr + 20 * k;
+      // der gesuchte Winkel hervorgehoben: kräftiger, aber gleich groß wie die Drehung daneben
+      var c = p[i], a0 = i * E.ext, sw = Math.PI - E.ext, mid = a0 + sw / 2, gross = !Z.ok, rr = ri, ra = rr + 20 * k;
       H.feld(ctx, c, rr, a0, sw, gross ? 'rgba(166,112,58,0.38)' : fb.fuell, fb.linie, gross ? ws * 1.6 : ws);
       App.text(ctx, Z.ok ? ein + '°' : '?', c[0] + Math.cos(mid) * ra, c[1] - Math.sin(mid) * ra, fb.linie, gross ? 22 : 16);
     }
