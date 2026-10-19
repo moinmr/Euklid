@@ -1,5 +1,5 @@
 // Level: Gleichseitige Dreiecke um einen Punkt. Jedes Antippen ist ein Schritt, keine Animation.
-// Ein Punkt in der Mitte. Antippen legt ein gleichseitiges Dreieck mit einer Ecke im Punkt, sein Winkel dort zeigt "?":
+// Am Anfang liegt schon ein gleichseitiges Dreieck mit einer Ecke im Punkt, sein Winkel dort zeigt "?":
 // man schreibt 60 ins Schreibfeld. Dann die Frage: Wie viele gleichseitige Dreiecke passen um den Punkt? (6). Danach legt
 // jedes Antippen das nächste Dreieck daneben (Felder am Punkt abwechselnd braun und grau), unten "60° + 60° = 120°" und
 // "2 × 1/6 Drehung". Nach sechs Dreiecken ist der Rand ein Sechseck: 6 × 60° = 360°, eine volle Umdrehung. Gelöst.
@@ -93,34 +93,34 @@ App.level('winkel', {
   id: 'sechs-dreiecke',
   text: {
     de: { title: 'Sechs Dreiecke',
-          task: 'Tippe: Ein gleichseitiges Dreieck legt sich an den Punkt. Wie groß ist sein Winkel dort, und wie viele gleichseitige Dreiecke passen um den Punkt? Die Zahlen schreibst du ins Feld.',
+          task: 'Ein gleichseitiges Dreieck liegt am Punkt. Wie groß ist sein Winkel dort, und wie viele gleichseitige Dreiecke passen um den Punkt? Die Zahlen schreibst du ins Feld.',
           done: 'Sechs gleichseitige Dreiecke passen um einen Punkt: 6 × 60° = 360°, eine volle Umdrehung. Zusammen sind sie ein Sechseck.' },
     en: { title: 'Six triangles',
-          task: 'Tap: an equilateral triangle is placed at the point. How big is its angle there, and how many equilateral triangles fit around the point? You write the numbers in the box.',
+          task: 'An equilateral triangle lies at the point. How big is its angle there, and how many equilateral triangles fit around the point? You write the numbers in the box.',
           done: 'Six equilateral triangles fit around a point: 6 × 60° = 360°, one full turn. Together they make a hexagon.' },
     fi: { title: 'Kuusi kolmiota',
-          task: 'Napauta: tasasivuinen kolmio asettuu pisteeseen. Kuinka suuri sen kulma siinä on, ja montako tasasivuista kolmiota mahtuu pisteen ympärille? Kirjoitat luvut kenttään.',
+          task: 'Tasasivuinen kolmio on pisteessä. Kuinka suuri sen kulma siinä on, ja montako tasasivuista kolmiota mahtuu pisteen ympärille? Kirjoitat luvut kenttään.',
           done: 'Kuusi tasasivuista kolmiota mahtuu pisteen ympärille: 6 × 60° = 360°, yksi täysi kierros. Yhdessä ne muodostavat kuusikulmion.' },
     tr: { title: 'Altı üçgen',
-          task: 'Dokun: noktaya bir eşkenar üçgen yerleşir. Oradaki açısı kaç derece ve noktanın etrafına kaç eşkenar üçgen sığar? Sayıları kutuya yazarsın.',
+          task: 'Noktada bir eşkenar üçgen duruyor. Oradaki açısı kaç derece ve noktanın etrafına kaç eşkenar üçgen sığar? Sayıları kutuya yazarsın.',
           done: 'Bir noktanın etrafına altı eşkenar üçgen sığar: 6 × 60° = 360°, tam bir tur. Birlikte bir altıgen oluştururlar.' },
     fr: { title: 'Six triangles',
-          task: 'Touche l’écran : un triangle équilatéral se place contre le point. Combien mesure son angle à cet endroit, et combien de triangles équilatéraux tiennent autour du point ? Tu écris les nombres dans la case.',
+          task: 'Un triangle équilatéral est posé contre le point. Combien mesure son angle à cet endroit, et combien de triangles équilatéraux tiennent autour du point ? Tu écris les nombres dans la case.',
           done: 'Six triangles équilatéraux tiennent autour d’un point : 6 × 60° = 360°, un tour complet. Ensemble, ils forment un hexagone.' },
     es: { title: 'Seis triángulos',
-          task: 'Toca: se coloca un triángulo equilátero en el punto. ¿Cuánto mide su ángulo allí y cuántos triángulos equiláteros caben alrededor del punto? Escribes los números en la casilla.',
+          task: 'Hay un triángulo equilátero en el punto. ¿Cuánto mide su ángulo allí y cuántos triángulos equiláteros caben alrededor del punto? Escribes los números en la casilla.',
           done: 'Seis triángulos equiláteros caben alrededor de un punto: 6 × 60° = 360°, una vuelta completa. Juntos forman un hexágono.' },
     ja: { title: '6つの三角形',
-          task: 'タップすると、点に正三角形が1つならびます。そこの角は何度？点のまわりに正三角形はいくつ入るかな？数は自分で書こう。',
+          task: '点に正三角形が1つあります。そこの角は何度？点のまわりに正三角形はいくつ入るかな？数は自分で書こう。',
           done: '点のまわりに正三角形が6つ入ります：6 × 60° = 360°、ちょうど1回転。合わせると六角形になります。' },
     ar: { title: 'ستة مثلثات',
-          task: 'انقر: يوضع مثلث متساوي الأضلاع عند النقطة. كم قياس زاويته هناك، وكم مثلثًا متساوي الأضلاع يتسع حول النقطة؟ تكتب الأعداد في المربع.',
+          task: 'يوجد مثلث متساوي الأضلاع عند النقطة. كم قياس زاويته هناك، وكم مثلثًا متساوي الأضلاع يتسع حول النقطة؟ تكتب الأعداد في المربع.',
           done: 'ستة مثلثات متساوية الأضلاع تتسع حول نقطة: 6 × 60° = 360°، دورة كاملة. ومعًا تصنع سداسيًا.' }
   },
   werkzeuge: ['clear'],
 
   // t: gelegte Dreiecke (0 bis 6), ok1: 60 geschrieben, ok2: 6 geschrieben
-  neu: function (Z) { Z.t = 0; Z.ok1 = false; Z.ok2 = false; },
+  neu: function (Z) { Z.t = 1; Z.ok1 = false; Z.ok2 = false; },   // das erste Dreieck liegt gleich da
   start: start,
 
   down: function (Z) {
