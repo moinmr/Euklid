@@ -4,7 +4,9 @@
 // (braun, mit ?). Die Linien aus einer Ecke teilen den Innenwinkel in gleiche Teile von je 180°/n:
 // Fünfeck 108° = 3 × 36°, die Spitze ist ein Teil (36°); Achteck 135° = 6 × 22,5°, die Spitze ist zwei Teile (45°).
 // Die Zahl schreibt man ins Schreibfeld. Richtig: alle Spitzen bekommen ihre Zahl, unten "5 × 36° = 180°".
-// Antippen bringt den nächsten Stern. Gelöst nach dem Achtstern.
+// Danach dreht sich bei jedem Antippen ein Stift an der nächsten Spitze um deren Winkel und rutscht weiter; in der Mitte
+// zeigt eine Uhr, wie weit er sich insgesamt gedreht hat: beim Fünfstern eine halbe Drehung (180°), beim Achtstern
+// eine ganze (360°). Danach bringt Antippen den nächsten Stern. Gelöst nach dem Achtstern.
 (function () {
 var App = window.App, S = App.S, C = App.C;
 // n Ecken, jede Ecke mit der m-ten nächsten verbunden, Winkel in der Spitze, Innenwinkel des Vielecks,
@@ -16,6 +18,14 @@ var TEXT = {
   linie: { de: 'Tippe für die nächste Linie', en: 'Tap for the next line', fi: 'Napauta, niin tulee seuraava viiva',
            tr: 'Sonraki çizgi için dokun', fr: 'Touche l’écran pour la ligne suivante', es: 'Toca para la siguiente línea',
            ja: 'タップすると次の線', ar: 'انقر للخط التالي' },
+  stift: { de: 'Tippe: Der Stift dreht sich an der nächsten Spitze', en: 'Tap: the pencil turns at the next point',
+           fi: 'Napauta: kynä kääntyy seuraavassa kärjessä', tr: 'Dokun: kalem bir sonraki uçta döner',
+           fr: 'Touche : le crayon tourne à la pointe suivante', es: 'Toca: el lápiz gira en la siguiente punta',
+           ja: 'タップ：えんぴつが次の先で回るよ', ar: 'انقر: يدور القلم عند الرأس التالي' },
+  halb: { de: 'halbe Drehung', en: 'half a turn', fi: 'puoli kierrosta', tr: 'yarım tur', fr: 'un demi-tour',
+          es: 'media vuelta', ja: '半回転', ar: 'نصف دورة' },
+  ganz: { de: 'ganze Drehung', en: 'a full turn', fi: 'koko kierros', tr: 'tam tur', fr: 'un tour complet',
+          es: 'una vuelta completa', ja: '1回転', ar: 'دورة كاملة' },
   weiter: { de: 'Tippe für den nächsten Stern', en: 'Tap for the next star', fi: 'Napauta, niin tulee seuraava tähti',
             tr: 'Sonraki yıldız için dokun', fr: 'Touche l’écran pour l’étoile suivante', es: 'Toca para la siguiente estrella',
             ja: 'タップすると次の星', ar: 'انقر للنجمة التالية' },
@@ -60,7 +70,7 @@ function ecken(s) {
     p.push([S.w / 2 + R * Math.cos(a), cy - R * Math.sin(a)]);
   }
   var rc = R * Math.cos(Math.PI * St.m / n) / Math.cos(Math.PI * (St.m - 1) / n);
-  return { p: p, R: R, h: R - rc * Math.cos(Math.PI / n) };
+  return { p: p, R: R, rc: rc, h: R - rc * Math.cos(Math.PI / n) };
 }
 // Kleinerer Winkel zwischen zwei Richtungen: Anfang und Weite (mathematisch, gegen den Uhrzeigersinn)
 function zwischen(d1, d2) {
@@ -68,6 +78,34 @@ function zwischen(d1, d2) {
   return sw <= Math.PI ? [d1, sw] : [d2, T - sw];
 }
 function fertig(Z) { return Z.j >= STERNE[Z.s].n; }
+// Stift: Spitzen in der Reihenfolge des Sterns (0, m, 2m, …). Im Stand b liegt er auf der Linie von Spitze b − 1
+// zu Spitze b, mit einem Ende an Spitze b. Jede Drehung ist der Spitzenwinkel, immer im selben Drehsinn.
+function stiftLage(Z, E) {
+  var H = App.winkel, St = STERNE[Z.s], n = St.n, m = St.m, p = E.p;
+  function sp(b) { return p[(((b * m) % n) + n) % n]; }
+  var a0 = H.richtung(p[0], sp(-1)), d1 = a0, d2 = H.richtung(p[0], sp(1));
+  var dreh = ((d2 - d1) % H.TAU + H.TAU + Math.PI) % H.TAU - Math.PI;   // −36° oder +36° (bzw. 45°)
+  var c = sp(Z.b), hinten = sp(Z.b - 1);
+  return { c: c, nach: H.richtung(c, hinten), a: a0 + Z.b * dreh, a0: a0, dreh: dreh, sp: sp };
+}
+// Ein Bleistift von e (Radiergummi) nach t (Mine)
+function stift(ctx, e, t, dicke) {
+  var dx = t[0] - e[0], dy = t[1] - e[1], l = Math.hypot(dx, dy), ux = dx / l, uy = dy / l, nx = -uy * dicke / 2, ny = ux * dicke / 2;
+  function pt(f, q) { return [e[0] + ux * l * f + nx * q, e[1] + uy * l * f + ny * q]; }
+  function vier(a, b, c, d, farbe) {
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); if (d) ctx.lineTo(d[0], d[1]);
+    ctx.closePath(); ctx.fillStyle = farbe; ctx.fill();
+  }
+  var gummi = Math.min(0.14, dicke * 1.3 / l), holz = 1 - Math.min(0.22, dicke * 2 / l);
+  vier(pt(0, -1), pt(gummi, -1), pt(gummi, 1), pt(0, 1), App.winkel.farben[2].linie);
+  vier(pt(gummi, -1), pt(holz, -1), pt(holz, 1), pt(gummi, 1), App.winkel.farben[1].linie);
+  vier(pt(holz, -1), pt(1, 0), pt(holz, 1), null, C.PARCH);
+  var mine = holz + (1 - holz) * 0.55;
+  vier(pt(mine, -0.45), pt(1, 0), pt(mine, 0.45), null, C.INK);
+  ctx.beginPath(); ctx.moveTo(pt(0, -1)[0], pt(0, -1)[1]); ctx.lineTo(pt(holz, -1)[0], pt(holz, -1)[1]); ctx.lineTo(t[0], t[1]);
+  ctx.lineTo(pt(holz, 1)[0], pt(holz, 1)[1]); ctx.lineTo(pt(0, 1)[0], pt(0, 1)[1]); ctx.closePath();
+  ctx.strokeStyle = C.INK; ctx.lineWidth = 1; ctx.stroke();
+}
 function start(Z) {
   if (!fertig(Z) || Z.ok) return;
   App.winkel.frage(STERNE[Z.s].spitze, TEXT.falsch[Z.s], function () {
@@ -106,13 +144,14 @@ App.level('winkel', {
   },
   werkzeuge: ['clear'],
 
-  // s: welcher Stern, j: wie viele Linien gezogen, ok: Frage zu diesem Stern beantwortet
-  neu: function (Z) { Z.s = 0; Z.j = 0; Z.ok = false; },
+  // s: welcher Stern, j: wie viele Linien gezogen, ok: Frage zu diesem Stern beantwortet, b: Drehungen des Stifts
+  neu: function (Z) { Z.s = 0; Z.j = 0; Z.ok = false; Z.b = 0; },
   start: start,
 
   down: function (Z) {
     if (!fertig(Z)) { Z.j++; start(Z); return; }   // Antippen: nächste Linie
-    if (Z.ok && Z.s < STERNE.length - 1) { Z.s++; Z.j = 0; Z.ok = false; }   // nächster Stern
+    if (Z.ok && Z.b < STERNE[Z.s].n) { Z.b++; return; }                      // Stift dreht sich weiter
+    if (Z.ok && Z.s < STERNE.length - 1) { Z.s++; Z.j = 0; Z.ok = false; Z.b = 0; }   // nächster Stern
   },
   move: function () {},
   up: function () {},
@@ -144,6 +183,9 @@ App.level('winkel', {
         var c = p[i], w = zwischen(H.richtung(c, ecke(i + m)), H.richtung(c, ecke(i - m))), mid = w[0] + w[1] / 2;
         var rB = frage ? Math.min(E.h * 0.85, E.R * (St.rg - 0.07)) : E.h * 0.7, ra = frage ? rB * 0.68 : E.h * 0.48;
         H.feld(ctx, c, rB, w[0], w[1], frage ? 'rgba(166,112,58,0.38)' : fb.fuell, fb.linie, frage ? ws * 1.6 : ws);
+        // Spitze, an der sich der Stift gerade gedreht hat: kräftiger
+        if (Z.ok && Z.b > 0 && i === ((((Z.b - 1) * m) % n) + n) % n)
+          H.feld(ctx, c, rB, w[0], w[1], 'rgba(166,112,58,0.38)', fb.linie, ws * 1.6);
         schrift.push([frage ? '?' : St.spitze + '°', c[0] + Math.cos(mid) * ra, c[1] - Math.sin(mid) * ra, frage ? 22 : 14]);
       }
     }
@@ -155,6 +197,26 @@ App.level('winkel', {
     ctx.fillStyle = C.INK;
     for (var u = 0; u <= Math.min(Z.j, n - 1); u++) App.dotAt(ctx, ecke(u * m), false);
     schrift.forEach(function (a) { App.text(ctx, a[0], a[1], a[2], fb.linie, a[3]); });
+    // Stift und Uhr in der Mitte: grau die Richtung am Anfang, braun wie weit er sich schon gedreht hat
+    if (Z.ok) {
+      var L = stiftLage(Z, E), mitte = [S.w / 2, p.reduce(function (s0, q) { return s0 + q[1]; }, 0) / n];
+      var rd = E.rc * 0.62, zeiger = rd * 1.15;
+      var a1 = Math.min(L.a0, L.a), sw = Math.abs(L.a - L.a0);
+      ctx.beginPath(); ctx.arc(mitte[0], mitte[1], rd, 0, H.TAU);
+      ctx.fillStyle = C.PARCH; ctx.fill(); ctx.strokeStyle = fg.linie; ctx.lineWidth = 1.2 * ws * k; ctx.stroke();
+      if (sw > 0.001) H.feld(ctx, mitte, rd, a1, sw, fb.fuell, fb.linie, ws);
+      ctx.save(); ctx.setLineDash([4 * k, 4 * k]); ctx.strokeStyle = fg.linie; ctx.lineWidth = 1.5 * ws * k;
+      ctx.beginPath(); ctx.moveTo(mitte[0], mitte[1]);
+      ctx.lineTo(mitte[0] + Math.cos(L.a0) * zeiger, mitte[1] - Math.sin(L.a0) * zeiger); ctx.stroke(); ctx.restore();
+      var kl = zeiger * 1.9;
+      stift(ctx, [mitte[0] - Math.cos(L.a) * kl / 2, mitte[1] + Math.sin(L.a) * kl / 2],
+                 [mitte[0] + Math.cos(L.a) * kl / 2, mitte[1] - Math.sin(L.a) * kl / 2], 6 * k);
+      // großer Stift auf der Linie, ein Ende an der Spitze, nach innen
+      var lang = Math.hypot(L.c[0] - L.sp(Z.b - 1)[0], L.c[1] - L.sp(Z.b - 1)[1]) * 0.42;
+      var ende = [L.c[0] + Math.cos(L.nach) * lang, L.c[1] - Math.sin(L.nach) * lang];
+      var vorn = Math.cos(L.a - L.nach) > 0;   // zeigt die Mine von der Spitze nach innen?
+      stift(ctx, vorn ? L.c : ende, vorn ? ende : L.c, 9 * k);
+    }
     // Zahl des Innenwinkels zuletzt, auf einem Stück Papier, damit die Linien sie nicht verdecken
     if (frage) {
       var ty = v[1] + E.R * St.rg + 14 * k;
@@ -165,7 +227,7 @@ App.level('winkel', {
     }
   },
 
-  // Unten: "Tippe für die nächste Linie", nach der Antwort "5 × 36° = 180°" und "Tippe für den nächsten Stern"
+  // Unten: "Tippe für die nächste Linie", nach der Antwort der Stift: "3 × 36° = 108°", am Ende "5 × 36° = 180° = halbe Drehung"
   overlay: function (ctx, Z) {
     var H = App.winkel, St = STERNE[Z.s], letzter = Z.s === STERNE.length - 1;
     if (fertig(Z) && !Z.ok) return;
@@ -176,22 +238,28 @@ App.level('winkel', {
       ctx.restore();
       return;
     }
-    var y = zeilenY(letzter ? 1 : 2);
-    H.zeile(ctx, [{ t: St.n + ' × ', c: C.INK }, { t: St.spitze + '°', c: H.farben[1].linie },
-                  { t: ' = ' + St.n * St.spitze + '°', c: C.INK }], y);
-    if (!letzter) {
+    var durch = Z.b >= St.n, hinweis = !durch ? TEXT.stift : (!letzter ? TEXT.weiter : null);
+    var y = zeilenY(hinweis ? 2 : 1);
+    if (Z.b > 0) {
+      var teile = [{ t: Z.b + ' × ', c: C.INK }, { t: St.spitze + '°', c: H.farben[1].linie },
+                   { t: ' = ' + Z.b * St.spitze + '°', c: C.INK }];
+      if (durch) teile.push({ t: ' = ' + App.wahl(St.n * St.spitze === 180 ? TEXT.halb : TEXT.ganz), c: C.INK });
+      H.zeile(ctx, teile, y);
+    }
+    if (hinweis) {
       ctx.font = '400 14.5px ' + C.FONT; ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.fillStyle = C.PENCIL;
-      ctx.fillText(App.wahl(TEXT.weiter), S.w / 2, y + 24);
+      ctx.fillText(App.wahl(hinweis), S.w / 2, y + 24);
     }
     ctx.restore();
   },
 
-  bild: function (Z) { return (Z.s || Z.j) ? { v: 1, s: Z.s, j: Z.j, ok: Z.ok } : null; },
+  bild: function (Z) { return (Z.s || Z.j) ? { v: 2, s: Z.s, j: Z.j, ok: Z.ok, b: Z.b } : null; },
   ausBild: function (Z, b) {
-    if (b.v !== 1) return;
+    if (b.v !== 1 && b.v !== 2) return;
     Z.s = Math.max(0, Math.min(STERNE.length - 1, b.s | 0));
     Z.j = Math.max(0, Math.min(STERNE[Z.s].n, b.j | 0));
     Z.ok = !!b.ok && Z.j >= STERNE[Z.s].n;
+    Z.b = Z.ok ? Math.max(0, Math.min(STERNE[Z.s].n, (b.v === 2 ? b.b : STERNE[Z.s].n) | 0)) : 0;
   }
 });
 })();
