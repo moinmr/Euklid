@@ -3,8 +3,10 @@
 // einer Ecke an den Punkt, gegen den Uhrzeigersinn direkt neben das vorige (gleiche Seitenlänge, abwechselnd braun
 // und grau, Winkelfeld mit Zahl am Punkt). Unten die Summe und wie viel noch frei ist. Ginge es über 360° hinaus:
 // rote Karte. Antippen des zuletzt gelegten Vielecks nimmt es wieder weg. Genau 360°: die Ecke ist voll, die
-// Zusammensetzung (ohne Reihenfolge) wird gemerkt und unten mit kleinen Symbolen gezeigt; doppelte zählen nicht.
-// Antippen der Zeichenfläche leert dann die Ecke. Gelöst nach drei verschiedenen Füllungen.
+// Zusammensetzung (ohne Reihenfolge) wird gemerkt und unten mit kleinen Symbolen gezeigt; doppelte zählen nicht,
+// und nur gemischte Füllungen zählen (nur Dreiecke, nur Quadrate oder nur Sechsecke gab es schon in früheren Leveln).
+// Antippen der Zeichenfläche leert dann die Ecke. Gelöst nach drei verschiedenen gemischten Füllungen
+// (möglich sind vier: 4 Dreiecke + Sechseck, 2 Dreiecke + 2 Sechsecke, 3 Dreiecke + 2 Quadrate, Dreieck + 2 Quadrate + Sechseck).
 // Fünfecke füllen nie eine Ecke: 108° passt mit 60°, 90°, 108° und 120° nie genau auf 360°.
 (function () {
 var App = window.App, S = App.S, C = App.C;
@@ -18,6 +20,10 @@ var TEXT = {
   voll: { de: 'Die Ecke ist voll: genau 360°', en: 'The corner is full: exactly 360°', fi: 'Kulma on täynnä: tasan 360°',
           tr: 'Köşe doldu: tam 360°', fr: 'Le coin est plein : exactement 360°', es: 'La esquina está llena: exactamente 360°',
           ja: '角がいっぱい：ちょうど360°', ar: 'الزاوية ممتلئة: 360° تمامًا' },
+  gleich: { de: 'Nur eine Sorte zählt nicht. Nimm verschiedene Vielecke.', en: 'Only one kind doesn’t count. Use different shapes.',
+            fi: 'Vain yksi laji ei kelpaa. Käytä eri monikulmioita.', tr: 'Tek tür sayılmaz. Farklı çokgenler kullan.',
+            fr: 'Une seule sorte ne compte pas. Prends des polygones différents.', es: 'Una sola clase no cuenta. Usa polígonos distintos.',
+            ja: '1種類だけでは数えないよ。ちがう形をまぜよう。', ar: 'نوع واحد لا يُحسب. استخدم مضلعات مختلفة.' },
   schon: { de: 'Diese Art hast du schon gefunden.', en: 'You already found this one.', fi: 'Tämän löysit jo.',
            tr: 'Bunu zaten buldun.', fr: 'Tu as déjà trouvé celle-ci.', es: 'Esta ya la encontraste.',
            ja: 'これはもう見つけたよ。', ar: 'وجدت هذه من قبل.' },
@@ -46,6 +52,8 @@ function innen(n) { return 180 - 360 / n; }
 function summe(Z) { return Z.liste.reduce(function (s, n) { return s + innen(n); }, 0); }
 function voll(Z) { return Z.liste.length > 0 && summe(Z) === 360; }
 // Zusammensetzung ohne Reihenfolge: Anzahl je Form, z. B. "1,2,0,1" (Dreiecke, Quadrate, Fünfecke, Sechsecke)
+// nur eine Sorte Vieleck in der Ecke
+function einerlei(liste) { return liste.every(function (n) { return n === liste[0]; }); }
 function art(liste) {
   return FORMEN.map(function (n) { return liste.filter(function (m) { return m === n; }).length; }).join(',');
 }
@@ -118,14 +126,15 @@ function symbol(ctx, cx, cy, r, n, fuell, linie, lw) {
 }
 
 function legen(Z, n) {
-  if (voll(Z)) { Z.liste = []; Z.doppelt = false; }
+  if (voll(Z)) { Z.liste = []; Z.doppelt = false; Z.gleich = false; }
   var frei = 360 - summe(Z);
   if (innen(n) > frei) { App.winkel.falsch(mitZahl(TEXT.falsch, frei)); return; }
   Z.liste.push(n);
   if (!voll(Z)) return;
   var k = art(Z.liste);
-  Z.doppelt = Z.gefunden.indexOf(k) >= 0;
-  if (!Z.doppelt) {
+  Z.gleich = einerlei(Z.liste);
+  Z.doppelt = !Z.gleich && Z.gefunden.indexOf(k) >= 0;
+  if (!Z.doppelt && !Z.gleich) {
     Z.gefunden.push(k);
     if (Z.gefunden.length >= ZIELE) App.winkel.geschafft();
   }
@@ -135,33 +144,33 @@ App.level('winkel', {
   id: 'mosaik',
   text: {
     de: { title: 'Mosaik',
-          task: 'Leg Vielecke um die Ecke, bis sie voll ist: genau 360°. Tippe unten auf ein Vieleck. Finde drei verschiedene Arten.',
+          task: 'Leg Vielecke um die Ecke, bis sie voll ist: genau 360°. Tippe unten auf ein Vieleck. Finde drei Arten mit verschiedenen Vielecken gemischt.',
           done: 'Um eine Ecke müssen die Winkel genau 360° ergeben. Dreiecke, Quadrate und Sechsecke passen, Fünfecke nie.' },
     en: { title: 'Mosaic',
-          task: 'Put shapes around the corner until it is full: exactly 360°. Tap a shape below. Find three different ways.',
+          task: 'Put shapes around the corner until it is full: exactly 360°. Tap a shape below. Find three ways that mix different shapes.',
           done: 'Around a corner the angles must add up to exactly 360°. Triangles, squares and hexagons fit, pentagons never.' },
     fi: { title: 'Mosaiikki',
-          task: 'Laita monikulmioita kulman ympärille, kunnes se on täynnä: tasan 360°. Napauta monikulmiota alhaalla. Löydä kolme eri tapaa.',
+          task: 'Laita monikulmioita kulman ympärille, kunnes se on täynnä: tasan 360°. Napauta monikulmiota alhaalla. Löydä kolme tapaa, joissa on eri monikulmioita sekaisin.',
           done: 'Kulman ympärillä kulmien summan pitää olla tasan 360°. Kolmiot, neliöt ja kuusikulmiot sopivat, viisikulmiot eivät koskaan.' },
     tr: { title: 'Mozaik',
-          task: 'Köşe dolana kadar etrafına çokgenler koy: tam 360°. Aşağıdaki bir çokgene dokun. Üç farklı yol bul.',
+          task: 'Köşe dolana kadar etrafına çokgenler koy: tam 360°. Aşağıdaki bir çokgene dokun. Farklı çokgenleri karıştıran üç yol bul.',
           done: 'Bir köşenin etrafındaki açıların toplamı tam 360° olmalı. Üçgenler, kareler ve altıgenler uyar, beşgenler asla.' },
     fr: { title: 'Mosaïque',
-          task: 'Pose des polygones autour du coin jusqu’à ce qu’il soit plein : exactement 360°. Touche un polygone en bas. Trouve trois façons différentes.',
+          task: 'Pose des polygones autour du coin jusqu’à ce qu’il soit plein : exactement 360°. Touche un polygone en bas. Trouve trois façons qui mélangent des polygones différents.',
           done: 'Autour d’un coin, les angles doivent faire exactement 360°. Triangles, carrés et hexagones vont bien, les pentagones jamais.' },
     es: { title: 'Mosaico',
-          task: 'Pon polígonos alrededor de la esquina hasta que esté llena: exactamente 360°. Toca un polígono abajo. Encuentra tres maneras distintas.',
+          task: 'Pon polígonos alrededor de la esquina hasta que esté llena: exactamente 360°. Toca un polígono abajo. Encuentra tres maneras que mezclen polígonos distintos.',
           done: 'Alrededor de una esquina los ángulos deben sumar exactamente 360°. Triángulos, cuadrados y hexágonos encajan, los pentágonos nunca.' },
     ja: { title: 'モザイク',
-          task: '角のまわりに多角形をならべて、いっぱいにしよう：ちょうど360°。下の形をタップ。ちがうならべ方を3つ見つけよう。',
+          task: '角のまわりに多角形をならべて、いっぱいにしよう：ちょうど360°。下の形をタップ。ちがう形をまぜたならべ方を3つ見つけよう。',
           done: '1つの角のまわりの角を合わせると、ちょうど360°。三角形、正方形、六角形はぴったり合うけれど、五角形はけっして合わない。' },
     ar: { title: 'فسيفساء',
-          task: 'ضع مضلعات حول الزاوية حتى تمتلئ: 360° تمامًا. انقر على مضلع في الأسفل. جد ثلاث طرق مختلفة.',
+          task: 'ضع مضلعات حول الزاوية حتى تمتلئ: 360° تمامًا. انقر على مضلع في الأسفل. جد ثلاث طرق تخلط مضلعات مختلفة.',
           done: 'حول الزاوية يجب أن يكون مجموع الزوايا 360° تمامًا. المثلثات والمربعات والسداسيات تتلاءم، أما الخماسيات فأبدًا.' }
   },
   werkzeuge: ['clear'],
 
-  neu: function (Z) { Z.liste = []; Z.gefunden = []; Z.doppelt = false; },
+  neu: function (Z) { Z.liste = []; Z.gefunden = []; Z.doppelt = false; Z.gleich = false; },
 
   down: function (Z, w) {
     if (Z.falsch) App.winkel.falschWeg();   // die rote Karte verschwindet beim nächsten Versuch
@@ -171,7 +180,7 @@ App.level('winkel', {
       if (Math.abs(w[0] - L.p[i][0]) <= L.cw / 2 && Math.abs(w[1] - L.p[i][1]) <= L.ch / 2) { legen(Z, FORMEN[i]); return; }
     }
     // volle Ecke: Antippen leert sie für den nächsten Versuch
-    if (voll(Z)) { Z.liste = []; Z.doppelt = false; return; }
+    if (voll(Z)) { Z.liste = []; Z.doppelt = false; Z.gleich = false; return; }
     // das zuletzt gelegte Vieleck antippen: wieder wegnehmen
     var g = gelegt(Z, L);
     if (g.length && drin(g[g.length - 1].p, w)) Z.liste.pop();
@@ -227,8 +236,8 @@ App.level('winkel', {
     }
     ctx.textBaseline = 'middle'; ctx.textAlign = 'center'; ctx.font = '400 14.5px ' + C.FONT;
     if (voll(Z)) {
-      ctx.fillStyle = Z.doppelt ? C.PENCIL : C.INK;
-      ctx.fillText(App.wahl(Z.doppelt ? TEXT.schon : TEXT.voll), S.w / 2, y + 22);
+      ctx.fillStyle = Z.doppelt || Z.gleich ? C.PENCIL : C.INK;
+      ctx.fillText(App.wahl(Z.gleich ? TEXT.gleich : Z.doppelt ? TEXT.schon : TEXT.voll), S.w / 2, y + 22);
       ctx.fillStyle = C.PENCIL;
       ctx.fillText(App.wahl(TEXT.leeren), S.w / 2, y + 44);
     } else {
@@ -284,7 +293,8 @@ App.level('winkel', {
   ausBild: function (Z, b) {
     if (b.v !== 1) return;
     Z.liste = (b.liste || []).filter(function (n) { return FORMEN.indexOf(n) >= 0; });
-    Z.gefunden = (b.gefunden || []).slice();
+    Z.gefunden = (b.gefunden || []).filter(function (k) { return k.split(',').filter(function (a) { return a !== '0'; }).length > 1; });   // nur gemischte
+    Z.gleich = voll(Z) && einerlei(Z.liste);
     Z.doppelt = !!b.doppelt && voll(Z);
   }
 });
