@@ -129,7 +129,21 @@ var TEXTE = {
                  es: 'El botón de arriba cambia entre estos dos idiomas.',
                  ja: '上のボタンでこの2つの言語を切り替えます。',
                  ar: 'الزر في الأعلى يبدّل بين هاتين اللغتين.' },
-  fertig: { de: 'Fertig', en: 'Done', fi: 'Valmis', tr: 'Tamam', fr: 'Terminé', es: 'Listo', ja: '完了', ar: 'تم' }
+  fertig: { de: 'Fertig', en: 'Done', fi: 'Valmis', tr: 'Tamam', fr: 'Terminé', es: 'Listo', ja: '完了', ar: 'تم' },
+  zuruecksetzen: { de: 'Alle Level zurücksetzen', en: 'Reset all levels', fi: 'Nollaa kaikki tasot', tr: 'Tüm seviyeleri sıfırla',
+                   fr: 'Réinitialiser tous les niveaux', es: 'Reiniciar todos los niveles', ja: 'すべてのレベルをリセット', ar: 'إعادة ضبط كل المستويات' },
+  zuruecksetzenFrage: { de: 'Alle Level zurücksetzen?', en: 'Reset all levels?', fi: 'Nollataanko kaikki tasot?', tr: 'Tüm seviyeler sıfırlansın mı?',
+                        fr: 'Réinitialiser tous les niveaux ?', es: '¿Reiniciar todos los niveles?', ja: 'すべてのレベルをリセットしますか？', ar: 'هل تريد إعادة ضبط كل المستويات؟' },
+  zuruecksetzenText: { de: 'Alle Level in allen Bereichen sind dann wieder ungelöst und beginnen von vorn.',
+                       en: 'All levels in all topics will be unsolved again and start from the beginning.',
+                       fi: 'Kaikki tasot kaikissa aiheissa ovat taas ratkaisematta ja alkavat alusta.',
+                       tr: 'Bütün konulardaki bütün seviyeler yeniden çözülmemiş olur ve baştan başlar.',
+                       fr: 'Tous les niveaux de tous les thèmes redeviennent non résolus et recommencent depuis le début.',
+                       es: 'Todos los niveles de todos los temas vuelven a estar sin resolver y empiezan desde el principio.',
+                       ja: 'すべてのテーマのすべてのレベルが未解決にもどり、最初から始まります。',
+                       ar: 'ستعود كل المستويات في كل المواضيع غير محلولة وتبدأ من جديد.' },
+  ja_zuruecksetzen: { de: 'Zurücksetzen', en: 'Reset', fi: 'Nollaa', tr: 'Sıfırla', fr: 'Réinitialiser', es: 'Reiniciar', ja: 'リセット', ar: 'إعادة الضبط' },
+  abbrechen: { de: 'Abbrechen', en: 'Cancel', fi: 'Peruuta', tr: 'Vazgeç', fr: 'Annuler', es: 'Cancelar', ja: 'キャンセル', ar: 'إلغاء' }
 };
 App.t = function (key) {
   var v = App.wahl(TEXTE[key]);

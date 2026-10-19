@@ -53,9 +53,15 @@
     <h1 data-t="mathe"></h1>
     <p class="sub" data-t="waehle"></p>
     <div id="areas"></div>
+    <button id="h-reset" data-t="zuruecksetzen"></button>
   </div>
   <!-- Auswahl der zwei Sprachen, geöffnet mit dem Globus auf der Startseite -->
   <div id="langpick" hidden role="dialog" data-aria="sprachen"><div class="sheet"></div></div>
+  <!-- Nachfrage vor dem Zurücksetzen aller Level -->
+  <div id="resetpick" hidden role="dialog" data-aria="zuruecksetzen"><div class="sheet">
+    <h2 data-t="zuruecksetzenFrage"></h2><p data-t="zuruecksetzenText"></p>
+    <div class="zwei"><button class="nein" data-t="abbrechen"></button><button class="ja" data-t="ja_zuruecksetzen"></button></div>
+  </div></div>
 </div>
 
 <script src="kern/dateien.js"></script>

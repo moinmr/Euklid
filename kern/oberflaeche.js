@@ -133,7 +133,7 @@ App.start = function () {
 
   // ----- Startseite -----
   var home = document.getElementById('home'), inArea = false;
-  var RAHMEN = ['board', 'mach', 'top', 'hud', 'bottom', 'home', 'langpick', 'fertig'];   // fester Rahmen aus index.html und dem Kern
+  var RAHMEN = ['board', 'mach', 'top', 'hud', 'bottom', 'home', 'langpick', 'resetpick', 'fertig'];   // fester Rahmen aus index.html und dem Kern
   var areas = document.getElementById('areas');
   bereiche.forEach(function (a) {
     var b = document.createElement('button');
@@ -152,7 +152,8 @@ App.start = function () {
       a.karte.querySelector('.s').textContent = leer ? T('bald') : standText(a.solved().size, a.levels().length);
     });
   }
-  function persist() { var a = App.aktiv(); if (a) a.persist(); }
+  var geloescht = false;   // nach dem Zurücksetzen nichts mehr speichern, bis die Seite neu geladen ist
+  function persist() { if (geloescht) return; var a = App.aktiv(); if (a) a.persist(); }
   function showHome() {
     persist();
     S.fingers.clear(); S.gesture = false; S.main = null; S.hist = [];
@@ -192,6 +193,22 @@ App.start = function () {
     enter();
   }
   window.addEventListener('popstate', function () { if (inArea) showHome(); });
+
+  // Alle Level zurücksetzen: Fortschritt aller Bereiche löschen (die Sprachwahl bleibt), dann neu laden
+  var resetpick = document.getElementById('resetpick');
+  bind('h-reset', function () { resetpick.hidden = false; });
+  resetpick.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button') : null;
+    if (e.target === resetpick || (b && b.classList.contains('nein'))) { resetpick.hidden = true; return; }
+    if (!b || !b.classList.contains('ja')) return;
+    geloescht = true;
+    try {
+      var behalten = ['mathe-sprache', 'mathe-sprachpaar'], weg = [];
+      for (var i = 0; i < localStorage.length; i++) { var key = localStorage.key(i); if (behalten.indexOf(key) < 0) weg.push(key); }
+      weg.forEach(function (key) { localStorage.removeItem(key); });
+    } catch (err) { /* ohne Speicher gibt es nichts zu löschen */ }
+    location.reload();
+  });
   bind('b-home', function () {
     if (history.state && history.state.e) history.back(); else showHome();
   });

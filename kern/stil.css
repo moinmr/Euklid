@@ -268,8 +268,32 @@ body {
 #langpick p { margin: 14px 0; font-size: 14px; text-align: center; opacity: .75; }
 #langpick .done { width: 100%; border-color: var(--ink); }
 #langpick button:active { opacity: .5; }
+/* Knopf unten auf der Startseite und die Nachfrage davor (gleicher Stil wie die Sprachauswahl) */
+#h-reset {
+  margin-top: 4px; padding: 10px 16px; background: none; border: 0; color: var(--ink); opacity: .6;
+  font-family: var(--font-ui); font-size: 14px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; touch-action: manipulation;
+}
+#h-reset:active { opacity: .3; }
+#resetpick {
+  position: absolute; inset: 0; z-index: 8; background: rgba(56,41,26,.25);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+#resetpick[hidden] { display: none; }
+#resetpick .sheet {
+  width: 100%; max-width: 420px; box-sizing: border-box; background: #fbf4e2; border-radius: 16px; padding: 18px 16px;
+  box-shadow: 0 10px 30px rgba(56,41,26,.25); text-align: center;
+}
+#resetpick h2 { margin: 0 0 8px; font-size: 22px; font-weight: 400; }
+#resetpick p { margin: 0 0 16px; font-size: 15px; line-height: 1.4; opacity: .8; }
+#resetpick .zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+#resetpick button {
+  height: 46px; background: none; color: var(--ink); font-family: var(--font-ui); font-size: 16px;
+  border: 1.2px solid rgba(56,41,26,.45); border-radius: 10px; cursor: pointer; touch-action: manipulation;
+}
+#resetpick .ja { border-color: var(--ink); font-weight: 700; }
+#resetpick button:active { opacity: .5; }
 /* Von rechts nach links (Arabisch): nur die Texte, die Leisten und das Bild bleiben, wie sie sind */
-.rtl #hud, .rtl #mach .hint, .rtl #mach .q, .rtl #mach .fb, .rtl #mach .mcol h3, .rtl .area .t, .rtl #home h1, .rtl #home .sub, .rtl #langpick .sheet { direction: rtl; }
+.rtl #hud, .rtl #mach .hint, .rtl #mach .q, .rtl #mach .fb, .rtl #mach .mcol h3, .rtl .area .t, .rtl #home h1, .rtl #home .sub, .rtl #langpick .sheet, .rtl #resetpick .sheet { direction: rtl; }
 /* Lange Antworten (z. B. "A ist verlässlich") dürfen umbrechen, ohne aus dem Knopf zu ragen */
 .opt { height: auto; min-height: 52px; line-height: 1.2; padding: 6px 8px; }
 /* Funktion selbst aufschreiben: zwei Kästchen zum Antippen */
